@@ -2,23 +2,36 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const TEXT_MODEL = "google/gemini-3-flash-preview";
+const VISION_MODEL = "google/gemini-3-flash-preview";
 
-async function callGemini(prompt: string): Promise<string> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("GEMINI_API_KEY is not configured");
-  const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+async function callGatewayJSON(
+  messages: Array<{ role: string; content: unknown }>,
+  model = TEXT_MODEL,
+): Promise<string> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("LOVABLE_API_KEY is not configured");
+  const res = await fetch(GATEWAY_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+      model,
+      messages,
+      response_format: { type: "json_object" },
     }),
   });
-  if (!res.ok) throw new Error(`Gemini error: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    const text = await res.text();
+    if (res.status === 429) throw new Error("AI rate limit reached. Please wait a moment and try again.");
+    if (res.status === 402) throw new Error("AI credits exhausted. Please add credits to your Lovable workspace.");
+    throw new Error(`AI gateway error: ${res.status} ${text}`);
+  }
   const json = await res.json();
-  return json.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+  return json.choices?.[0]?.message?.content ?? "{}";
 }
 
 function safeParse<T>(text: string, fallback: T): T {
@@ -57,7 +70,10 @@ export const generatePlans = createServerFn({ method: "POST" })
       ctx,
     )}, create a 7-day workout plan that fits around their class schedule. Return JSON: { "days": [ { "day": "Monday", "focus": "...", "duration_minutes": 30, "exercises": [{"name":"...","sets":3,"reps":"10-12"}], "notes": "..." }, ... ] }. Include all 7 days. Use rest days appropriately.`;
 
-    const [mealText, workoutText] = await Promise.all([callGemini(mealPrompt), callGemini(workoutPrompt)]);
+    const [mealText, workoutText] = await Promise.all([
+      callGatewayJSON([{ role: "user", content: mealPrompt }]),
+      callGatewayJSON([{ role: "user", content: workoutPrompt }]),
+    ]);
     const mealPlan = safeParse(mealText, { days: [] });
     const workoutPlan = safeParse(workoutText, { days: [] });
 
@@ -75,36 +91,21 @@ export const parseSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ParseScheduleInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("GEMINI_API_KEY is not configured");
-
-    // Fetch image and convert to base64
-    const imgRes = await fetch(data.imageUrl);
-    if (!imgRes.ok) throw new Error("Could not fetch schedule image");
-    const buf = await imgRes.arrayBuffer();
-    const b64 = Buffer.from(buf).toString("base64");
-    const mime = imgRes.headers.get("content-type") || "image/jpeg";
-
-    const res = await fetch(`${GEMINI_URL}?key=${key}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: 'Extract this class schedule into JSON: { "days": [ { "day": "Monday", "classes": [{"name":"...","start":"09:00","end":"10:30","location":"..."}] }, ... ] }. Return JSON only.',
-              },
-              { inline_data: { mime_type: mime, data: b64 } },
-            ],
-          },
-        ],
-        generationConfig: { responseMimeType: "application/json" },
-      }),
-    });
-    if (!res.ok) throw new Error(`Gemini vision error: ${res.status}`);
-    const json = await res.json();
-    const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+    const text = await callGatewayJSON(
+      [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: 'Extract this class schedule into JSON: { "days": [ { "day": "Monday", "classes": [{"name":"...","start":"09:00","end":"10:30","location":"..."}] }, ... ] }. Return JSON only.',
+            },
+            { type: "image_url", image_url: { url: data.imageUrl } },
+          ],
+        },
+      ],
+      VISION_MODEL,
+    );
     const parsed = safeParse(text, { days: [] });
 
     await context.supabase
