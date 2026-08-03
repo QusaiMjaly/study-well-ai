@@ -124,8 +124,18 @@
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.66 0.19 258.3);
+  --primary-foreground: oklch(1 0 0);
+  --success: oklch(0.68 0.17 148.5);
+  --success-foreground: oklch(0.16 0.03 150);
+  --ai: oklch(0.66 0.2 300.5);
+  --ai-foreground: oklch(1 0 0);
+  --gradient-page: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--primary) 16%, var(--background)) 0%,
+    var(--background) 50%,
+    color-mix(in oklab, var(--success) 16%, var(--background)) 100%
+  );
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
