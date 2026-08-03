@@ -170,5 +170,24 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
   }
 }
+
+@utility bg-page-gradient {
+  background-image: var(--gradient-page);
+  background-attachment: fixed;
+}
+
+@utility bg-cta-gradient {
+  background-image: var(--gradient-cta);
+}
+
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
