@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Apple, Dumbbell, LineChart, User } from "lucide-react";
 import { toast } from "sonner";
 import { HomeOverview } from "@/components/dashboard/HomeOverview";
+import { MealsPanel } from "@/components/dashboard/MealsPanel";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
