@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { analyzeTimetable } from "@/lib/schedule.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +48,15 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: Onboarding,
 });
 
+const AI_STAGES = [
+  "Reading your schedule",
+  "Extracting your classes",
+  "Finding your free time",
+  "Saving your schedule",
+];
+
 const GOALS = [
+
   { value: "lose_weight", label: "Lose Weight", icon: TrendingDown, tone: "primary" as const },
   { value: "gain_muscle", label: "Build Muscle", icon: Dumbbell, tone: "success" as const },
   { value: "maintain", label: "Stay Fit", icon: Activity, tone: "ai" as const },
@@ -132,8 +142,15 @@ function ChoiceChip({
 function Onboarding() {
   const navigate = useNavigate();
 
+  const analyze = useServerFn(analyzeTimetable);
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiStage, setAiStage] = useState(0);
+  const [aiDone, setAiDone] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
 
   // Step 1
   const [goalType, setGoalType] = useState("");
@@ -230,6 +247,26 @@ function Onboarding() {
     return null;
   }
 
+  async function runAnalysis() {
+    setAiError(null);
+    setAiStage(0);
+    setAnalyzing(true);
+    const ticker = setInterval(() => setAiStage((s) => (s < 2 ? s + 1 : s)), 2500);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("You are signed out. Please sign in again.");
+      await analyze(undefined as never);
+      clearInterval(ticker);
+      setAiStage(3);
+      setAiDone(true);
+      toast.success("Your timetable was analysed and saved.");
+      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+    } catch (e) {
+      clearInterval(ticker);
+      setAiError((e as Error).message || "Something went wrong. Please retry.");
+    }
+  }
+
   async function generatePlan() {
     const err1 = validateStep1();
     if (err1) {
@@ -268,14 +305,16 @@ function Onboarding() {
       } as never);
       if (gErr) throw gErr;
 
-      toast.success("Your details are saved — your plan is ready to be generated.");
-      navigate({ to: "/dashboard" });
+      setLoading(false);
+      await runAnalysis();
+      return;
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-page-gradient">
@@ -630,6 +669,83 @@ function Onboarding() {
           </div>
         )}
       </div>
+
+      {analyzing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-5 backdrop-blur-sm">
+          <div className="w-full max-w-[420px] rounded-3xl border border-border/60 bg-card p-6 shadow-card">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cta-gradient text-primary-foreground">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">
+                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Analysing your timetable"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {aiError
+                    ? "Your upload and details are safe."
+                    : aiDone
+                      ? "Taking you to your dashboard…"
+                      : "This usually takes a few seconds."}
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-5 space-y-3">
+              {AI_STAGES.map((label, i) => {
+                const done = aiDone || i < aiStage;
+                const active = !aiError && !aiDone && i === aiStage;
+                return (
+                  <li key={label} className="flex items-center gap-3 text-sm">
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                        done
+                          ? "border-transparent bg-success text-primary-foreground"
+                          : active
+                            ? "border-primary text-primary"
+                            : "border-border/60 text-muted-foreground"
+                      }`}
+                    >
+                      {done ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : active ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <span className="text-[11px]">{i + 1}</span>
+                      )}
+                    </span>
+                    <span className={done || active ? "font-medium" : "text-muted-foreground"}>
+                      {label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {aiError && (
+              <div className="mt-5 space-y-3">
+                <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiError}
+                </p>
+                <Button
+                  onClick={runAnalysis}
+                  className="h-12 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground"
+                >
+                  Try again
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setAnalyzing(false)}
+                  className="h-11 w-full rounded-2xl text-sm"
+                >
+                  Back to my details
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
