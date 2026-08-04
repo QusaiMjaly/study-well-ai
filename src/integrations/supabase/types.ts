@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_daily_tips: {
+        Row: {
+          created_at: string
+          day_name: string
+          id: string
+          plan_id: string
+          tip_text: string
+        }
+        Insert: {
+          created_at?: string
+          day_name: string
+          id?: string
+          plan_id: string
+          tip_text: string
+        }
+        Update: {
+          created_at?: string
+          day_name?: string
+          id?: string
+          plan_id?: string
+          tip_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_daily_tips_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "ai_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_plans: {
+        Row: {
+          ai_model: string | null
+          created_at: string
+          generation_version: number
+          id: string
+          is_active: boolean
+          plan_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string | null
+          created_at?: string
+          generation_version?: number
+          id?: string
+          is_active?: boolean
+          plan_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_model?: string | null
+          created_at?: string
+          generation_version?: number
+          id?: string
+          is_active?: boolean
+          plan_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           biggest_challenge: string | null
@@ -60,6 +133,103 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_days: {
+        Row: {
+          carbohydrates: number | null
+          created_at: string
+          day_name: string
+          fats: number | null
+          id: string
+          plan_id: string
+          protein: number | null
+          total_calories: number | null
+        }
+        Insert: {
+          carbohydrates?: number | null
+          created_at?: string
+          day_name: string
+          fats?: number | null
+          id?: string
+          plan_id: string
+          protein?: number | null
+          total_calories?: number | null
+        }
+        Update: {
+          carbohydrates?: number | null
+          created_at?: string
+          day_name?: string
+          fats?: number | null
+          id?: string
+          plan_id?: string
+          protein?: number | null
+          total_calories?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "ai_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_items: {
+        Row: {
+          calories: number | null
+          carbohydrates: number | null
+          created_at: string
+          fats: number | null
+          id: string
+          ingredients: string[]
+          meal_day_id: string
+          meal_name: string
+          meal_order: number
+          meal_type: string | null
+          notes: string | null
+          protein: number | null
+          scheduled_time: string | null
+        }
+        Insert: {
+          calories?: number | null
+          carbohydrates?: number | null
+          created_at?: string
+          fats?: number | null
+          id?: string
+          ingredients?: string[]
+          meal_day_id: string
+          meal_name: string
+          meal_order?: number
+          meal_type?: string | null
+          notes?: string | null
+          protein?: number | null
+          scheduled_time?: string | null
+        }
+        Update: {
+          calories?: number | null
+          carbohydrates?: number | null
+          created_at?: string
+          fats?: number | null
+          id?: string
+          ingredients?: string[]
+          meal_day_id?: string
+          meal_name?: string
+          meal_order?: number
+          meal_type?: string | null
+          notes?: string | null
+          protein?: number | null
+          scheduled_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_items_meal_day_id_fkey"
+            columns: ["meal_day_id"]
+            isOneToOne: false
+            referencedRelation: "meal_days"
             referencedColumns: ["id"]
           },
         ]
@@ -161,6 +331,47 @@ export type Database = {
           },
         ]
       }
+      progress_logs: {
+        Row: {
+          body_fat: number | null
+          created_at: string
+          id: string
+          logged_at: string
+          muscle_mass: number | null
+          notes: string | null
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          body_fat?: number | null
+          created_at?: string
+          id?: string
+          logged_at?: string
+          muscle_mass?: number | null
+          notes?: string | null
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          body_fat?: number | null
+          created_at?: string
+          id?: string
+          logged_at?: string
+          muscle_mass?: number | null
+          notes?: string | null
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedules: {
         Row: {
           created_at: string | null
@@ -189,6 +400,103 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_days: {
+        Row: {
+          created_at: string
+          day_name: string
+          duration_minutes: number | null
+          estimated_calories: number | null
+          id: string
+          notes: string | null
+          plan_id: string
+          scheduled_end: string | null
+          scheduled_start: string | null
+          workout_title: string | null
+          workout_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_name: string
+          duration_minutes?: number | null
+          estimated_calories?: number | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          workout_title?: string | null
+          workout_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_name?: string
+          duration_minutes?: number | null
+          estimated_calories?: number | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          workout_title?: string | null
+          workout_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "ai_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_exercises: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          exercise_name: string
+          exercise_order: number
+          id: string
+          notes: string | null
+          reps: string | null
+          rest_seconds: number | null
+          sets: number | null
+          workout_day_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          exercise_name: string
+          exercise_order?: number
+          id?: string
+          notes?: string | null
+          reps?: string | null
+          rest_seconds?: number | null
+          sets?: number | null
+          workout_day_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          exercise_name?: string
+          exercise_order?: number
+          id?: string
+          notes?: string | null
+          reps?: string | null
+          rest_seconds?: number | null
+          sets?: number | null
+          workout_day_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercises_workout_day_id_fkey"
+            columns: ["workout_day_id"]
+            isOneToOne: false
+            referencedRelation: "workout_days"
             referencedColumns: ["id"]
           },
         ]
@@ -227,7 +535,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_ai_plan: { Args: { _plan_id: string }; Returns: boolean }
+      owns_meal_day: { Args: { _day_id: string }; Returns: boolean }
+      owns_workout_day: { Args: { _day_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
