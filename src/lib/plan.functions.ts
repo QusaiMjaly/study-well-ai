@@ -1,0 +1,116 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AiPlanSchema, validatePlanAgainstSchedule, type AiPlan } from "./plan-schema";
+import {
+  GATEWAY_URL,
+  PLAN_MODEL,
+  buildPlanPrompt,
+  extractJson,
+  toSavePayload,
+  type PlanInputs,
+} from "./plan-prompt";
+import type { ScheduleJson } from "./schedule-schema";
+
+export const generateAiPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ planId: string; summary: AiPlan["summary"] }> => {
+    const { supabase, userId } = context;
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("AI is not configured on the server.");
+
+    const [{ data: profile }, { data: goals }, { data: scheduleRow }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, age, gender, height, weight, activity_level")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("goals")
+        .select(
+          "goal_type, workout_preference, meal_preference, workout_duration, preferred_time, biggest_challenge",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("schedules")
+        .select("schedule_json")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (!profile) throw new Error("We could not find your profile. Please complete onboarding again.");
+
+    const inputs: PlanInputs = {
+      profile,
+      goals: goals ?? null,
+      schedule: (scheduleRow?.schedule_json as unknown as ScheduleJson) ?? null,
+    };
+
+    let problems: string[] = [];
+    let plan: AiPlan | null = null;
+
+    for (let attempt = 0; attempt < 2 && !plan; attempt++) {
+      const res = await fetch(GATEWAY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: PLAN_MODEL,
+          response_format: { type: "json_object" },
+          messages: [{ role: "user", content: buildPlanPrompt(inputs, attempt ? problems : undefined) }],
+        }),
+      });
+
+      if (!res.ok) {
+        if (res.status === 429) throw new Error("AI is busy right now. Please retry in a moment.");
+        if (res.status === 402) throw new Error("AI credits exhausted. Add credits to your Lovable workspace.");
+        throw new Error(`AI request failed (${res.status}). Please retry.`);
+      }
+
+      const payload = await res.json();
+      const raw: string = payload?.choices?.[0]?.message?.content ?? "";
+
+      let parsedJson: unknown;
+      try {
+        parsedJson = extractJson(raw);
+      } catch {
+        problems = ["The response was not valid JSON."];
+        continue;
+      }
+
+      const parsed = AiPlanSchema.safeParse(parsedJson);
+      if (!parsed.success) {
+        problems = parsed.error.issues.slice(0, 8).map((i) => `${i.path.join(".")}: ${i.message}`);
+        continue;
+      }
+
+      const scheduleProblems = validatePlanAgainstSchedule(parsed.data, inputs.schedule);
+      if (scheduleProblems.length) {
+        problems = scheduleProblems.slice(0, 8);
+        continue;
+      }
+
+      plan = parsed.data;
+    }
+
+    if (!plan) {
+      throw new Error(
+        `The AI plan failed validation: ${problems.slice(0, 3).join(" ")} Please retry.`,
+      );
+    }
+
+    const { data: planId, error: saveErr } = await supabase.rpc(
+      "save_ai_plan" as never,
+      { _plan: toSavePayload(plan, PLAN_MODEL) } as never,
+    );
+
+    if (saveErr) {
+      throw new Error(`Your plan could not be saved (nothing was stored): ${saveErr.message}`);
+    }
+
+    return { planId: planId as unknown as string, summary: plan.summary };
+  });

@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { analyzeTimetable } from "@/lib/schedule.functions";
+import { generateAiPlan } from "@/lib/plan.functions";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,10 +51,12 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 const AI_STAGES = [
-  "Reading your schedule",
-  "Extracting your classes",
-  "Finding your free time",
-  "Saving your schedule",
+  "Analyzing your timetable",
+  "Calculating nutrition",
+  "Planning workouts",
+  "Preparing meals",
+  "Optimizing your week",
+  "Saving your AI plan",
 ];
 
 const GOALS = [
@@ -143,6 +147,8 @@ function Onboarding() {
   const navigate = useNavigate();
 
   const analyze = useServerFn(analyzeTimetable);
+  const generate = useServerFn(generateAiPlan);
+
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -251,21 +257,31 @@ function Onboarding() {
     setAiError(null);
     setAiStage(0);
     setAnalyzing(true);
-    const ticker = setInterval(() => setAiStage((s) => (s < 2 ? s + 1 : s)), 2500);
+    let ticker: ReturnType<typeof setInterval> | undefined;
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("You are signed out. Please sign in again.");
+
+      // Real milestone 1: timetable extraction.
       await analyze(undefined as never);
+      setAiStage(1);
+
+      // Plan generation: advance through the intermediate stages while the AI works.
+      ticker = setInterval(() => setAiStage((s) => (s < 4 ? s + 1 : s)), 4000);
+      await generate(undefined as never);
       clearInterval(ticker);
-      setAiStage(3);
+
+      // Real milestone 2: the plan was validated and stored transactionally.
+      setAiStage(5);
       setAiDone(true);
-      toast.success("Your timetable was analysed and saved.");
+      toast.success("Your personalised AI plan is ready.");
       setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
-      clearInterval(ticker);
+      if (ticker) clearInterval(ticker);
       setAiError((e as Error).message || "Something went wrong. Please retry.");
     }
   }
+
 
   async function generatePlan() {
     const err1 = validateStep1();
@@ -679,7 +695,7 @@ function Onboarding() {
               </span>
               <div>
                 <h2 className="text-base font-semibold">
-                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Analysing your timetable"}
+                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Building your AI plan"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {aiError
