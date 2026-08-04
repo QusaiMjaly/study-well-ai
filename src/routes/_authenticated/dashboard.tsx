@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Apple, Dumbbell, LineChart, User } from "lucide-react";
 import { toast } from "sonner";
+import { HomeOverview } from "@/components/dashboard/HomeOverview";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
