@@ -100,6 +100,25 @@ function AuthPage() {
     }
   }
 
+  async function onForgotPassword() {
+    if (!email) {
+      toast.error("Enter your email above first, then tap “Forgot password?”");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent — check your inbox.");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function oauth(provider: "google" | "facebook") {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -107,6 +126,7 @@ function AuthPage() {
     });
     if (error) toast.error(error.message);
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-page-gradient px-5 py-8">
