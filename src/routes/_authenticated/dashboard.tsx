@@ -108,23 +108,7 @@ function Dashboard() {
         </TabsList>
 
         <TabsContent value="meals" className="mt-6">
-          {!mealPlan?.days?.length ? (
-            <EmptyState onGenerate={regenerate} loading={regenerating} />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {mealPlan.days.map((d, i) => (
-                <Card key={i} className="p-5">
-                  <h3 className="font-semibold text-primary">{d.day as string}</h3>
-                  <div className="mt-3 space-y-2 text-sm">
-                    {(["breakfast", "lunch", "dinner", "snacks"] as const).map((k) => (
-                      d[k] ? <div key={k}><span className="font-medium capitalize">{k}: </span><span className="text-muted-foreground">{d[k] as string}</span></div> : null
-                    ))}
-                    {d.calories ? <div className="pt-2 text-xs text-muted-foreground">~{d.calories as number} kcal</div> : null}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+          <MealsPanel />
         </TabsContent>
 
         <TabsContent value="workouts" className="mt-6">
