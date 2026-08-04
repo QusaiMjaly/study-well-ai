@@ -132,8 +132,15 @@ function ChoiceChip({
 function Onboarding() {
   const navigate = useNavigate();
 
+  const analyze = useServerFn(analyzeTimetable);
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiStage, setAiStage] = useState(0);
+  const [aiDone, setAiDone] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
 
   // Step 1
   const [goalType, setGoalType] = useState("");
