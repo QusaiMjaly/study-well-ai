@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Apple, Dumbbell, LineChart, User } from "lucide-react";
 import { toast } from "sonner";
+import { HomeOverview } from "@/components/dashboard/HomeOverview";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -94,7 +96,10 @@ function Dashboard() {
         </Button>
       </div>
 
+      <HomeOverview />
+
       <Tabs defaultValue="meals">
+
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="meals"><Apple className="mr-2 h-4 w-4" />Meals</TabsTrigger>
           <TabsTrigger value="workouts"><Dumbbell className="mr-2 h-4 w-4" />Workouts</TabsTrigger>
