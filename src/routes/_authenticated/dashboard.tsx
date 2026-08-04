@@ -94,7 +94,10 @@ function Dashboard() {
         </Button>
       </div>
 
+      <HomeOverview />
+
       <Tabs defaultValue="meals">
+
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="meals"><Apple className="mr-2 h-4 w-4" />Meals</TabsTrigger>
           <TabsTrigger value="workouts"><Dumbbell className="mr-2 h-4 w-4" />Workouts</TabsTrigger>
