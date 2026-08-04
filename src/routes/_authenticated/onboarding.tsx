@@ -661,6 +661,83 @@ function Onboarding() {
           </div>
         )}
       </div>
+
+      {analyzing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-5 backdrop-blur-sm">
+          <div className="w-full max-w-[420px] rounded-3xl border border-border/60 bg-card p-6 shadow-card">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cta-gradient text-primary-foreground">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">
+                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Analysing your timetable"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {aiError
+                    ? "Your upload and details are safe."
+                    : aiDone
+                      ? "Taking you to your dashboard…"
+                      : "This usually takes a few seconds."}
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-5 space-y-3">
+              {AI_STAGES.map((label, i) => {
+                const done = aiDone || i < aiStage;
+                const active = !aiError && !aiDone && i === aiStage;
+                return (
+                  <li key={label} className="flex items-center gap-3 text-sm">
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                        done
+                          ? "border-transparent bg-success text-primary-foreground"
+                          : active
+                            ? "border-primary text-primary"
+                            : "border-border/60 text-muted-foreground"
+                      }`}
+                    >
+                      {done ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : active ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <span className="text-[11px]">{i + 1}</span>
+                      )}
+                    </span>
+                    <span className={done || active ? "font-medium" : "text-muted-foreground"}>
+                      {label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {aiError && (
+              <div className="mt-5 space-y-3">
+                <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiError}
+                </p>
+                <Button
+                  onClick={runAnalysis}
+                  className="h-12 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground"
+                >
+                  Try again
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setAnalyzing(false)}
+                  className="h-11 w-full rounded-2xl text-sm"
+                >
+                  Back to my details
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
