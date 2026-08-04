@@ -253,21 +253,31 @@ function Onboarding() {
     setAiError(null);
     setAiStage(0);
     setAnalyzing(true);
-    const ticker = setInterval(() => setAiStage((s) => (s < 2 ? s + 1 : s)), 2500);
+    let ticker: ReturnType<typeof setInterval> | undefined;
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("You are signed out. Please sign in again.");
+
+      // Real milestone 1: timetable extraction.
       await analyze(undefined as never);
+      setAiStage(1);
+
+      // Plan generation: advance through the intermediate stages while the AI works.
+      ticker = setInterval(() => setAiStage((s) => (s < 4 ? s + 1 : s)), 4000);
+      await generate(undefined as never);
       clearInterval(ticker);
-      setAiStage(3);
+
+      // Real milestone 2: the plan was validated and stored transactionally.
+      setAiStage(5);
       setAiDone(true);
-      toast.success("Your timetable was analysed and saved.");
+      toast.success("Your personalised AI plan is ready.");
       setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
-      clearInterval(ticker);
+      if (ticker) clearInterval(ticker);
       setAiError((e as Error).message || "Something went wrong. Please retry.");
     }
   }
+
 
   async function generatePlan() {
     const err1 = validateStep1();
