@@ -205,14 +205,10 @@ function Onboarding() {
           .from("schedule-images")
           .upload(path, scheduleFile);
         if (upErr) throw upErr;
-        const { data: signed } = await supabase.storage
-          .from("schedule-images")
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-        const imageUrl = signed?.signedUrl ?? null;
 
         const { error: insErr } = await supabase.from("schedules").insert({
           user_id: u.user.id,
-          image_url: imageUrl,
+          image_url: path,
           schedule_json: null,
         });
         if (insErr) throw insErr;
