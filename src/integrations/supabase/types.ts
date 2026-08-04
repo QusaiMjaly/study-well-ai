@@ -538,6 +538,7 @@ export type Database = {
       owns_ai_plan: { Args: { _plan_id: string }; Returns: boolean }
       owns_meal_day: { Args: { _day_id: string }; Returns: boolean }
       owns_workout_day: { Args: { _day_id: string }; Returns: boolean }
+      save_ai_plan: { Args: { _plan: Json }; Returns: string }
     }
     Enums: {
       [_ in never]: never
