@@ -695,7 +695,7 @@ function Onboarding() {
               </span>
               <div>
                 <h2 className="text-base font-semibold">
-                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Analysing your timetable"}
+                  {aiError ? "We hit a snag" : aiDone ? "All set!" : "Building your AI plan"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {aiError
