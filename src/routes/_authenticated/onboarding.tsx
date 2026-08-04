@@ -247,7 +247,7 @@ function Onboarding() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("You are signed out. Please sign in again.");
-      await analyze({ data: {} });
+      await analyze(undefined as never);
       clearInterval(ticker);
       setAiStage(3);
       setAiDone(true);
