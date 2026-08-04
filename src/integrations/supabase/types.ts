@@ -137,6 +137,38 @@ export type Database = {
           },
         ]
       }
+      meal_completions: {
+        Row: {
+          completed_on: string
+          created_at: string
+          id: string
+          meal_item_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_on?: string
+          created_at?: string
+          id?: string
+          meal_item_id: string
+          user_id: string
+        }
+        Update: {
+          completed_on?: string
+          created_at?: string
+          id?: string
+          meal_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_completions_meal_item_id_fkey"
+            columns: ["meal_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_days: {
         Row: {
           carbohydrates: number | null
