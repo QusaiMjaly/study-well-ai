@@ -49,10 +49,12 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 const AI_STAGES = [
-  "Reading your schedule",
-  "Extracting your classes",
-  "Finding your free time",
-  "Saving your schedule",
+  "Analyzing your timetable",
+  "Calculating nutrition",
+  "Planning workouts",
+  "Preparing meals",
+  "Optimizing your week",
+  "Saving your AI plan",
 ];
 
 const GOALS = [
