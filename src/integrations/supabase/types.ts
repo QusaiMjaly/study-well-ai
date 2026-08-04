@@ -16,28 +16,43 @@ export type Database = {
     Tables: {
       goals: {
         Row: {
+          biggest_challenge: string | null
           created_at: string | null
           goal_type: string | null
           id: string
+          meal_preference: string | null
+          preferred_time: string | null
           target_weight: number | null
           user_id: string | null
           workout_days: number | null
+          workout_duration: string | null
+          workout_preference: string | null
         }
         Insert: {
+          biggest_challenge?: string | null
           created_at?: string | null
           goal_type?: string | null
           id?: string
+          meal_preference?: string | null
+          preferred_time?: string | null
           target_weight?: number | null
           user_id?: string | null
           workout_days?: number | null
+          workout_duration?: string | null
+          workout_preference?: string | null
         }
         Update: {
+          biggest_challenge?: string | null
           created_at?: string | null
           goal_type?: string | null
           id?: string
+          meal_preference?: string | null
+          preferred_time?: string | null
           target_weight?: number | null
           user_id?: string | null
           workout_days?: number | null
+          workout_duration?: string | null
+          workout_preference?: string | null
         }
         Relationships: [
           {
