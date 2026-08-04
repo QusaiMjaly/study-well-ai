@@ -230,6 +230,26 @@ function Onboarding() {
     return null;
   }
 
+  async function runAnalysis() {
+    setAiError(null);
+    setAiStage(0);
+    setAnalyzing(true);
+    const ticker = setInterval(() => setAiStage((s) => (s < 2 ? s + 1 : s)), 2500);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("You are signed out. Please sign in again.");
+      await analyze({ data: {} });
+      clearInterval(ticker);
+      setAiStage(3);
+      setAiDone(true);
+      toast.success("Your timetable was analysed and saved.");
+      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+    } catch (e) {
+      clearInterval(ticker);
+      setAiError((e as Error).message || "Something went wrong. Please retry.");
+    }
+  }
+
   async function generatePlan() {
     const err1 = validateStep1();
     if (err1) {
@@ -268,14 +288,16 @@ function Onboarding() {
       } as never);
       if (gErr) throw gErr;
 
-      toast.success("Your details are saved — your plan is ready to be generated.");
-      navigate({ to: "/dashboard" });
+      setLoading(false);
+      await runAnalysis();
+      return;
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-page-gradient">
