@@ -48,7 +48,15 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: Onboarding,
 });
 
+const AI_STAGES = [
+  "Reading your schedule",
+  "Extracting your classes",
+  "Finding your free time",
+  "Saving your schedule",
+];
+
 const GOALS = [
+
   { value: "lose_weight", label: "Lose Weight", icon: TrendingDown, tone: "primary" as const },
   { value: "gain_muscle", label: "Build Muscle", icon: Dumbbell, tone: "success" as const },
   { value: "maintain", label: "Stay Fit", icon: Activity, tone: "ai" as const },
