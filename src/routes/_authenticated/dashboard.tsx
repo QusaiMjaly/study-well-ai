@@ -125,29 +125,9 @@ function Dashboard() {
         </TabsContent>
 
         <TabsContent value="profile" className="mt-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold">Your profile</h3>
-            <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              {[
-                ["Name", profile.full_name],
-                ["Email", profile.email],
-                ["Age", profile.age],
-                ["Gender", profile.gender],
-                ["Height", profile.height ? `${profile.height} cm` : null],
-                ["Weight", profile.weight ? `${profile.weight} kg` : null],
-                ["Activity", profile.activity_level],
-              ].map(([k, v]) => (
-                <div key={k as string}>
-                  <dt className="text-muted-foreground">{k}</dt>
-                  <dd className="font-medium">{(v as string) || "—"}</dd>
-                </div>
-              ))}
-            </dl>
-            <Link to="/onboarding">
-              <Button variant="outline" className="mt-6">Update profile</Button>
-            </Link>
-          </Card>
+          <ProfilePanel />
         </TabsContent>
+
       </Tabs>
     </div>
   );
