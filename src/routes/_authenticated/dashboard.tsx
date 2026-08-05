@@ -15,6 +15,8 @@ import { HomeOverview } from "@/components/dashboard/HomeOverview";
 import { MealsPanel } from "@/components/dashboard/MealsPanel";
 import { WorkoutsPanel } from "@/components/dashboard/WorkoutsPanel";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
+import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
+
 
 
 
