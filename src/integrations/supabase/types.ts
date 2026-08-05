@@ -436,6 +436,54 @@ export type Database = {
           },
         ]
       }
+      workout_completions: {
+        Row: {
+          completed_at: string
+          completed_on: string
+          completion_percentage: number
+          created_at: string
+          exercise_id: string | null
+          id: string
+          user_id: string
+          workout_day_id: string
+        }
+        Insert: {
+          completed_at?: string
+          completed_on?: string
+          completion_percentage?: number
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          user_id: string
+          workout_day_id: string
+        }
+        Update: {
+          completed_at?: string
+          completed_on?: string
+          completion_percentage?: number
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          user_id?: string
+          workout_day_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_completions_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "workout_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_completions_workout_day_id_fkey"
+            columns: ["workout_day_id"]
+            isOneToOne: false
+            referencedRelation: "workout_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_days: {
         Row: {
           created_at: string
