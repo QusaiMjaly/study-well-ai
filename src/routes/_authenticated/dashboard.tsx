@@ -13,6 +13,8 @@ import { Loader2, Sparkles, Apple, Dumbbell, LineChart, User } from "lucide-reac
 import { toast } from "sonner";
 import { HomeOverview } from "@/components/dashboard/HomeOverview";
 import { MealsPanel } from "@/components/dashboard/MealsPanel";
+import { WorkoutsPanel } from "@/components/dashboard/WorkoutsPanel";
+
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
