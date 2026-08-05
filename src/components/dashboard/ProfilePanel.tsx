@@ -5,10 +5,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertCircle,
   CalendarDays,
@@ -22,6 +28,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ACTIVITY_LEVELS,
+  CHALLENGES,
+  DURATIONS,
+  GENDERS,
+  GOALS,
+  MEAL_PREFS,
+  TIMES,
+  WORKOUT_PREFS,
+  labelOf,
+  type Option,
+} from "@/lib/profile-options";
 import {
   fetchProfileBundle,
   initialsOf,
@@ -44,6 +62,7 @@ const DAY_LABELS: Record<string, string> = {
   saturday: "Sat",
 };
 
+
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl bg-muted/50 p-3">
@@ -52,6 +71,80 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+
+function SelectField({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  options: Option[];
+  onChange: (value: string) => void;
+}) {
+  const known = options.some((o) => o.value === value);
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Select value={known ? value : undefined} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Select an option" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function NumberField({
+  id,
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  min: number;
+  max: number;
+  onChange: (value: string) => void;
+}) {
+  const n = value.trim() === "" ? null : Number(value);
+  const invalid = n !== null && (!Number.isFinite(n) || n < min || n > max);
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={value}
+        aria-invalid={invalid}
+        onChange={(ev) => onChange(ev.target.value.replace(/[^\d.]/g, ""))}
+      />
+      {invalid && (
+        <p className="text-xs text-destructive">
+          Enter a value between {min} and {max}.
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 
 function emptyEdits(b: ProfileBundle): ProfileEdits {
   return {
@@ -183,40 +276,106 @@ export function ProfilePanel() {
         <Card className="rounded-2xl p-5">
           <h3 className="font-semibold">Edit details</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {(
-              [
-                ["full_name", "Full name", "text"],
-                ["age", "Age", "number"],
-                ["gender", "Gender", "text"],
-                ["height", "Height (cm)", "number"],
-                ["weight", "Current weight (kg)", "number"],
-                ["activity_level", "Activity level", "text"],
-                ["goal_type", "Main goal", "text"],
-                ["target_weight", "Target weight (kg)", "number"],
-                ["workout_preference", "Workout preference", "text"],
-                ["meal_preference", "Meal preference", "text"],
-                ["workout_duration", "Preferred duration", "text"],
-                ["preferred_time", "Preferred time", "text"],
-              ] as const
-            ).map(([key, label, type]) => (
-              <div key={key} className="space-y-1.5">
-                <Label htmlFor={key}>{label}</Label>
-                <Input
-                  id={key}
-                  type={type}
-                  value={form[key]}
-                  maxLength={100}
-                  onChange={(ev) => setForm({ ...form, [key]: ev.target.value })}
-                />
-              </div>
-            ))}
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="biggest_challenge">Biggest challenge</Label>
-              <Textarea
+              <Label htmlFor="full_name">Full name</Label>
+              <Input
+                id="full_name"
+                value={form.full_name}
+                maxLength={100}
+                onChange={(ev) => setForm({ ...form, full_name: ev.target.value })}
+              />
+            </div>
+
+            <NumberField
+              id="age"
+              label="Age"
+              value={form.age}
+              min={13}
+              max={100}
+              onChange={(v) => setForm({ ...form, age: v })}
+            />
+            <SelectField
+              id="gender"
+              label="Gender"
+              value={form.gender}
+              options={GENDERS}
+              onChange={(v) => setForm({ ...form, gender: v })}
+            />
+            <NumberField
+              id="height"
+              label="Height (cm)"
+              value={form.height}
+              min={100}
+              max={250}
+              onChange={(v) => setForm({ ...form, height: v })}
+            />
+            <NumberField
+              id="weight"
+              label="Current weight (kg)"
+              value={form.weight}
+              min={30}
+              max={300}
+              onChange={(v) => setForm({ ...form, weight: v })}
+            />
+            <div className="sm:col-span-2">
+              <SelectField
+                id="activity_level"
+                label="Activity level"
+                value={form.activity_level}
+                options={ACTIVITY_LEVELS}
+                onChange={(v) => setForm({ ...form, activity_level: v })}
+              />
+            </div>
+            <SelectField
+              id="goal_type"
+              label="Main goal"
+              value={form.goal_type}
+              options={GOALS}
+              onChange={(v) => setForm({ ...form, goal_type: v })}
+            />
+            <NumberField
+              id="target_weight"
+              label="Target weight (kg)"
+              value={form.target_weight}
+              min={30}
+              max={300}
+              onChange={(v) => setForm({ ...form, target_weight: v })}
+            />
+            <SelectField
+              id="workout_preference"
+              label="Workout preference"
+              value={form.workout_preference}
+              options={WORKOUT_PREFS}
+              onChange={(v) => setForm({ ...form, workout_preference: v })}
+            />
+            <SelectField
+              id="meal_preference"
+              label="Meal preference"
+              value={form.meal_preference}
+              options={MEAL_PREFS}
+              onChange={(v) => setForm({ ...form, meal_preference: v })}
+            />
+            <SelectField
+              id="workout_duration"
+              label="Preferred duration"
+              value={form.workout_duration}
+              options={DURATIONS}
+              onChange={(v) => setForm({ ...form, workout_duration: v })}
+            />
+            <SelectField
+              id="preferred_time"
+              label="Preferred time"
+              value={form.preferred_time}
+              options={TIMES}
+              onChange={(v) => setForm({ ...form, preferred_time: v })}
+            />
+            <div className="sm:col-span-2">
+              <SelectField
                 id="biggest_challenge"
-                maxLength={300}
+                label="Biggest challenge"
                 value={form.biggest_challenge}
-                onChange={(ev) => setForm({ ...form, biggest_challenge: ev.target.value })}
+                options={CHALLENGES}
+                onChange={(v) => setForm({ ...form, biggest_challenge: v })}
               />
             </div>
           </div>
@@ -236,14 +395,17 @@ export function ProfilePanel() {
             <h3 className="font-semibold">Personal information</h3>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Field label="Age" value={data.profile?.age ?? ""} />
-              <Field label="Gender" value={data.profile?.gender ?? ""} />
+              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
               <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
               <Field
                 label="Current weight"
                 value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
               />
-              <Field label="Main goal" value={data.goals?.goal_type?.replace(/_/g, " ") ?? ""} />
-              <Field label="Activity level" value={data.profile?.activity_level ?? ""} />
+              <Field label="Main goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+              <Field
+                label="Activity level"
+                value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
+              />
             </div>
           </Card>
 
@@ -256,34 +418,46 @@ export function ProfilePanel() {
               </p>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <Field label="Workout preference" value={data.goals.workout_preference ?? ""} />
-                <Field label="Meal preference" value={data.goals.meal_preference ?? ""} />
-                <Field label="Preferred duration" value={data.goals.workout_duration ?? ""} />
-                <Field label="Preferred time" value={data.goals.preferred_time ?? ""} />
-                <div className="col-span-2">
-                  <Field label="Biggest challenge" value={data.goals.biggest_challenge ?? ""} />
-                </div>
+                <Field
+                  label="Workout preference"
+                  value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
+                />
+                <Field label="Meal preference" value={labelOf(MEAL_PREFS, data.goals.meal_preference)} />
+                <Field
+                  label="Preferred duration"
+                  value={labelOf(DURATIONS, data.goals.workout_duration)}
+                />
+                <Field label="Preferred time" value={labelOf(TIMES, data.goals.preferred_time)} />
                 <div className="col-span-2">
                   <Field
-                    label="Motivation"
-                    value={
-                      data.goals.target_weight
-                        ? `Target weight ${data.goals.target_weight} kg`
-                        : ""
-                    }
+                    label="Biggest challenge"
+                    value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
                   />
                 </div>
               </div>
             )}
           </Card>
+
+          {/* Edit entry point, kept close to the data it changes */}
+          <Button
+            variant="outline"
+            className="w-full rounded-2xl"
+            onClick={() => {
+              setForm(emptyEdits(data));
+              setEditing(true);
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" /> Edit details
+          </Button>
         </>
       )}
+
 
       {/* Schedule */}
       <Card className="rounded-2xl p-5">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold">Weekly schedule</h3>
-          <Link to="/onboarding">
+          <Link to="/schedule-update">
             <Button variant="outline" size="sm">
               <CalendarDays className="mr-2 h-4 w-4" />
               Update schedule
@@ -350,18 +524,16 @@ export function ProfilePanel() {
           </div>
         </div>
 
-        <button
-          type="button"
+        <Link
+          to="/schedule-update"
           className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
-          onClick={() => {
-            setForm(emptyEdits(data));
-            setEditing(true);
-          }}
         >
           <span className="flex items-center gap-2 text-sm font-medium">
-            <Pencil className="h-4 w-4" /> Edit details
+            <CalendarDays className="h-4 w-4" /> Update timetable
           </span>
-        </button>
+        </Link>
+
+
 
         <Link
           to="/reset-password"
