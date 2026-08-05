@@ -5,10 +5,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertCircle,
   CalendarDays,
@@ -22,6 +28,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ACTIVITY_LEVELS,
+  CHALLENGES,
+  DURATIONS,
+  GENDERS,
+  GOALS,
+  MEAL_PREFS,
+  TIMES,
+  WORKOUT_PREFS,
+  labelOf,
+  type Option,
+} from "@/lib/profile-options";
 import {
   fetchProfileBundle,
   initialsOf,
@@ -43,6 +61,7 @@ const DAY_LABELS: Record<string, string> = {
   friday: "Fri",
   saturday: "Sat",
 };
+
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
