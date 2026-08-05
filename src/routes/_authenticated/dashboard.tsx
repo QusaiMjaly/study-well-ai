@@ -113,27 +113,9 @@ function Dashboard() {
         </TabsContent>
 
         <TabsContent value="workouts" className="mt-6">
-          {!workoutPlan?.days?.length ? (
-            <EmptyState onGenerate={regenerate} loading={regenerating} />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {workoutPlan.days.map((d, i) => (
-                <Card key={i} className="p-5">
-                  <h3 className="font-semibold text-primary">{d.day as string}</h3>
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {d.focus as string} {d.duration_minutes ? `· ${d.duration_minutes as number} min` : ""}
-                  </div>
-                  <ul className="mt-3 space-y-1 text-sm">
-                    {(d.exercises as any[])?.map((ex, j) => (
-                      <li key={j}>• {ex.name} <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span></li>
-                    ))}
-                  </ul>
-                  {d.notes ? <p className="mt-3 text-xs text-muted-foreground">{d.notes as string}</p> : null}
-                </Card>
-              ))}
-            </div>
-          )}
+          <WorkoutsPanel />
         </TabsContent>
+
 
         <TabsContent value="progress" className="mt-6">
           <ProgressTab progress={progress} onAdded={load} />
