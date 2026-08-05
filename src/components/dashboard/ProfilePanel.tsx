@@ -72,6 +72,80 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function SelectField({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  options: Option[];
+  onChange: (value: string) => void;
+}) {
+  const known = options.some((o) => o.value === value);
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Select value={known ? value : undefined} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Select an option" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function NumberField({
+  id,
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  min: number;
+  max: number;
+  onChange: (value: string) => void;
+}) {
+  const n = value.trim() === "" ? null : Number(value);
+  const invalid = n !== null && (!Number.isFinite(n) || n < min || n > max);
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={value}
+        aria-invalid={invalid}
+        onChange={(ev) => onChange(ev.target.value.replace(/[^\d.]/g, ""))}
+      />
+      {invalid && (
+        <p className="text-xs text-destructive">
+          Enter a value between {min} and {max}.
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+
 function emptyEdits(b: ProfileBundle): ProfileEdits {
   return {
     full_name: b.profile?.full_name ?? "",
