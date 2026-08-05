@@ -457,7 +457,7 @@ export function ProfilePanel() {
       <Card className="rounded-2xl p-5">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold">Weekly schedule</h3>
-          <Link to="/onboarding">
+          <Link to="/schedule-update">
             <Button variant="outline" size="sm">
               <CalendarDays className="mr-2 h-4 w-4" />
               Update schedule
