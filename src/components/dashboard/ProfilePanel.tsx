@@ -1,0 +1,389 @@
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertCircle,
+  CalendarDays,
+  Image as ImageIcon,
+  Info,
+  KeyRound,
+  Loader2,
+  LogOut,
+  Pencil,
+  Sparkles,
+} from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchProfileBundle,
+  initialsOf,
+  isPlanStale,
+  saveProfileEdits,
+  scheduleDays,
+  totalClasses,
+  validateEdits,
+  type ProfileBundle,
+  type ProfileEdits,
+} from "@/lib/profile-data";
+
+const DAY_LABELS: Record<string, string> = {
+  sunday: "Sun",
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+};
+
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-muted/50 p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-medium">{value || "Not set"}</p>
+    </div>
+  );
+}
+
+function emptyEdits(b: ProfileBundle): ProfileEdits {
+  return {
+    full_name: b.profile?.full_name ?? "",
+    age: b.profile?.age != null ? String(b.profile.age) : "",
+    gender: b.profile?.gender ?? "",
+    height: b.profile?.height != null ? String(b.profile.height) : "",
+    weight: b.profile?.weight != null ? String(b.profile.weight) : "",
+    activity_level: b.profile?.activity_level ?? "",
+    goal_type: b.goals?.goal_type ?? "",
+    target_weight: b.goals?.target_weight != null ? String(b.goals.target_weight) : "",
+    workout_preference: b.goals?.workout_preference ?? "",
+    meal_preference: b.goals?.meal_preference ?? "",
+    workout_duration: b.goals?.workout_duration ?? "",
+    preferred_time: b.goals?.preferred_time ?? "",
+    biggest_challenge: b.goals?.biggest_challenge ?? "",
+  };
+}
+
+export function ProfilePanel() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<ProfileEdits | null>(null);
+  const [editedAt, setEditedAt] = useState<number | null>(null);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["profile-bundle"],
+    queryFn: fetchProfileBundle,
+  });
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!data || !form) return;
+      const message = validateEdits(form);
+      if (message) throw new Error(message);
+      await saveProfileEdits(data, form);
+    },
+    onSuccess: async () => {
+      setEditedAt(Date.now());
+      setEditing(false);
+      toast.success("Profile updated");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["profile-bundle"] }),
+        qc.invalidateQueries({ queryKey: ["active-plan"] }),
+      ]);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-40 rounded-2xl" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="rounded-2xl p-6 text-center">
+        <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
+        <p className="mt-2 text-sm text-muted-foreground">
+          We couldn't load your profile. {(error as Error).message}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => qc.invalidateQueries({ queryKey: ["profile-bundle"] })}
+        >
+          Try again
+        </Button>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
+
+  const name = data.profile?.full_name?.trim();
+  const email = data.profile?.email ?? data.authEmail;
+  const stale = isPlanStale(data, editedAt);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <Card className="rounded-2xl p-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
+            {initialsOf(name ?? null, email)}
+          </div>
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-semibold">{name || "Add your name"}</h2>
+            <p className="truncate text-sm text-muted-foreground">{email || "No email on file"}</p>
+            {data.goals?.goal_type ? (
+              <Badge variant="secondary" className="mt-2 capitalize">
+                {data.goals.goal_type.replace(/_/g, " ")}
+              </Badge>
+            ) : null}
+          </div>
+        </div>
+        {!data.profile && (
+          <p className="mt-4 rounded-xl bg-muted/60 p-3 text-sm text-muted-foreground">
+            No profile details saved yet — complete onboarding or use Edit details below.
+          </p>
+        )}
+      </Card>
+
+      {stale && (
+        <Card className="flex items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p className="text-sm">
+            Your active plan was generated using previous profile information. Generate a new plan to
+            apply these changes.
+          </p>
+        </Card>
+      )}
+
+      {/* Edit mode */}
+      {editing && form ? (
+        <Card className="rounded-2xl p-5">
+          <h3 className="font-semibold">Edit details</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                ["full_name", "Full name", "text"],
+                ["age", "Age", "number"],
+                ["gender", "Gender", "text"],
+                ["height", "Height (cm)", "number"],
+                ["weight", "Current weight (kg)", "number"],
+                ["activity_level", "Activity level", "text"],
+                ["goal_type", "Main goal", "text"],
+                ["target_weight", "Target weight (kg)", "number"],
+                ["workout_preference", "Workout preference", "text"],
+                ["meal_preference", "Meal preference", "text"],
+                ["workout_duration", "Preferred duration", "text"],
+                ["preferred_time", "Preferred time", "text"],
+              ] as const
+            ).map(([key, label, type]) => (
+              <div key={key} className="space-y-1.5">
+                <Label htmlFor={key}>{label}</Label>
+                <Input
+                  id={key}
+                  type={type}
+                  value={form[key]}
+                  maxLength={100}
+                  onChange={(ev) => setForm({ ...form, [key]: ev.target.value })}
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="biggest_challenge">Biggest challenge</Label>
+              <Textarea
+                id="biggest_challenge"
+                maxLength={300}
+                value={form.biggest_challenge}
+                onChange={(ev) => setForm({ ...form, biggest_challenge: ev.target.value })}
+              />
+            </div>
+          </div>
+          <div className="mt-5 flex gap-3">
+            <Button onClick={() => save.mutate()} disabled={save.isPending} className="flex-1">
+              {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(false)} disabled={save.isPending}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <>
+          {/* Personal information */}
+          <Card className="rounded-2xl p-5">
+            <h3 className="font-semibold">Personal information</h3>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <Field label="Age" value={data.profile?.age ?? ""} />
+              <Field label="Gender" value={data.profile?.gender ?? ""} />
+              <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
+              <Field
+                label="Current weight"
+                value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
+              />
+              <Field label="Main goal" value={data.goals?.goal_type?.replace(/_/g, " ") ?? ""} />
+              <Field label="Activity level" value={data.profile?.activity_level ?? ""} />
+            </div>
+          </Card>
+
+          {/* Preferences */}
+          <Card className="rounded-2xl p-5">
+            <h3 className="font-semibold">Preferences</h3>
+            {!data.goals ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No preferences saved yet. Add them with Edit details.
+              </p>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Field label="Workout preference" value={data.goals.workout_preference ?? ""} />
+                <Field label="Meal preference" value={data.goals.meal_preference ?? ""} />
+                <Field label="Preferred duration" value={data.goals.workout_duration ?? ""} />
+                <Field label="Preferred time" value={data.goals.preferred_time ?? ""} />
+                <div className="col-span-2">
+                  <Field label="Biggest challenge" value={data.goals.biggest_challenge ?? ""} />
+                </div>
+                <div className="col-span-2">
+                  <Field
+                    label="Motivation"
+                    value={
+                      data.goals.target_weight
+                        ? `Target weight ${data.goals.target_weight} kg`
+                        : ""
+                    }
+                  />
+                </div>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      {/* Schedule */}
+      <Card className="rounded-2xl p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold">Weekly schedule</h3>
+          <Link to="/onboarding">
+            <Button variant="outline" size="sm">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Update schedule
+            </Button>
+          </Link>
+        </div>
+
+        {!data.schedule ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No timetable uploaded yet. Upload one to personalise your plan.
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="secondary">
+                <ImageIcon className="mr-1 h-3 w-3" />
+                {data.schedule.image_url ? "Timetable image saved" : "No image"}
+              </Badge>
+              <span>
+                Last updated{" "}
+                {data.schedule.created_at
+                  ? new Date(data.schedule.created_at).toLocaleDateString()
+                  : "—"}
+              </span>
+              <span>· {totalClasses(data.schedule)} classes</span>
+            </div>
+            <div className="mt-4 grid grid-cols-7 gap-1.5">
+              {Object.keys(DAY_LABELS).map((d) => {
+                const hit = days.find((x) => x.day === d);
+                return (
+                  <div
+                    key={d}
+                    className={`rounded-xl p-2 text-center text-xs ${
+                      hit ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground"
+                    }`}
+                  >
+                    <div className="font-medium">{DAY_LABELS[d]}</div>
+                    <div className="mt-0.5">{hit ? hit.count : "—"}</div>
+                  </div>
+                );
+              })}
+            </div>
+            {!data.schedule.schedule_json && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Timetable uploaded but not analysed yet.
+              </p>
+            )}
+          </>
+        )}
+      </Card>
+
+      {/* Settings */}
+      <Card className="divide-y rounded-2xl">
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <p className="text-sm font-medium">Auto-update plan</p>
+            <p className="text-xs text-muted-foreground">
+              Automatically refresh your plan when details change
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Coming soon</Badge>
+            <Switch disabled aria-label="Auto-update plan (coming soon)" />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
+          onClick={() => {
+            setForm(emptyEdits(data));
+            setEditing(true);
+          }}
+        >
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <Pencil className="h-4 w-4" /> Edit details
+          </span>
+        </button>
+
+        <Link
+          to="/reset-password"
+          className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <KeyRound className="h-4 w-4" /> Change password
+          </span>
+        </Link>
+
+        <div className="p-4">
+          <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5" />
+            {data.activePlan
+              ? `Active plan: ${data.activePlan.plan_name}`
+              : "No active AI plan yet"}
+          </div>
+          <Button variant="outline" className="w-full" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" /> Log out
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
