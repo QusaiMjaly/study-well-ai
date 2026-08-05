@@ -524,18 +524,16 @@ export function ProfilePanel() {
           </div>
         </div>
 
-        <button
-          type="button"
+        <Link
+          to="/schedule-update"
           className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
-          onClick={() => {
-            setForm(emptyEdits(data));
-            setEditing(true);
-          }}
         >
           <span className="flex items-center gap-2 text-sm font-medium">
-            <Pencil className="h-4 w-4" /> Edit details
+            <CalendarDays className="h-4 w-4" /> Update timetable
           </span>
-        </button>
+        </Link>
+
+
 
         <Link
           to="/reset-password"
