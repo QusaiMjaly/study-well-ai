@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { HomeOverview } from "@/components/dashboard/HomeOverview";
 import { MealsPanel } from "@/components/dashboard/MealsPanel";
 import { WorkoutsPanel } from "@/components/dashboard/WorkoutsPanel";
+import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
 
 
 
@@ -120,7 +121,7 @@ function Dashboard() {
 
 
         <TabsContent value="progress" className="mt-6">
-          <ProgressTab progress={progress} onAdded={load} />
+          <ProgressPanel />
         </TabsContent>
 
         <TabsContent value="profile" className="mt-6">
