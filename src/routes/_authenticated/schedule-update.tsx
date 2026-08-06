@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
@@ -63,6 +64,7 @@ function ScheduleUpdate() {
       await analyze(undefined as never);
 
       setDone(true);
+      await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
       toast.success("Schedule updated.");
       setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {

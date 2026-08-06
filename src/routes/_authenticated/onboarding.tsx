@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { analyzeTimetable } from "@/lib/schedule.functions";
 import { generateAiPlan } from "@/lib/plan.functions";
@@ -145,6 +146,7 @@ function ChoiceChip({
 
 function Onboarding() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const analyze = useServerFn(analyzeTimetable);
   const generate = useServerFn(generateAiPlan);
@@ -274,6 +276,14 @@ function Onboarding() {
       // Real milestone 2: the plan was validated and stored transactionally.
       setAiStage(5);
       setAiDone(true);
+
+      // The new plan invalidates every cached read derived from the active plan.
+      await Promise.all(
+        ["active-plan", "today-meals", "today-workout", "progress-logs", "profile-bundle"].map(
+          (key) => qc.invalidateQueries({ queryKey: [key] }),
+        ),
+      );
+
       toast.success("Your personalised AI plan is ready.");
       setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
