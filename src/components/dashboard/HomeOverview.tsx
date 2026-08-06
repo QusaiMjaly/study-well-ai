@@ -29,7 +29,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
     return (
       <div className="space-y-4">
         {[0, 1, 2].map((i) => (
-          <Card key={i} className="space-y-3 rounded-3xl p-6 shadow-soft">
+          <Card key={i} className="space-y-3 rounded-[24px] p-6 shadow-soft">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-8 w-44" />
             <Skeleton className="h-4 w-36" />
@@ -41,7 +41,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-3xl border-destructive/30 p-6">
+      <Card className="flex items-start gap-3 rounded-[24px] border-destructive/30 p-6">
         <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
         <div>
           <h3 className="font-semibold">Couldn't load your plan</h3>
@@ -61,10 +61,10 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
   return (
     <div className="space-y-4">
       {/* NEXT WORKOUT */}
-      <section className="rounded-3xl bg-gradient-to-br from-primary/10 to-primary/[0.03] p-6 shadow-soft">
-        <div className="flex items-start justify-between gap-3">
+      <section className="rounded-[24px] bg-gradient-to-br from-primary/10 to-primary/[0.03] p-6 shadow-soft">
+        <div className="flex min-h-[56px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cta-gradient text-primary-foreground shadow-soft">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-cta-gradient text-primary-foreground shadow-soft">
               <Dumbbell className="h-6 w-6" />
             </div>
             <div className="min-w-0">
@@ -82,7 +82,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
         </div>
 
         {workout ? (
-          <div className="mt-4 flex items-center justify-between gap-4">
+          <div className="mt-5 flex min-h-[48px] items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="truncate text-base font-semibold">
                 {workout.workout_title ?? workout.workout_type ?? "Workout"}
@@ -107,10 +107,10 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
       </section>
 
       {/* NEXT MEAL */}
-      <section className="rounded-3xl bg-gradient-to-br from-success/10 to-success/[0.03] p-6 shadow-soft">
-        <div className="flex items-start justify-between gap-3">
+      <section className="rounded-[24px] bg-gradient-to-br from-success/10 to-success/[0.03] p-6 shadow-soft">
+        <div className="flex min-h-[56px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-success text-success-foreground shadow-soft">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-success text-success-foreground shadow-soft">
               <Apple className="h-6 w-6" />
             </div>
             <div className="min-w-0">
@@ -128,7 +128,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
         </div>
 
         {meal ? (
-          <div className="mt-4 flex items-center justify-between gap-4">
+          <div className="mt-5 flex min-h-[48px] items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="truncate text-base font-semibold">{meal.meal_name}</p>
               <p className="text-sm text-muted-foreground">
@@ -150,14 +150,14 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
       </section>
 
       {/* TODAY SUMMARY */}
-      <section className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
+      <section className="rounded-[24px] bg-card p-6 shadow-card">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-ai text-ai-foreground">
             <Sparkles className="h-5 w-5" />
           </div>
           <h3 className="text-lg font-bold tracking-tight">Today's Summary</h3>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-3 gap-4">
           <Stat value={summary.workoutCount} label="Workout" />
           <Stat value={summary.mealCount} label="Meals" />
           <Stat value={summary.calories.toLocaleString()} label="Calories" />
@@ -165,7 +165,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
       </section>
 
       {/* AI TIP */}
-      <section className="rounded-3xl bg-gradient-to-br from-ai/10 to-primary/5 p-5">
+      <section className="rounded-[24px] bg-gradient-to-br from-ai/10 to-primary/5 p-5">
         <div className="flex items-start gap-3">
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" />
           <div className="min-w-0">
@@ -184,7 +184,7 @@ function Stat({ value, label }: { value: number | string; label: string }) {
   return (
     <div>
       <p className="text-2xl font-bold leading-8 tracking-tight">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -204,7 +204,7 @@ function EmptyInline({ label }: { label: string }) {
 
 function NoPlan() {
   return (
-    <Card className="rounded-3xl p-8 text-center shadow-soft">
+    <Card className="rounded-[24px] p-8 text-center shadow-soft">
       <Sparkles className="mx-auto h-8 w-8 text-ai" />
       <h3 className="mt-3 text-lg font-bold">No active plan yet</h3>
       <p className="mt-1 text-sm text-muted-foreground">
