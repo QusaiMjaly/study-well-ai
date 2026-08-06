@@ -158,6 +158,8 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
     weeklyWorkoutCount: allDays.length,
     completedExerciseIds: (comps ?? []).filter((c) => c.exercise_id).map((c) => c.exercise_id!),
     dayCompleted: (comps ?? []).some((c) => !c.exercise_id),
+    nextWorkout: findNext(),
+
   };
 }
 
