@@ -143,23 +143,8 @@ function Landing() {
             ))}
           </ol>
         </section>
-
-        <section className="mt-12 rounded-2xl bg-cta-gradient p-6 text-center shadow-card">
-          <h2 className="text-lg font-bold text-primary-foreground">Ready to start?</h2>
-          <p className="mt-1.5 text-sm text-primary-foreground/85">
-            Your first plan takes about a minute.
-          </p>
-          <Link to="/auth" search={{ mode: "signup" }} className="mt-5 block">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="h-12 w-full rounded-xl bg-card text-base font-semibold text-primary hover:bg-card/90"
-            >
-              Get Started
-            </Button>
-          </Link>
-        </section>
       </div>
+
     </div>
   );
 }
