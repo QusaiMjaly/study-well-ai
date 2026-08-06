@@ -78,7 +78,7 @@ function Landing() {
               </div>
             </div>
 
-            <h1 className="mt-6 text-[2.5rem] font-bold leading-[1.15] tracking-tight">
+            <h1 className="mt-6 text-[2.2rem] font-bold leading-[1.18] tracking-tight">
               Smart Fitness &amp;
               <br />
               Nutrition for Students
@@ -145,8 +145,8 @@ function Landing() {
           <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <div className="flex items-center">
               <span className="h-5 w-5 rounded-full border-2 border-background bg-primary" />
-              <span className="-ml-2 h-5 w-5 rounded-full border-2 border-background bg-success" />
-              <span className="-ml-2 h-5 w-5 rounded-full border-2 border-background bg-ai" />
+              <span className="-ml-1.5 h-5 w-5 rounded-full border-2 border-background bg-success" />
+              <span className="-ml-1.5 h-5 w-5 rounded-full border-2 border-background bg-ai" />
             </div>
             Join 10,000+ students getting fit
           </div>
