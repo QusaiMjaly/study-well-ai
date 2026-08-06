@@ -305,4 +305,3 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
     </div>
   );
 }
-}
