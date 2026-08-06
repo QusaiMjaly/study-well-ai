@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dumbbell, Apple, Sparkles, Flame, Clock, AlertCircle } from "lucide-react";
+import { Dumbbell, Apple, Sparkles, ChevronRight, AlertCircle } from "lucide-react";
 import {
   fetchActivePlan,
   pickNextWorkout,
@@ -13,7 +13,12 @@ import {
   formatTime,
 } from "@/lib/dashboard-data";
 
-export function HomeOverview() {
+type Props = {
+  onOpenWorkouts?: () => void;
+  onOpenMeals?: () => void;
+};
+
+export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
   const { data: plan, isLoading, isError, error } = useQuery({
     queryKey: ["active-plan"],
     queryFn: fetchActivePlan,
@@ -22,11 +27,11 @@ export function HomeOverview() {
 
   if (isLoading) {
     return (
-      <div className="mb-8 grid gap-4 md:grid-cols-2">
-        {[0, 1, 2, 3].map((i) => (
-          <Card key={i} className="space-y-3 rounded-2xl p-5">
+      <div className="space-y-4">
+        {[0, 1, 2].map((i) => (
+          <Card key={i} className="space-y-3 rounded-[24px] p-6 shadow-soft">
             <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-8 w-44" />
             <Skeleton className="h-4 w-36" />
           </Card>
         ))}
@@ -36,7 +41,7 @@ export function HomeOverview() {
 
   if (isError) {
     return (
-      <Card className="mb-8 flex items-start gap-3 rounded-2xl border-destructive/30 p-5">
+      <Card className="flex items-start gap-3 rounded-[24px] border-destructive/30 p-6">
         <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
         <div>
           <h3 className="font-semibold">Couldn't load your plan</h3>
@@ -54,69 +59,123 @@ export function HomeOverview() {
   const tip = todayTip(plan);
 
   return (
-    <div className="mb-8 grid gap-4 md:grid-cols-2">
+    <div className="space-y-4">
       {/* NEXT WORKOUT */}
-      <Card className="rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Dumbbell className="h-4 w-4 text-primary" /> Next workout
-        </div>
-        {workout ? (
-          <>
-            <h3 className="mt-2 text-lg font-semibold">{workout.workout_title ?? workout.workout_type ?? "Workout"}</h3>
-            <p className="text-sm text-muted-foreground">
-              {workout.day_name} · {formatTime(workout.scheduled_start)}
-            </p>
-            <div className="mt-3 flex gap-4 text-sm">
-              <span className="flex items-center gap-1"><Clock className="h-4 w-4 text-muted-foreground" />{workout.duration_minutes ?? "—"} min</span>
-              <span className="flex items-center gap-1"><Flame className="h-4 w-4 text-muted-foreground" />{workout.estimated_calories ?? "—"} kcal</span>
+      <section className="rounded-[24px] bg-gradient-to-br from-primary/10 to-primary/[0.03] p-6 shadow-soft">
+        <div className="flex min-h-[56px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-primary to-primary/75 text-primary-foreground shadow-soft">
+              <Dumbbell className="h-6 w-6" />
             </div>
-          </>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-primary">Next Workout</p>
+              <p className="text-2xl font-bold leading-8 tracking-tight">
+                {workout ? formatTime(workout.scheduled_start) : "—"}
+              </p>
+            </div>
+          </div>
+          {workout?.day_name ? (
+            <span className="shrink-0 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary">
+              {workout.day_name}
+            </span>
+          ) : null}
+        </div>
+
+        {workout ? (
+          <div className="mt-5 flex min-h-[48px] items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold">
+                {workout.workout_title ?? workout.workout_type ?? "Workout"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {workout.duration_minutes ?? "—"} min ·{" "}
+                {workout.estimated_calories ?? "—"} kcal
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenWorkouts}
+              aria-label="Open workouts"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         ) : (
           <EmptyInline label="No upcoming workout in your plan." />
         )}
-      </Card>
+      </section>
 
       {/* NEXT MEAL */}
-      <Card className="rounded-2xl p-5">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Apple className="h-4 w-4 text-primary" /> Next meal
-        </div>
-        {meal ? (
-          <>
-            <h3 className="mt-2 text-lg font-semibold">{meal.meal_name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {meal.meal_type ?? "Meal"} · {formatTime(meal.scheduled_time)}
-            </p>
-            <div className="mt-3 flex gap-4 text-sm">
-              <span>{meal.calories ?? "—"} kcal</span>
-              <span>{meal.protein ?? "—"} g protein</span>
+      <section className="rounded-[24px] bg-gradient-to-br from-success/10 to-success/[0.03] p-6 shadow-soft">
+        <div className="flex min-h-[56px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-success to-success/75 text-success-foreground shadow-soft">
+              <Apple className="h-6 w-6" />
             </div>
-          </>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-success">Next Meal</p>
+              <p className="text-2xl font-bold leading-8 tracking-tight">
+                {meal ? formatTime(meal.scheduled_time) : "—"}
+              </p>
+            </div>
+          </div>
+          {meal?.meal_type ? (
+            <span className="shrink-0 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold capitalize text-success">
+              {meal.meal_type}
+            </span>
+          ) : null}
+        </div>
+
+        {meal ? (
+          <div className="mt-5 flex min-h-[48px] items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold">{meal.meal_name}</p>
+              <p className="text-sm text-muted-foreground">
+                {meal.calories ?? "—"} cal · {meal.protein ?? "—"}g protein
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenMeals}
+              aria-label="Open meals"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-success text-success-foreground transition-opacity hover:opacity-90"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         ) : (
           <EmptyInline label="No upcoming meal in your plan." />
         )}
-      </Card>
+      </section>
 
       {/* TODAY SUMMARY */}
-      <Card className="rounded-2xl p-5">
-        <div className="text-sm font-medium text-muted-foreground">Today</div>
-        <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-          <Stat value={summary.workoutCount} label="Workouts" />
-          <Stat value={summary.mealCount} label="Meals" />
-          <Stat value={summary.calories} label="kcal" />
-          <Stat value={`${summary.protein}g`} label="Protein" />
+      <section className="rounded-[24px] bg-card p-6 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-ai to-ai/75 text-ai-foreground">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <h3 className="text-lg font-bold tracking-tight">Today's Summary</h3>
         </div>
-      </Card>
+        <div className="mt-4 grid grid-cols-3 gap-4">
+          <Stat value={summary.workoutCount} label="Workout" />
+          <Stat value={summary.mealCount} label="Meals" />
+          <Stat value={summary.calories.toLocaleString()} label="Calories" />
+        </div>
+      </section>
 
       {/* AI TIP */}
-      <Card className="rounded-2xl bg-primary/5 p-5">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary">
-          <Sparkles className="h-4 w-4" /> AI tip of the day
+      <section className="rounded-[24px] bg-gradient-to-br from-ai/10 to-primary/5 p-5">
+        <div className="flex items-start gap-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" />
+          <div className="min-w-0">
+            <p className="text-base font-semibold">AI Tip</p>
+            <p className="mt-1 text-sm leading-5 text-muted-foreground">
+              {tip?.tip_text ?? "No tip available for today."}
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {tip?.tip_text ?? "No tip available for today."}
-        </p>
-      </Card>
+      </section>
     </div>
   );
 }
@@ -124,18 +183,20 @@ export function HomeOverview() {
 function Stat({ value, label }: { value: number | string; label: string }) {
   return (
     <div>
-      <div className="text-xl font-bold">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <p className="text-2xl font-bold leading-8 tracking-tight">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
 
 function EmptyInline({ label }: { label: string }) {
   return (
-    <div className="mt-3">
+    <div className="mt-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <Link to="/onboarding">
-        <Button size="sm" variant="outline" className="mt-3">Generate New Plan</Button>
+        <Button size="sm" variant="outline" className="mt-3 rounded-xl">
+          Generate New Plan
+        </Button>
       </Link>
     </div>
   );
@@ -143,14 +204,16 @@ function EmptyInline({ label }: { label: string }) {
 
 function NoPlan() {
   return (
-    <Card className="mb-8 rounded-2xl p-10 text-center">
-      <Sparkles className="mx-auto h-8 w-8 text-primary" />
-      <h3 className="mt-3 font-semibold">No active plan yet</h3>
+    <Card className="rounded-[24px] p-8 text-center shadow-soft">
+      <Sparkles className="mx-auto h-8 w-8 text-ai" />
+      <h3 className="mt-3 text-lg font-bold">No active plan yet</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Create your personalized AI plan to see your day at a glance.
       </p>
       <Link to="/onboarding">
-        <Button className="mt-4">Generate New Plan</Button>
+        <Button className="mt-5 h-12 w-full rounded-2xl bg-cta-gradient font-bold text-primary-foreground">
+          Generate New Plan
+        </Button>
       </Link>
     </Card>
   );
