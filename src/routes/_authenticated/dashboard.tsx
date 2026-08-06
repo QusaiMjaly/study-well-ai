@@ -80,7 +80,7 @@ function Dashboard() {
         ) : (
           <Tabs value={tab} onValueChange={setTab} className="flex flex-1 flex-col gap-0">
             {/* Header */}
-            <header className="relative bg-gradient-to-br from-primary/8 via-transparent to-success/8 px-6 pb-8 pt-6">
+            <header className="relative bg-gradient-to-b from-primary/[0.07] to-transparent px-6 pb-8 pt-6">
               <h1 className="text-[30px] font-bold leading-9 tracking-tight">
                 Hi {profile.full_name?.split(" ")[0] || "there"} 👋
               </h1>

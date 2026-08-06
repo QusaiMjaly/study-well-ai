@@ -27,7 +27,7 @@ function P() {
     <div className="flex min-h-screen justify-center bg-page-gradient">
       <div className="relative flex w-full max-w-[448px] flex-col bg-background shadow-card">
         <Tabs value={tab} onValueChange={setTab} className="flex flex-1 flex-col gap-0">
-          <header className="relative bg-gradient-to-br from-primary/8 via-transparent to-success/8 px-6 pb-8 pt-6">
+          <header className="relative bg-gradient-to-b from-primary/[0.07] to-transparent px-6 pb-8 pt-6">
             <h1 className="text-[30px] font-bold leading-9 tracking-tight">Hi Alex 👋</h1>
             <p className="mt-1 text-base text-muted-foreground">Here's your plan for today</p>
             <button
@@ -44,7 +44,7 @@ function P() {
                 <section className="rounded-[24px] bg-gradient-to-br from-primary/10 to-primary/[0.03] p-6 shadow-soft">
                   <div className="flex min-h-[56px] items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-cta-gradient text-primary-foreground shadow-soft">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-primary to-primary/75 text-primary-foreground shadow-soft">
                         <Dumbbell className="h-6 w-6" />
                       </div>
                       <div className="min-w-0">
@@ -70,7 +70,7 @@ function P() {
                 <section className="rounded-[24px] bg-gradient-to-br from-success/10 to-success/[0.03] p-6 shadow-soft">
                   <div className="flex min-h-[56px] items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-success text-success-foreground shadow-soft">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-success to-success/75 text-success-foreground shadow-soft">
                         <Apple className="h-6 w-6" />
                       </div>
                       <div className="min-w-0">
@@ -95,7 +95,7 @@ function P() {
 
                 <section className="rounded-[24px] bg-card p-6 shadow-card">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-ai text-ai-foreground">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-ai to-ai/75 text-ai-foreground">
                       <Sparkles className="h-5 w-5" />
                     </div>
                     <h3 className="text-lg font-bold tracking-tight">Today's Summary</h3>
