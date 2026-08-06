@@ -64,7 +64,7 @@ function ScheduleUpdate() {
 
       setDone(true);
       toast.success("Schedule updated.");
-      setTimeout(() => navigate({ to: "/dashboard", search: { tab: "profile" } as never }), 1200);
+      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       toast.error((e as Error).message || "Something went wrong. Please retry.");
     } finally {
