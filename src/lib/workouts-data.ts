@@ -13,6 +13,21 @@ export type WorkoutExercise = {
   notes: string | null;
 };
 
+export type NextWorkout = {
+  workoutDayId: string;
+  dayName: string;
+  workoutTitle: string | null;
+  workoutType: string | null;
+  durationMinutes: number | null;
+  estimatedCalories: number | null;
+  scheduledStart: string | null;
+  scheduledEnd: string | null;
+  notes: string | null;
+  exercises: WorkoutExercise[];
+  /** Days from today until this workout. */
+  daysAway: number;
+};
+
 export type TodayWorkout = {
   planId: string;
   dayName: string;
@@ -30,10 +45,13 @@ export type TodayWorkout = {
   weeklyWorkoutCount: number;
   completedExerciseIds: string[];
   dayCompleted: boolean;
+  /** Nearest upcoming workout (used on recovery days). */
+  nextWorkout: NextWorkout | null;
 } | null;
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAY_INDEX = (name: string) => DAYS.findIndex((d) => normalizeDay(d) === normalizeDay(name));
+
 
 /** One optimized read: active plan -> this week's workout days + today's exercises, plus today's completions. */
 export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout> {
