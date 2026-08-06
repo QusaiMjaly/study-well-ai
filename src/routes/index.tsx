@@ -60,20 +60,15 @@ function Landing() {
   return (
     <div className="min-h-screen bg-page-gradient">
       <div className="mx-auto w-full max-w-[420px] px-5 pb-16 pt-8">
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-center">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cta-gradient text-primary-foreground shadow-soft">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
             <span className="text-base font-bold tracking-tight">StudentFitAI</span>
           </div>
-          <Link
-            to="/auth"
-            className="text-sm font-medium text-primary transition-opacity hover:opacity-80"
-          >
-            Log in
-          </Link>
         </header>
+
 
         <section className="pt-10 text-center">
           <div className="mx-auto mb-5 inline-flex items-center gap-1.5 rounded-full bg-ai/10 px-3 py-1.5 text-xs font-medium text-ai">
@@ -148,23 +143,8 @@ function Landing() {
             ))}
           </ol>
         </section>
-
-        <section className="mt-12 rounded-2xl bg-cta-gradient p-6 text-center shadow-card">
-          <h2 className="text-lg font-bold text-primary-foreground">Ready to start?</h2>
-          <p className="mt-1.5 text-sm text-primary-foreground/85">
-            Your first plan takes about a minute.
-          </p>
-          <Link to="/auth" search={{ mode: "signup" }} className="mt-5 block">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="h-12 w-full rounded-xl bg-card text-base font-semibold text-primary hover:bg-card/90"
-            >
-              Get Started
-            </Button>
-          </Link>
-        </section>
       </div>
+
     </div>
   );
 }
