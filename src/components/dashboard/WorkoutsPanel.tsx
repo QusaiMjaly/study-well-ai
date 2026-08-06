@@ -1,19 +1,21 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Check, Clock, Dumbbell, Flame, Sparkles, Timer } from "lucide-react";
+import { AlertCircle, CalendarDays, Check, Clock, Dumbbell, Flame, Leaf, Sparkles, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { formatTime } from "@/lib/dashboard-data";
 import {
   fetchTodayWorkout,
   setExerciseCompleted,
   setWorkoutCompleted,
+  type TodayWorkout,
   type WorkoutExercise,
 } from "@/lib/workouts-data";
+
 
 export function WorkoutsPanel() {
   const qc = useQueryClient();
