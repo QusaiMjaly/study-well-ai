@@ -524,14 +524,6 @@ export function ProfilePanel() {
           </div>
         </div>
 
-        <Link
-          to="/schedule-update"
-          className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <CalendarDays className="h-4 w-4" /> Update timetable
-          </span>
-        </Link>
 
 
 
