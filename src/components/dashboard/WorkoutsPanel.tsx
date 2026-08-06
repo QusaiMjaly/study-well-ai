@@ -221,9 +221,88 @@ function EmptyCard({ title, body }: { title: string; body: string }) {
       <Sparkles className="mx-auto h-8 w-8 text-primary" />
       <h3 className="mt-3 font-semibold">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-      <Link to="/onboarding">
-        <Button className="mt-4">Generate New Plan</Button>
-      </Link>
     </Card>
   );
+}
+
+const RECOVERY_GOALS = ["Stay hydrated", "Get enough sleep", "Light stretching", "Optional light walk"];
+
+function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
+  const [showNext, setShowNext] = useState(false);
+  const next = data.nextWorkout;
+
+  return (
+    <div className="space-y-4">
+      <Card className="rounded-2xl border-primary/20 bg-primary/5 p-6 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <Leaf className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="mt-3 text-xl font-bold">🌿 Recovery Day</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Recovery is an essential part of your personalized AI training plan. Today is intentionally
+          reserved to help your body recover and prepare for the next workout.
+        </p>
+      </Card>
+
+      <Card className="rounded-2xl p-5">
+        <h3 className="font-semibold">Recovery goals</h3>
+        <ul className="mt-3 space-y-2">
+          {RECOVERY_GOALS.map((g) => (
+            <li key={g} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-4 w-4 text-primary" />
+              {g}
+            </li>
+          ))}
+        </ul>
+      </Card>
+
+      {next ? (
+        <Card className="rounded-2xl p-5">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <CalendarDays className="h-4 w-4 text-primary" /> Next workout
+          </div>
+          <h3 className="mt-2 text-lg font-bold">{next.workoutTitle ?? "Workout"}</h3>
+          <p className="text-sm text-muted-foreground">
+            {next.workoutType ?? "Training"} · {next.dayName} · {formatTime(next.scheduledStart)}
+          </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Stat icon={<Clock className="h-4 w-4" />} value={`${next.durationMinutes ?? "—"} min`} label="Duration" />
+            <Stat icon={<Flame className="h-4 w-4" />} value={`${next.estimatedCalories ?? "—"}`} label="kcal burn" />
+          </div>
+
+          <Button className="mt-4 w-full" onClick={() => setShowNext((v) => !v)}>
+            {showNext ? "Hide Next Workout" : "View Next Workout"}
+          </Button>
+
+          {showNext ? (
+            <div className="mt-4 space-y-3 border-t pt-4">
+              {next.notes ? <p className="text-sm text-muted-foreground">{next.notes}</p> : null}
+              {next.exercises.map((ex) => (
+                <div key={ex.id} className="flex items-start gap-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    {ex.exercise_order}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{ex.exercise_name}</p>
+                    <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                      {ex.sets ? <span>{ex.sets} sets</span> : null}
+                      {ex.reps ? <span>{ex.reps} reps</span> : null}
+                      {ex.duration_seconds ? <span>{ex.duration_seconds}s</span> : null}
+                      {ex.rest_seconds ? <span>{ex.rest_seconds}s rest</span> : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </Card>
+      ) : (
+        <Card className="rounded-2xl p-5 text-center text-sm text-muted-foreground">
+          Enjoy the rest — no further workouts are scheduled in your current plan week.
+        </Card>
+      )}
+    </div>
+  );
+}
 }
