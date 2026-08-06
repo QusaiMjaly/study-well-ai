@@ -80,6 +80,34 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
   const today = normalizeDay(DAYS[now.getDay()]);
   const idx = allDays.findIndex((d) => normalizeDay(d.day_name) === today);
   const day = idx >= 0 ? allDays[idx] : null;
+
+  /** Scan forward from today (wrapping across the week) for the nearest workout. */
+  const findNext = (): NextWorkout | null => {
+    const todayIdx = now.getDay();
+    for (let offset = 1; offset <= 7; offset++) {
+      const target = (todayIdx + offset) % 7;
+      const match = allDays.find((d) => DAY_INDEX(d.day_name) === target);
+      if (match) {
+        return {
+          workoutDayId: match.id,
+          dayName: DAYS[target]!,
+          workoutTitle: match.workout_title,
+          workoutType: match.workout_type,
+          durationMinutes: match.duration_minutes,
+          estimatedCalories: match.estimated_calories,
+          scheduledStart: match.scheduled_start,
+          scheduledEnd: match.scheduled_end,
+          notes: match.notes,
+          exercises: ((match.workout_exercises ?? []) as WorkoutExercise[])
+            .slice()
+            .sort((a, b) => a.exercise_order - b.exercise_order),
+          daysAway: offset,
+        };
+      }
+    }
+    return null;
+  };
+
   if (!day) {
     return {
       planId: data.id,
@@ -97,8 +125,10 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
       weeklyWorkoutCount: allDays.length,
       completedExerciseIds: [],
       dayCompleted: false,
+      nextWorkout: findNext(),
     };
   }
+
 
   const exercises = ((day.workout_exercises ?? []) as WorkoutExercise[])
     .slice()
