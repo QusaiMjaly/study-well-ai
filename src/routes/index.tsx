@@ -78,7 +78,7 @@ function Landing() {
               </div>
             </div>
 
-            <h1 className="mt-6 text-[2.25rem] font-bold leading-[1.18] tracking-tight">
+            <h1 className="mt-6 text-4xl font-bold leading-[1.18] tracking-tight">
               Smart Fitness &amp;
               <br />
               Nutrition for Students
