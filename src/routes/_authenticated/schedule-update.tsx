@@ -31,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/schedule-update")({
 
 function ScheduleUpdate() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const analyze = useServerFn(analyzeTimetable);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
