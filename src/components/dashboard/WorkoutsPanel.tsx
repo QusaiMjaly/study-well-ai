@@ -70,16 +70,12 @@ export function WorkoutsPanel() {
     );
   }
 
-  if (!data) return <EmptyCard title="No active plan yet" body="Create your personalized AI plan to see your workouts." />;
+  if (!data) return <EmptyCard title="No active plan yet" body="Your personalized AI plan will appear here once it's ready." />;
 
   if (!data.workoutDayId) {
-    return (
-      <EmptyCard
-        title="Rest day"
-        body={`No workout scheduled for ${data.dayName}. You have ${data.weeklyWorkoutCount} workout day${data.weeklyWorkoutCount === 1 ? "" : "s"} this week.`}
-      />
-    );
+    return <RecoveryDay data={data} />;
   }
+
 
   const total = data.exercises.length;
   const done = data.completedExerciseIds.length;
