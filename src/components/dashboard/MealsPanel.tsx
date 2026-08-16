@@ -3,18 +3,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Check, Clock, Flame, Sparkles, Utensils } from "lucide-react";
+import { Check, Clock, Flame, Sparkles, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { formatTime } from "@/lib/dashboard-data";
 import { fetchTodayMeals, setMealCompleted, type MealItem } from "@/lib/meals-data";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 
 export function MealsPanel() {
   const qc = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-meals"],
     queryFn: () => fetchTodayMeals(),
     staleTime: 60_000,
   });
+
 
   const toggle = useMutation({
     mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
@@ -39,15 +42,10 @@ export function MealsPanel() {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-2xl border-destructive/30 p-5 shadow-soft">
-        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
-        <div>
-          <h3 className="font-semibold">Couldn't load your meals</h3>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </Card>
+      <DataError title="Couldn't load your meals" error={error} onRetry={() => refetch()} />
     );
   }
+
 
   if (!data) {
     return (
