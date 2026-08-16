@@ -19,7 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertCircle,
   Award,
   CalendarDays,
   Flame,

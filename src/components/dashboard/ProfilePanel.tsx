@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertCircle,
   Apple,
   CalendarDays,
   ChevronRight,
