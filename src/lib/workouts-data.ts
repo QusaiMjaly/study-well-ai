@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { normalizeDay } from "@/lib/dashboard-data";
+import { DAY_NAMES, dayIndexOf, normalizeDay, todayIndex } from "@/lib/day-utils";
 import { localDateKey } from "@/lib/meals-data";
 
 export type WorkoutExercise = {
@@ -49,8 +49,8 @@ export type TodayWorkout = {
   nextWorkout: NextWorkout | null;
 } | null;
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const DAY_INDEX = (name: string) => DAYS.findIndex((d) => normalizeDay(d) === normalizeDay(name));
+const DAYS = DAY_NAMES;
+const DAY_INDEX = (name: string) => dayIndexOf(name);
 
 
 /** One optimized read: active plan -> this week's workout days + today's exercises, plus today's completions. */
@@ -77,13 +77,13 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
   const allDays = ((data.workout_days ?? []) as any[]).slice().sort(
     (a, b) => DAY_INDEX(a.day_name) - DAY_INDEX(b.day_name),
   );
-  const today = normalizeDay(DAYS[now.getDay()]);
+  const today = normalizeDay(DAYS[todayIndex(now)]);
   const idx = allDays.findIndex((d) => normalizeDay(d.day_name) === today);
   const day = idx >= 0 ? allDays[idx] : null;
 
   /** Scan forward from today (wrapping across the week) for the nearest workout. */
   const findNext = (): NextWorkout | null => {
-    const todayIdx = now.getDay();
+    const todayIdx = todayIndex(now);
     for (let offset = 1; offset <= 7; offset++) {
       const target = (todayIdx + offset) % 7;
       const match = allDays.find((d) => DAY_INDEX(d.day_name) === target);
@@ -111,7 +111,7 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
   if (!day) {
     return {
       planId: data.id,
-      dayName: DAYS[now.getDay()]!,
+      dayName: DAYS[todayIndex(now)]!,
       workoutDayId: "",
       workoutTitle: null,
       workoutType: null,
@@ -144,7 +144,7 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
 
   return {
     planId: data.id,
-    dayName: DAYS[now.getDay()]!,
+    dayName: DAYS[todayIndex(now)]!,
     workoutDayId: day.id,
     workoutTitle: day.workout_title,
     workoutType: day.workout_type,

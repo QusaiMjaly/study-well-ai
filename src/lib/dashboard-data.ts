@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { DAY_NAMES, normalizeDay, weekOrderFrom } from "@/lib/day-utils";
+
+export { normalizeDay };
 
 export type ActivePlan = {
   id: string;
@@ -55,11 +58,7 @@ export async function fetchActivePlan(): Promise<ActivePlan | null> {
   return (data as unknown as ActivePlan) ?? null;
 }
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-export function normalizeDay(name: string | null | undefined) {
-  return (name ?? "").trim().toLowerCase().slice(0, 3);
-}
+const DAYS = DAY_NAMES;
 
 function minutesOf(time: string | null | undefined): number | null {
   if (!time) return null;
@@ -80,8 +79,7 @@ export function formatTime(time: string | null | undefined) {
 
 /** Days ordered starting from today, so "nearest upcoming" wraps across the week. */
 function upcomingDayOrder(now: Date) {
-  const idx = now.getDay();
-  return DAYS.map((_, i) => DAYS[(idx + i) % 7]!);
+  return weekOrderFrom(now).map((i) => DAYS[i]!);
 }
 
 export function pickNextWorkout(plan: ActivePlan | null, now = new Date()) {
