@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dumbbell, Apple, Sparkles, ChevronRight, AlertCircle } from "lucide-react";
+import { Dumbbell, Apple, Sparkles, ChevronRight } from "lucide-react";
+import { DataError } from "@/components/dashboard/DataError";
+
 import {
   fetchActivePlan,
   pickNextWorkout,
@@ -19,7 +21,7 @@ type Props = {
 };
 
 export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
-  const { data: plan, isLoading, isError, error } = useQuery({
+  const { data: plan, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["active-plan"],
     queryFn: fetchActivePlan,
     staleTime: 60_000,
@@ -41,15 +43,15 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-[24px] border-destructive/30 p-6">
-        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
-        <div>
-          <h3 className="font-semibold">Couldn't load your plan</h3>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </Card>
+      <DataError
+        title="Couldn't load your plan"
+        error={error}
+        onRetry={() => refetch()}
+        className="rounded-[24px] p-6"
+      />
     );
   }
+
 
   if (!plan) return <NoPlan />;
 

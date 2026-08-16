@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertCircle,
   Apple,
   CalendarDays,
   ChevronRight,
@@ -55,6 +54,8 @@ import {
   type ProfileEdits,
 } from "@/lib/profile-data";
 import { normalizeDay } from "@/lib/day-utils";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 
 const DAY_LABELS: Record<string, string> = {
   sunday: "S",
@@ -220,7 +221,7 @@ export function ProfilePanel() {
   const [form, setForm] = useState<ProfileEdits | null>(null);
   const [editedAt, setEditedAt] = useState<number | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["profile-bundle"],
     queryFn: fetchProfileBundle,
   });
@@ -241,7 +242,7 @@ export function ProfilePanel() {
         qc.invalidateQueries({ queryKey: ["active-plan"] }),
       ]);
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
@@ -262,21 +263,15 @@ export function ProfilePanel() {
 
   if (error) {
     return (
-      <Card className="rounded-3xl p-6 text-center shadow-soft">
-        <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          We couldn't load your profile. {(error as Error).message}
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4 rounded-2xl"
-          onClick={() => qc.invalidateQueries({ queryKey: ["profile-bundle"] })}
-        >
-          Try again
-        </Button>
-      </Card>
+      <DataError
+        title="Couldn't load your profile"
+        error={error}
+        onRetry={() => refetch()}
+        className="rounded-3xl"
+      />
     );
   }
+
 
   if (!data) return null;
 
@@ -571,7 +566,14 @@ export function ProfilePanel() {
                   const classCount = Math.min(hit?.count ?? 0, 3);
                   return (
                     <div key={d} className="flex flex-col items-center gap-1.5">
-                      <span className="text-[12px] font-medium text-muted-foreground">
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold ${
+                          hasWorkout
+                            ? "bg-success text-success-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        title={hasWorkout ? "Workout day" : undefined}
+                      >
                         {DAY_LABELS[d]}
                       </span>
                       {Array.from({ length: classCount }).map((_, i) => (
@@ -581,12 +583,18 @@ export function ProfilePanel() {
                           aria-hidden
                         />
                       ))}
-                      {hasWorkout ? (
-                        <span className="h-1.5 w-full rounded-full bg-success" aria-hidden />
-                      ) : null}
-                      {classCount === 0 && !hasWorkout ? (
+                      {classCount === 0 ? (
                         <span className="h-1.5 w-full rounded-full bg-muted" aria-hidden />
                       ) : null}
+                      {hasWorkout ? (
+                        <Dumbbell className="mt-0.5 h-3 w-3 text-success" aria-hidden />
+                      ) : (
+                        <span className="mt-0.5 h-3 w-3" aria-hidden />
+                      )}
+                      <span className="sr-only">
+                        {classCount > 0 ? `${hit?.count} classes` : "No classes"}
+                        {hasWorkout ? ", workout day" : ""}
+                      </span>
                     </div>
                   );
                 })}
@@ -597,7 +605,9 @@ export function ProfilePanel() {
                   Classes ({totalClasses(data.schedule)})
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-4 rounded-full bg-success" aria-hidden />
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
+                    <Dumbbell className="h-2.5 w-2.5" aria-hidden />
+                  </span>
                   Workout days ({workoutDayKeys.size})
                 </span>
               </div>

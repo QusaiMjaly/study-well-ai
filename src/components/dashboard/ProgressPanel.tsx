@@ -19,7 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertCircle,
   Award,
   CalendarDays,
   Flame,
@@ -29,6 +28,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 import {
   addProgressLog,
   validateProgressEntry,
@@ -100,11 +101,12 @@ const axisProps = {
 
 export function ProgressPanel() {
   const qc = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["progress-logs"],
     queryFn: () => fetchProgressData(),
     staleTime: 60_000,
   });
+
 
   const [weight, setWeight] = useState("");
   const [bodyFat, setBodyFat] = useState("");
@@ -134,7 +136,7 @@ export function ProgressPanel() {
       qc.invalidateQueries({ queryKey: ["progress-logs"] });
       qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   if (isLoading) {
@@ -154,15 +156,10 @@ export function ProgressPanel() {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-2xl border-destructive/30 p-5 shadow-soft">
-        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
-        <div>
-          <h3 className="font-semibold">Couldn't load your progress</h3>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </Card>
+      <DataError title="Couldn't load your progress" error={error} onRetry={() => refetch()} />
     );
   }
+
 
   if (!data) return null;
 

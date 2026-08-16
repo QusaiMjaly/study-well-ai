@@ -1,8 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePlans } from "@/lib/gemini.functions";
+import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { friendlyMessage } from "@/lib/friendly-errors";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, Apple, Dumbbell, TrendingUp, User, Home } from "lucide-react";
@@ -26,6 +30,8 @@ const navItems = [
 ];
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const generateFn = useServerFn(generatePlans);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -34,11 +40,20 @@ function Dashboard() {
 
   async function load() {
     setLoading(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const p = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
-    setProfile(p.data);
-    setLoading(false);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        // No session: defer to the app's authenticated-route behaviour.
+        navigate({ to: "/auth", replace: true });
+        return;
+      }
+      const p = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+      setProfile(p.data);
+    } catch (e) {
+      toast.error(friendlyMessage(e, "We couldn't load your dashboard."));
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -49,14 +64,17 @@ function Dashboard() {
     setRegenerating(true);
     try {
       await generateFn({ data: {} });
+      // Every plan-derived cache must refresh, via the shared invalidation helper.
+      await invalidatePlanCaches(qc);
       toast.success("New plans generated!");
       await load();
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyMessage(e, "We couldn't regenerate your plan. Please try again."));
     } finally {
       setRegenerating(false);
     }
   }
+
 
   return (
     <div className="flex min-h-screen justify-center bg-page-gradient">
