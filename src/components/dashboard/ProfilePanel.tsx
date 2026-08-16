@@ -5,8 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -17,14 +15,19 @@ import {
 } from "@/components/ui/select";
 import {
   AlertCircle,
+  Apple,
   CalendarDays,
-  Image as ImageIcon,
+  ChevronRight,
+  Clock,
+  Dumbbell,
   Info,
   KeyRound,
   Loader2,
   LogOut,
   Pencil,
+  Settings,
   Sparkles,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,21 +57,67 @@ import {
 import { normalizeDay } from "@/lib/day-utils";
 
 const DAY_LABELS: Record<string, string> = {
-  sunday: "Sun",
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
+  sunday: "S",
+  monday: "M",
+  tuesday: "T",
+  wednesday: "W",
+  thursday: "T",
+  friday: "F",
+  saturday: "S",
 };
 
+function SectionCard({
+  icon,
+  iconClass,
+  title,
+  action,
+  children,
+}: {
+  icon: React.ReactNode;
+  iconClass: string;
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="gap-0 rounded-3xl border-border/60 p-5 shadow-soft">
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconClass}`}
+        >
+          {icon}
+        </span>
+        <h3 className="flex-1 text-[18px] font-bold leading-6">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </Card>
+  );
+}
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-muted/50 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-medium">{value || "Not set"}</p>
+    <div className="rounded-2xl bg-muted/60 p-3">
+      <p className="text-[12px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-[15px] font-semibold leading-5">{value || "Not set"}</p>
+    </div>
+  );
+}
+
+function PrefRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3">
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="flex-1 text-[14px] text-muted-foreground">{label}</span>
+      <span className="text-[15px] font-semibold">{value || "Not set"}</span>
     </div>
   );
 }
@@ -91,7 +140,7 @@ function SelectField({
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Select value={known ? value : undefined} onValueChange={onChange}>
-        <SelectTrigger id={id}>
+        <SelectTrigger id={id} className="rounded-xl">
           <SelectValue placeholder="Select an option" />
         </SelectTrigger>
         <SelectContent>
@@ -133,6 +182,7 @@ function NumberField({
         min={min}
         max={max}
         value={value}
+        className="rounded-xl"
         aria-invalid={invalid}
         onChange={(ev) => onChange(ev.target.value.replace(/[^\d.]/g, ""))}
       />
@@ -144,8 +194,6 @@ function NumberField({
     </div>
   );
 }
-
-
 
 function emptyEdits(b: ProfileBundle): ProfileEdits {
   return {
@@ -205,23 +253,23 @@ export function ProfilePanel() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-28 rounded-2xl" />
-        <Skeleton className="h-48 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-[132px] rounded-3xl" />
+        <Skeleton className="h-48 rounded-3xl" />
+        <Skeleton className="h-40 rounded-3xl" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="rounded-2xl p-6 text-center">
+      <Card className="rounded-3xl p-6 text-center shadow-soft">
         <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
         <p className="mt-2 text-sm text-muted-foreground">
           We couldn't load your profile. {(error as Error).message}
         </p>
         <Button
           variant="outline"
-          className="mt-4"
+          className="mt-4 rounded-2xl"
           onClick={() => qc.invalidateQueries({ queryKey: ["profile-bundle"] })}
         >
           Try again
@@ -236,38 +284,52 @@ export function ProfilePanel() {
   const email = data.profile?.email ?? data.authEmail;
   const stale = isPlanStale(data, editedAt);
 
+  function startEditing() {
+    if (!data) return;
+    setForm(emptyEdits(data));
+    setEditing(true);
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
+  const editButton = (
+    <button
+      type="button"
+      onClick={startEditing}
+      aria-label="Edit details"
+      className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      <Pencil className="h-[18px] w-[18px]" />
+    </button>
+  );
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <Card className="rounded-2xl p-5">
+    <div className="space-y-4">
+      {/* HEADER */}
+      <section className="bg-profile-gradient rounded-3xl px-6 py-6 text-white shadow-card">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
+          <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-white text-[22px] font-bold text-primary shadow-soft">
             {initialsOf(name ?? null, email)}
           </div>
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold">{name || "Add your name"}</h2>
-            <p className="truncate text-sm text-muted-foreground">{email || "No email on file"}</p>
-            {data.goals?.goal_type ? (
-              <Badge variant="secondary" className="mt-2 capitalize">
-                {data.goals.goal_type.replace(/_/g, " ")}
-              </Badge>
-            ) : null}
+            <h2 className="truncate text-[24px] font-bold leading-8">
+              {name || "Add your name"}
+            </h2>
+            <p className="truncate text-[14px] opacity-85">{email || "No email on file"}</p>
           </div>
         </div>
         {!data.profile && (
-          <p className="mt-4 rounded-xl bg-muted/60 p-3 text-sm text-muted-foreground">
-            No profile details saved yet — complete onboarding or use Edit details below.
+          <p className="mt-4 rounded-2xl bg-white/15 p-3 text-[13px]">
+            No profile details saved yet — complete onboarding or use Edit Details below.
           </p>
         )}
-      </Card>
+      </section>
 
       {stale && (
-        <Card className="flex items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4">
+        <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm">
             Your active plan was generated using previous profile information. Generate a new plan to
@@ -276,10 +338,10 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {/* Edit mode */}
+      {/* EDIT MODE */}
       {editing && form ? (
-        <Card className="rounded-2xl p-5">
-          <h3 className="font-semibold">Edit details</h3>
+        <Card className="gap-0 rounded-3xl border-border/60 p-5 shadow-soft">
+          <h3 className="text-[18px] font-bold leading-6">Edit Details</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="full_name">Full name</Label>
@@ -287,6 +349,7 @@ export function ProfilePanel() {
                 id="full_name"
                 value={form.full_name}
                 maxLength={100}
+                className="rounded-xl"
                 onChange={(ev) => setForm({ ...form, full_name: ev.target.value })}
               />
             </div>
@@ -385,181 +448,229 @@ export function ProfilePanel() {
             </div>
           </div>
           <div className="mt-5 flex gap-3">
-            <Button onClick={() => save.mutate()} disabled={save.isPending} className="flex-1">
+            <Button
+              onClick={() => save.mutate()}
+              disabled={save.isPending}
+              className="h-12 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
+            >
               {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes
             </Button>
-            <Button variant="outline" onClick={() => setEditing(false)} disabled={save.isPending}>
+            <Button
+              variant="outline"
+              className="h-12 rounded-2xl"
+              onClick={() => setEditing(false)}
+              disabled={save.isPending}
+            >
               Cancel
             </Button>
           </div>
         </Card>
       ) : (
         <>
-          {/* Personal information */}
-          <Card className="rounded-2xl p-5">
-            <h3 className="font-semibold">Personal information</h3>
+          {/* PERSONAL INFO */}
+          <SectionCard
+            icon={<User className="h-5 w-5 text-primary-foreground" />}
+            iconClass="bg-primary"
+            title="Personal Info"
+            action={editButton}
+          >
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <Field label="Age" value={data.profile?.age ?? ""} />
-              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
-              <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
+              <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
               <Field
-                label="Current weight"
+                label="Height"
+                value={data.profile?.height ? `${data.profile.height} cm` : ""}
+              />
+              <Field
+                label="Weight"
                 value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
               />
-              <Field label="Main goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+              <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
               <Field
                 label="Activity level"
                 value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
               />
             </div>
-          </Card>
+          </SectionCard>
 
-          {/* Preferences */}
-          <Card className="rounded-2xl p-5">
-            <h3 className="font-semibold">Preferences</h3>
+          {/* PREFERENCES */}
+          <SectionCard
+            icon={<Settings className="h-5 w-5 text-success-foreground" />}
+            iconClass="bg-success"
+            title="Preferences"
+            action={editButton}
+          >
             {!data.goals ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                No preferences saved yet. Add them with Edit details.
+              <p className="mt-3 text-[13px] text-muted-foreground">
+                No preferences saved yet. Add them with Edit Details.
               </p>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <Field
-                  label="Workout preference"
+              <div className="mt-4 space-y-2.5">
+                <PrefRow
+                  icon={<Dumbbell className="h-[18px] w-[18px]" />}
+                  label="Workout"
                   value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
                 />
-                <Field label="Meal preference" value={labelOf(MEAL_PREFS, data.goals.meal_preference)} />
-                <Field
-                  label="Preferred duration"
+                <PrefRow
+                  icon={<Apple className="h-[18px] w-[18px]" />}
+                  label="Meal type"
+                  value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
+                />
+                <PrefRow
+                  icon={<CalendarDays className="h-[18px] w-[18px]" />}
+                  label="Duration"
                   value={labelOf(DURATIONS, data.goals.workout_duration)}
                 />
-                <Field label="Preferred time" value={labelOf(TIMES, data.goals.preferred_time)} />
-                <div className="col-span-2">
-                  <Field
-                    label="Biggest challenge"
-                    value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
-                  />
-                </div>
+                <PrefRow
+                  icon={<Clock className="h-[18px] w-[18px]" />}
+                  label="Preferred time"
+                  value={labelOf(TIMES, data.goals.preferred_time)}
+                />
+                <PrefRow
+                  icon={<Sparkles className="h-[18px] w-[18px]" />}
+                  label="Biggest challenge"
+                  value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
+                />
               </div>
             )}
-          </Card>
-
-          {/* Edit entry point, kept close to the data it changes */}
-          <Button
-            variant="outline"
-            className="w-full rounded-2xl"
-            onClick={() => {
-              setForm(emptyEdits(data));
-              setEditing(true);
-            }}
-          >
-            <Pencil className="mr-2 h-4 w-4" /> Edit details
-          </Button>
+          </SectionCard>
         </>
       )}
 
-
-      {/* Schedule */}
-      <Card className="rounded-2xl p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="font-semibold">Weekly schedule</h3>
-          <Link to="/schedule-update">
-            <Button variant="outline" size="sm">
-              <CalendarDays className="mr-2 h-4 w-4" />
-              Update schedule
-            </Button>
-          </Link>
+      {/* YOUR SCHEDULE */}
+      <Card className="gap-0 rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[0.06] to-success/[0.08] p-5 shadow-soft">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cta-gradient text-primary-foreground">
+            <CalendarDays className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-[18px] font-bold leading-6">Your Schedule</h3>
+            <p className="text-[13px] text-muted-foreground">
+              {data.schedule?.created_at
+                ? `Last updated: ${new Date(data.schedule.created_at).toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}`
+                : "No timetable uploaded yet"}
+            </p>
+          </div>
         </div>
 
         {!data.schedule ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            No timetable uploaded yet. Upload one to personalise your plan.
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            Upload your timetable to personalise your plan.
           </p>
         ) : (
           <>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="secondary">
-                <ImageIcon className="mr-1 h-3 w-3" />
-                {data.schedule.image_url ? "Timetable image saved" : "No image"}
-              </Badge>
-              <span>
-                Last updated{" "}
-                {data.schedule.created_at
-                  ? new Date(data.schedule.created_at).toLocaleDateString()
-                  : "—"}
-              </span>
-              <span>· {totalClasses(data.schedule)} classes</span>
+            <div className="mt-4 rounded-2xl bg-background/80 p-4">
+              <div className="grid grid-cols-7 gap-1.5">
+                {Object.keys(DAY_LABELS).map((d) => {
+                  const hit = days.find((x) => x.day === d);
+                  const hasWorkout = workoutDayKeys.has(normalizeDay(d));
+                  const classCount = Math.min(hit?.count ?? 0, 3);
+                  return (
+                    <div key={d} className="flex flex-col items-center gap-1.5">
+                      <span className="text-[12px] font-medium text-muted-foreground">
+                        {DAY_LABELS[d]}
+                      </span>
+                      {Array.from({ length: classCount }).map((_, i) => (
+                        <span
+                          key={`c${i}`}
+                          className="h-1.5 w-full rounded-full bg-primary/35"
+                          aria-hidden
+                        />
+                      ))}
+                      {hasWorkout ? (
+                        <span className="h-1.5 w-full rounded-full bg-success" aria-hidden />
+                      ) : null}
+                      {classCount === 0 && !hasWorkout ? (
+                        <span className="h-1.5 w-full rounded-full bg-muted" aria-hidden />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-4 rounded-full bg-primary/35" aria-hidden />
+                  Classes ({totalClasses(data.schedule)})
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-4 rounded-full bg-success" aria-hidden />
+                  Workout days ({workoutDayKeys.size})
+                </span>
+              </div>
+              {!data.schedule.schedule_json && (
+                <p className="mt-3 text-[12px] text-muted-foreground">
+                  Timetable uploaded but not analysed yet.
+                </p>
+              )}
             </div>
-            <div className="mt-4 grid grid-cols-7 gap-1.5">
-              {Object.keys(DAY_LABELS).map((d) => {
-                const hit = days.find((x) => x.day === d);
-                const hasWorkout = workoutDayKeys.has(normalizeDay(d));
-                return (
-                  <div
-                    key={d}
-                    className={`rounded-xl p-2 text-center text-xs ${
-                      hit ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="font-medium">{DAY_LABELS[d]}</div>
-                    <div className="mt-0.5">{hit ? hit.count : "—"}</div>
-                    <div
-                      className={`mx-auto mt-1 h-1.5 w-1.5 rounded-full ${
-                        hasWorkout ? "bg-success" : "bg-transparent"
-                      }`}
-                      aria-hidden
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {!data.schedule.schedule_json && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Timetable uploaded but not analysed yet.
-              </p>
-            )}
           </>
         )}
+
+        <Link to="/schedule-update" className="mt-4 block">
+          <Button className="h-12 w-full rounded-2xl bg-cta-gradient font-bold text-primary-foreground">
+            <CalendarDays className="mr-2 h-5 w-5" /> Update Schedule
+          </Button>
+        </Link>
       </Card>
 
-      {/* Settings */}
-      <Card className="divide-y rounded-2xl">
-        <div className="flex items-center justify-between p-4">
+      {/* AUTO-UPDATE */}
+      <Card className="gap-0 rounded-3xl border-ai/20 bg-gradient-to-br from-ai/[0.08] to-primary/[0.06] p-5 shadow-soft">
+        <div className="flex items-start gap-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" />
           <div>
-            <p className="text-sm font-medium">Auto-update plan</p>
-            <p className="text-xs text-muted-foreground">
-              Automatically refresh your plan when details change
+            <h3 className="text-[16px] font-bold leading-5">Auto-Update</h3>
+            <p className="mt-1 text-[14px] text-muted-foreground">
+              Your plan updates when you change your profile or schedule
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Coming soon</Badge>
-            <Switch disabled aria-label="Auto-update plan (coming soon)" />
-          </div>
-        </div>
-
-
-
-
-        <Link
-          to="/reset-password"
-          className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <KeyRound className="h-4 w-4" /> Change password
-          </span>
-        </Link>
-
-        <div className="p-4">
-          <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5" />
-            {data.activePlan
-              ? `Active plan: ${data.activePlan.plan_name}`
-              : "No active AI plan yet"}
-          </div>
-          <Button variant="outline" className="w-full" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" /> Log out
-          </Button>
         </div>
       </Card>
+
+      {/* SETTINGS */}
+      <SectionCard
+        icon={<Settings className="h-5 w-5 text-background" />}
+        iconClass="bg-foreground"
+        title="Settings"
+      >
+        <div className="mt-4 space-y-2.5">
+          <Link
+            to="/reset-password"
+            className="flex items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3.5 transition-colors hover:bg-muted"
+          >
+            <KeyRound className="h-[18px] w-[18px]" />
+            <span className="flex-1 text-[15px] font-medium">Change password</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <div className="flex items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3.5 text-muted-foreground">
+            <Sparkles className="h-[18px] w-[18px]" />
+            <span className="flex-1 text-[15px] font-medium">
+              {data.activePlan ? `Active plan: ${data.activePlan.plan_name}` : "No active AI plan yet"}
+            </span>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ACTIONS */}
+      {!editing && (
+        <Button
+          onClick={startEditing}
+          className="h-13 w-full rounded-2xl bg-cta-gradient py-3.5 text-[16px] font-bold text-primary-foreground"
+        >
+          <Pencil className="mr-2 h-5 w-5" /> Edit Details
+        </Button>
+      )}
+
+      <Button
+        variant="outline"
+        className="h-13 w-full rounded-2xl border-destructive/30 py-3.5 text-[16px] font-bold text-destructive hover:bg-destructive/5 hover:text-destructive"
+        onClick={signOut}
+      >
+        <LogOut className="mr-2 h-5 w-5" /> Log out
+      </Button>
     </div>
   );
 }
