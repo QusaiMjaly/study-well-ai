@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
 import { analyzeTimetable } from "@/lib/schedule.functions";
 import { generateAiPlan } from "@/lib/plan.functions";
 
@@ -29,8 +30,13 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { friendlyAiMessage, friendlyMessage } from "@/lib/friendly-errors";
+
+const searchSchema = z.object({ redo: z.coerce.boolean().optional() });
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Set up your plan — StudentFitAI" },
@@ -152,7 +158,9 @@ function Onboarding() {
   const generate = useServerFn(generateAiPlan);
 
 
+  const { redo } = Route.useSearch();
   const [step, setStep] = useState(1);
+  const [prefilling, setPrefilling] = useState(true);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiStage, setAiStage] = useState(0);
@@ -171,6 +179,10 @@ function Onboarding() {
 
   // Step 2
   const [scheduleFile, setScheduleFile] = useState<File | null>(null);
+  /** A timetable already stored for this user (re-entry) means Step 2 is satisfied. */
+  const [hasStoredSchedule, setHasStoredSchedule] = useState(false);
+  const [scheduleUploaded, setScheduleUploaded] = useState(false);
+  const [step2Error, setStep2Error] = useState<string | null>(null);
 
   // Step 3
   const [workoutPref, setWorkoutPref] = useState("");
@@ -179,14 +191,98 @@ function Onboarding() {
   const [preferredTime, setPreferredTime] = useState("");
   const [challenge, setChallenge] = useState("");
 
+  const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (navTimer.current) clearTimeout(navTimer.current);
+    };
+  }, []);
+
+  /**
+   * Re-entry: existing users with an active plan go back to the dashboard,
+   * otherwise their saved profile/goals/timetable prefill the form.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) return;
+        const [p, g, sch, plan] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
+          supabase
+            .from("goals")
+            .select("*")
+            .eq("user_id", u.user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("schedules")
+            .select("id")
+            .eq("user_id", u.user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("ai_plans")
+            .select("id")
+            .eq("user_id", u.user.id)
+            .eq("is_active", true)
+            .limit(1)
+            .maybeSingle(),
+        ]);
+        if (cancelled) return;
+
+        if (plan.data && !redo) {
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
+
+        const prof = p.data as any;
+        if (prof) {
+          setFullName(prof.full_name ?? "");
+          setAge(prof.age != null ? String(prof.age) : "");
+          setGender(prof.gender ?? "");
+          setHeight(prof.height != null ? String(prof.height) : "");
+          setWeight(prof.weight != null ? String(prof.weight) : "");
+          setActivity(prof.activity_level ?? "");
+        }
+        const goals = g.data as any;
+        if (goals) {
+          setGoalType(goals.goal_type ?? "");
+          setWorkoutPref(goals.workout_preference ?? "");
+          setMealPref(goals.meal_preference ?? "");
+          setDuration(goals.workout_duration ?? "");
+          setPreferredTime(goals.preferred_time ?? "");
+          setChallenge(goals.biggest_challenge ?? "");
+        }
+        setHasStoredSchedule(Boolean(sch.data));
+      } catch {
+        // Prefill is best-effort; the user can still fill the form manually.
+      } finally {
+        if (!cancelled) setPrefilling(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [redo]);
+
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
 
   function validateStep1() {
     if (!goalType) return "Pick your main goal";
     if (!fullName.trim()) return "Enter your full name";
-    if (!age || Number(age) <= 0) return "Enter a valid age";
-    if (!height || Number(height) <= 0) return "Enter your height in cm";
-    if (!weight || Number(weight) <= 0) return "Enter your weight in kg";
+    const ageNum = Number(age);
+    if (!age || !Number.isFinite(ageNum) || ageNum < 13 || ageNum > 100)
+      return "Age must be between 13 and 100.";
+    const heightNum = Number(height);
+    if (!height || !Number.isFinite(heightNum) || heightNum < 100 || heightNum > 250)
+      return "Height must be between 100 and 250 cm.";
+    const weightNum = Number(weight);
+    if (!weight || !Number.isFinite(weightNum) || weightNum < 30 || weightNum > 300)
+      return "Weight must be between 30 and 300 kg.";
     if (!gender) return "Select your gender";
     if (!activity) return "Select your activity level";
     return null;
@@ -212,13 +308,21 @@ function Onboarding() {
       if (error) throw error;
       setStep(2);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyMessage(e, "We couldn't save your details. Please try again."));
     } finally {
       setLoading(false);
     }
   }
 
   async function saveStep2() {
+    if (!scheduleFile && !scheduleUploaded && !hasStoredSchedule) {
+      const message =
+        "We need a photo of your class timetable — the AI builds your week around it.";
+      setStep2Error(message);
+      toast.error(message);
+      return;
+    }
+    setStep2Error(null);
     setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -237,10 +341,16 @@ function Onboarding() {
           schedule_json: null,
         });
         if (insErr) throw insErr;
+        // Keep the upload if the user steps back and forward again — no re-upload.
+        setScheduleUploaded(true);
+        setHasStoredSchedule(true);
+        setScheduleFile(null);
       }
       setStep(3);
     } catch (e) {
-      toast.error((e as Error).message);
+      const message = friendlyMessage(e, "We couldn't upload your timetable. Please try again.");
+      setStep2Error(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -278,17 +388,13 @@ function Onboarding() {
       setAiDone(true);
 
       // The new plan invalidates every cached read derived from the active plan.
-      await Promise.all(
-        ["active-plan", "today-meals", "today-workout", "progress-logs", "profile-bundle"].map(
-          (key) => qc.invalidateQueries({ queryKey: [key] }),
-        ),
-      );
+      await invalidatePlanCaches(qc);
 
       toast.success("Your personalised AI plan is ready.");
-      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+      navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       if (ticker) clearInterval(ticker);
-      setAiError((e as Error).message || "Something went wrong. Please retry.");
+      setAiError(friendlyAiMessage(e));
     }
   }
 
@@ -319,7 +425,9 @@ function Onboarding() {
       });
       if (pErr) throw pErr;
 
-      const { error: gErr } = await supabase.from("goals").insert({
+      // One current goals row per user: update the existing row instead of
+      // appending a new one on every generation (no history is deleted).
+      const goalPayload = {
         user_id: u.user.id,
         goal_type: goalType,
         workout_days: duration === "flexible" ? 4 : null,
@@ -328,19 +436,46 @@ function Onboarding() {
         workout_duration: duration,
         preferred_time: preferredTime,
         biggest_challenge: challenge,
-      } as never);
+      };
+
+      const { data: existingGoal, error: gSelErr } = await supabase
+        .from("goals")
+        .select("id")
+        .eq("user_id", u.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (gSelErr) throw gSelErr;
+
+      const gErr = existingGoal?.id
+        ? (
+            await supabase
+              .from("goals")
+              .update(goalPayload as never)
+              .eq("id", existingGoal.id)
+              .eq("user_id", u.user.id)
+          ).error
+        : (await supabase.from("goals").insert(goalPayload as never)).error;
       if (gErr) throw gErr;
 
       setLoading(false);
       await runAnalysis();
       return;
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyMessage(e, "We couldn't save your details. Please try again."));
     } finally {
       setLoading(false);
     }
   }
 
+
+  if (prefilling) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-page-gradient">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-page-gradient">
@@ -517,7 +652,11 @@ function Onboarding() {
                   <Upload className="h-5 w-5" />
                 </div>
                 <span className="text-sm font-semibold">
-                  {scheduleFile ? scheduleFile.name : "Upload timetable image"}
+                  {scheduleFile
+                    ? scheduleFile.name
+                    : hasStoredSchedule
+                      ? "Timetable on file — upload a new one to replace it"
+                      : "Upload timetable image"}
                 </span>
                 <span className="px-6 text-xs text-muted-foreground">
                   PNG or JPG of your class timetable
@@ -529,6 +668,15 @@ function Onboarding() {
                   onChange={(e) => setScheduleFile(e.target.files?.[0] ?? null)}
                 />
               </label>
+
+              {step2Error && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
+                >
+                  {step2Error}
+                </p>
+              )}
 
               <button
                 type="button"
@@ -562,13 +710,6 @@ function Onboarding() {
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Next
             </Button>
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="w-full text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Skip for now
-            </button>
           </div>
         )}
 
@@ -668,7 +809,12 @@ function Onboarding() {
                   ["Height", height ? `${height} cm` : "—"],
                   ["Weight", weight ? `${weight} kg` : "—"],
                   ["Activity", labelOf(ACTIVITY_LEVELS, activity)],
-                  ["Schedule", scheduleFile ? "Timetable uploaded" : "Not provided"],
+                  [
+                    "Schedule",
+                    scheduleFile || scheduleUploaded || hasStoredSchedule
+                      ? "Timetable uploaded"
+                      : "Not provided",
+                  ],
                   ["Workouts", labelOf(WORKOUT_PREFS, workoutPref)],
                   ["Meals", labelOf(MEAL_PREFS, mealPref)],
                   ["Duration", labelOf(DURATIONS, duration)],

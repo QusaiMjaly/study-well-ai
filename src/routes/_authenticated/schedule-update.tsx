@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyMessage } from "@/lib/friendly-errors";
 
 export const Route = createFileRoute("/_authenticated/schedule-update")({
   head: () => ({
@@ -36,6 +37,13 @@ function ScheduleUpdate() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimer.current) clearTimeout(navTimer.current);
+    };
+  }, []);
 
   function pick(f: File | null) {
     if (!f) return setFile(null);
@@ -67,9 +75,9 @@ function ScheduleUpdate() {
       setDone(true);
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
       toast.success("Schedule updated.");
-      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+      navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
-      toast.error((e as Error).message || "Something went wrong. Please retry.");
+      toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
     } finally {
       setLoading(false);
     }
