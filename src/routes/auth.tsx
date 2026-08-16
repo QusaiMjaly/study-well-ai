@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
+import {
+  friendlyAuthMessage,
+  validateEmail,
+  validatePassword,
+} from "@/lib/friendly-errors";
 
 const searchSchema = z.object({ mode: z.enum(["signin", "signup"]).optional() });
 
@@ -73,9 +78,21 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setFieldError(emailError);
+      return;
+    }
+    const passwordError = validatePassword(password, mode);
+    if (passwordError) {
+      setFieldError(passwordError);
+      return;
+    }
+    setFieldError(null);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -94,15 +111,18 @@ function AuthPage() {
         navigate({ to: "/dashboard" });
       }
     } catch (err) {
-      toast.error((err as Error).message);
+      const message = friendlyAuthMessage(err);
+      setFieldError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
 
   async function onForgotPassword() {
-    if (!email) {
-      toast.error("Enter your email above first, then tap “Forgot password?”");
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setFieldError("Enter your email above first, then tap “Forgot password?”");
       return;
     }
     setLoading(true);
@@ -113,7 +133,7 @@ function AuthPage() {
       if (error) throw error;
       toast.success("Password reset link sent — check your inbox.");
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(friendlyAuthMessage(err));
     } finally {
       setLoading(false);
     }
@@ -124,7 +144,7 @@ function AuthPage() {
       provider,
       options: { redirectTo: window.location.origin + "/onboarding" },
     });
-    if (error) toast.error(error.message);
+    if (error) toast.error(friendlyAuthMessage(error));
   }
 
 
@@ -191,6 +211,15 @@ function AuthPage() {
               </div>
             )}
 
+            {fieldError && (
+              <p
+                role="alert"
+                className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
+              >
+                {fieldError}
+              </p>
+            )}
+
             <Button
               type="submit"
               disabled={loading}
@@ -235,7 +264,10 @@ function AuthPage() {
           {mode === "signup" ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
             type="button"
-            onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+            onClick={() => {
+              setFieldError(null);
+              setMode(mode === "signup" ? "signin" : "signup");
+            }}
             className="font-semibold text-primary hover:underline"
           >
             {mode === "signup" ? "Log in" : "Sign up"}
