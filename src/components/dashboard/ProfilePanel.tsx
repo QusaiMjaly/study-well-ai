@@ -55,6 +55,8 @@ import {
   type ProfileEdits,
 } from "@/lib/profile-data";
 import { normalizeDay } from "@/lib/day-utils";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 
 const DAY_LABELS: Record<string, string> = {
   sunday: "S",
@@ -220,7 +222,7 @@ export function ProfilePanel() {
   const [form, setForm] = useState<ProfileEdits | null>(null);
   const [editedAt, setEditedAt] = useState<number | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["profile-bundle"],
     queryFn: fetchProfileBundle,
   });

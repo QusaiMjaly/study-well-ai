@@ -29,6 +29,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 import {
   addProgressLog,
   validateProgressEntry,
