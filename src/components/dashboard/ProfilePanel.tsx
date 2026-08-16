@@ -566,7 +566,14 @@ export function ProfilePanel() {
                   const classCount = Math.min(hit?.count ?? 0, 3);
                   return (
                     <div key={d} className="flex flex-col items-center gap-1.5">
-                      <span className="text-[12px] font-medium text-muted-foreground">
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold ${
+                          hasWorkout
+                            ? "bg-success text-success-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        title={hasWorkout ? "Workout day" : undefined}
+                      >
                         {DAY_LABELS[d]}
                       </span>
                       {Array.from({ length: classCount }).map((_, i) => (
@@ -576,12 +583,18 @@ export function ProfilePanel() {
                           aria-hidden
                         />
                       ))}
-                      {hasWorkout ? (
-                        <span className="h-1.5 w-full rounded-full bg-success" aria-hidden />
-                      ) : null}
-                      {classCount === 0 && !hasWorkout ? (
+                      {classCount === 0 ? (
                         <span className="h-1.5 w-full rounded-full bg-muted" aria-hidden />
                       ) : null}
+                      {hasWorkout ? (
+                        <Dumbbell className="mt-0.5 h-3 w-3 text-success" aria-hidden />
+                      ) : (
+                        <span className="mt-0.5 h-3 w-3" aria-hidden />
+                      )}
+                      <span className="sr-only">
+                        {classCount > 0 ? `${hit?.count} classes` : "No classes"}
+                        {hasWorkout ? ", workout day" : ""}
+                      </span>
                     </div>
                   );
                 })}
@@ -592,7 +605,9 @@ export function ProfilePanel() {
                   Classes ({totalClasses(data.schedule)})
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-4 rounded-full bg-success" aria-hidden />
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
+                    <Dumbbell className="h-2.5 w-2.5" aria-hidden />
+                  </span>
                   Workout days ({workoutDayKeys.size})
                 </span>
               </div>
