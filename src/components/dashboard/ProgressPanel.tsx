@@ -25,6 +25,7 @@ import { AlertCircle, Award, Flame, Loader2, Scale, Timer, TrendingDown, Trendin
 import { toast } from "sonner";
 import {
   addProgressLog,
+  validateProgressEntry,
   avgWorkoutsPerWeek,
   currentStreak,
   earnedAchievements,
@@ -69,6 +70,11 @@ export function ProgressPanel() {
   const [bodyFat, setBodyFat] = useState("");
   const [muscle, setMuscle] = useState("");
   const [notes, setNotes] = useState("");
+  const [errors, setErrors] = useState<{
+    weight?: string;
+    body_fat?: string;
+    muscle_mass?: string;
+  }>({});
 
   const add = useMutation({
     mutationFn: () =>
@@ -83,6 +89,7 @@ export function ProgressPanel() {
       setBodyFat("");
       setMuscle("");
       setNotes("");
+      setErrors({});
       toast.success("Progress logged");
       qc.invalidateQueries({ queryKey: ["progress-logs"] });
       qc.invalidateQueries({ queryKey: ["active-plan"] });
@@ -235,30 +242,60 @@ export function ProgressPanel() {
               <Input
                 type="number"
                 inputMode="decimal"
+                min={20}
+                max={400}
+                step="0.1"
+                aria-invalid={!!errors.weight}
                 value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={(e) => {
+                  setWeight(e.target.value);
+                  setErrors((p) => ({ ...p, weight: undefined }));
+                }}
                 placeholder="70"
               />
+              {errors.weight ? (
+                <p className="mt-1 text-[11px] text-destructive">{errors.weight}</p>
+              ) : null}
             </div>
             <div>
               <Label className="text-xs">Body fat %</Label>
               <Input
                 type="number"
                 inputMode="decimal"
+                min={0}
+                max={75}
+                step="0.1"
+                aria-invalid={!!errors.body_fat}
                 value={bodyFat}
-                onChange={(e) => setBodyFat(e.target.value)}
+                onChange={(e) => {
+                  setBodyFat(e.target.value);
+                  setErrors((p) => ({ ...p, body_fat: undefined }));
+                }}
                 placeholder="optional"
               />
+              {errors.body_fat ? (
+                <p className="mt-1 text-[11px] text-destructive">{errors.body_fat}</p>
+              ) : null}
             </div>
             <div>
               <Label className="text-xs">Muscle (kg)</Label>
               <Input
                 type="number"
                 inputMode="decimal"
+                min={0}
+                max={200}
+                step="0.1"
+                aria-invalid={!!errors.muscle_mass}
                 value={muscle}
-                onChange={(e) => setMuscle(e.target.value)}
+                onChange={(e) => {
+                  setMuscle(e.target.value);
+                  setErrors((p) => ({ ...p, muscle_mass: undefined }));
+                }}
                 placeholder="optional"
               />
+              {errors.muscle_mass ? (
+                <p className="mt-1 text-[11px] text-destructive">{errors.muscle_mass}</p>
+              ) : null}
             </div>
           </div>
           <Textarea
@@ -269,8 +306,21 @@ export function ProgressPanel() {
           />
           <Button
             className="w-full"
-            disabled={!weight || Number.isNaN(Number(weight)) || add.isPending}
-            onClick={() => add.mutate()}
+            disabled={add.isPending}
+            onClick={() => {
+              const next = validateProgressEntry({
+                weight,
+                body_fat: bodyFat,
+                muscle_mass: muscle,
+              });
+              setErrors(next);
+              const first = Object.values(next)[0];
+              if (first) {
+                toast.error(first);
+                return;
+              }
+              add.mutate();
+            }}
           >
             {add.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save entry
