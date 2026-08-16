@@ -100,11 +100,12 @@ const axisProps = {
 
 export function ProgressPanel() {
   const qc = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["progress-logs"],
     queryFn: () => fetchProgressData(),
     staleTime: 60_000,
   });
+
 
   const [weight, setWeight] = useState("");
   const [bodyFat, setBodyFat] = useState("");
@@ -154,15 +155,10 @@ export function ProgressPanel() {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-2xl border-destructive/30 p-5 shadow-soft">
-        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
-        <div>
-          <h3 className="font-semibold">Couldn't load your progress</h3>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </Card>
+      <DataError title="Couldn't load your progress" error={error} onRetry={() => refetch()} />
     );
   }
+
 
   if (!data) return null;
 

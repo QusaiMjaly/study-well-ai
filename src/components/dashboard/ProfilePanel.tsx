@@ -262,21 +262,15 @@ export function ProfilePanel() {
 
   if (error) {
     return (
-      <Card className="rounded-3xl p-6 text-center shadow-soft">
-        <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          We couldn't load your profile. {(error as Error).message}
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4 rounded-2xl"
-          onClick={() => qc.invalidateQueries({ queryKey: ["profile-bundle"] })}
-        >
-          Try again
-        </Button>
-      </Card>
+      <DataError
+        title="Couldn't load your profile"
+        error={error}
+        onRetry={() => refetch()}
+        className="rounded-3xl"
+      />
     );
   }
+
 
   if (!data) return null;
 

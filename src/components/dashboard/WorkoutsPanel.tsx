@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertCircle,
   CalendarDays,
   Check,
   Clock,
@@ -23,14 +22,17 @@ import {
   type TodayWorkout,
   type WorkoutExercise,
 } from "@/lib/workouts-data";
+import { DataError } from "@/components/dashboard/DataError";
+import { friendlyMessage } from "@/lib/friendly-errors";
 
 export function WorkoutsPanel() {
   const qc = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-workout"],
     queryFn: () => fetchTodayWorkout(),
     staleTime: 60_000,
   });
+
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["today-workout"] });
@@ -68,15 +70,10 @@ export function WorkoutsPanel() {
 
   if (isError) {
     return (
-      <Card className="flex items-start gap-3 rounded-2xl border-destructive/30 p-5 shadow-soft">
-        <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
-        <div>
-          <h3 className="font-semibold">Couldn't load your workout</h3>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </Card>
+      <DataError title="Couldn't load your workout" error={error} onRetry={() => refetch()} />
     );
   }
+
 
   if (!data)
     return (
