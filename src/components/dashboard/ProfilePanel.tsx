@@ -241,7 +241,7 @@ export function ProfilePanel() {
         qc.invalidateQueries({ queryKey: ["active-plan"] }),
       ]);
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);

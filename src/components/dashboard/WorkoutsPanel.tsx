@@ -42,7 +42,7 @@ export function WorkoutsPanel() {
     mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
       setExerciseCompleted(data!.workoutDayId, id, completed),
     onSuccess: refresh,
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   const toggleWorkout = useMutation({
@@ -52,7 +52,7 @@ export function WorkoutsPanel() {
       refresh();
       if (v.completed) toast.success("Workout completed 💪");
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   if (isLoading) {

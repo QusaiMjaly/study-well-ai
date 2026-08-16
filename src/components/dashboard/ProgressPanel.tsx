@@ -134,7 +134,7 @@ export function ProgressPanel() {
       qc.invalidateQueries({ queryKey: ["progress-logs"] });
       qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   if (isLoading) {

@@ -26,7 +26,7 @@ export function MealsPanel() {
       qc.invalidateQueries({ queryKey: ["today-meals"] });
       qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(friendlyMessage(e)),
   });
 
   if (isLoading) {
