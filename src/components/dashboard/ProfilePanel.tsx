@@ -51,6 +51,7 @@ import {
   type ProfileBundle,
   type ProfileEdits,
 } from "@/lib/profile-data";
+import { normalizeDay } from "@/lib/day-utils";
 
 const DAY_LABELS: Record<string, string> = {
   sunday: "Sun",
@@ -196,6 +197,10 @@ export function ProfilePanel() {
   });
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
+  const workoutDayKeys = useMemo(
+    () => new Set((data?.workoutDayNames ?? []).map(normalizeDay)),
+    [data],
+  );
 
   if (isLoading) {
     return (
@@ -487,6 +492,7 @@ export function ProfilePanel() {
             <div className="mt-4 grid grid-cols-7 gap-1.5">
               {Object.keys(DAY_LABELS).map((d) => {
                 const hit = days.find((x) => x.day === d);
+                const hasWorkout = workoutDayKeys.has(normalizeDay(d));
                 return (
                   <div
                     key={d}
@@ -496,6 +502,12 @@ export function ProfilePanel() {
                   >
                     <div className="font-medium">{DAY_LABELS[d]}</div>
                     <div className="mt-0.5">{hit ? hit.count : "—"}</div>
+                    <div
+                      className={`mx-auto mt-1 h-1.5 w-1.5 rounded-full ${
+                        hasWorkout ? "bg-success" : "bg-transparent"
+                      }`}
+                      aria-hidden
+                    />
                   </div>
                 );
               })}

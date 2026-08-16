@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { normalizeDay } from "@/lib/dashboard-data";
+import { DAY_NAMES, normalizeDay } from "@/lib/day-utils";
 
 export type MealItem = {
   id: string;
@@ -24,7 +24,7 @@ export type TodayMeals = {
   completedIds: string[];
 } | null;
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = DAY_NAMES;
 
 export function localDateKey(now = new Date()) {
   const y = now.getFullYear();

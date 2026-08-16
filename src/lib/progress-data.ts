@@ -122,12 +122,59 @@ export async function fetchProgressData(now = new Date()): Promise<ProgressData 
   };
 }
 
+/**
+ * Validates a progress entry. Returns a field->message map; empty means valid.
+ * Runs before any write so impossible values never reach Supabase.
+ */
+export function validateProgressEntry(input: {
+  weight: string;
+  body_fat: string;
+  muscle_mass: string;
+}) {
+  const errors: { weight?: string; body_fat?: string; muscle_mass?: string } = {};
+
+  const w = Number(input.weight);
+  if (input.weight.trim() === "" || !Number.isFinite(w)) {
+    errors.weight = "Enter your weight in kg.";
+  } else if (w <= 0) {
+    errors.weight = "Weight must be greater than 0.";
+  } else if (w < 20 || w > 400) {
+    errors.weight = "Weight must be between 20 and 400 kg.";
+  }
+
+  if (input.body_fat.trim() !== "") {
+    const bf = Number(input.body_fat);
+    if (!Number.isFinite(bf)) errors.body_fat = "Enter a valid number.";
+    else if (bf < 0) errors.body_fat = "Body fat can't be negative.";
+    else if (bf > 75) errors.body_fat = "Body fat must be between 0 and 75%.";
+  }
+
+  if (input.muscle_mass.trim() !== "") {
+    const mm = Number(input.muscle_mass);
+    if (!Number.isFinite(mm)) errors.muscle_mass = "Enter a valid number.";
+    else if (mm < 0) errors.muscle_mass = "Muscle mass can't be negative.";
+    else if (mm > 200) errors.muscle_mass = "Muscle mass must be between 0 and 200 kg.";
+    else if (Number.isFinite(w) && w > 0 && mm > w)
+      errors.muscle_mass = "Muscle mass can't exceed body weight.";
+  }
+
+  return errors;
+}
+
 export async function addProgressLog(input: {
   weight: number;
   body_fat?: number | null;
   muscle_mass?: number | null;
   notes?: string | null;
 }) {
+  const errors = validateProgressEntry({
+    weight: String(input.weight ?? ""),
+    body_fat: input.body_fat == null ? "" : String(input.body_fat),
+    muscle_mass: input.muscle_mass == null ? "" : String(input.muscle_mass),
+  });
+  const firstError = Object.values(errors)[0];
+  if (firstError) throw new Error(firstError);
+
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not signed in");
   const { error } = await supabase.from("progress_logs").insert({
