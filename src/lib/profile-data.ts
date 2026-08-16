@@ -40,6 +40,8 @@ export type ProfileBundle = {
   goals: GoalsRow | null;
   schedule: ScheduleRow | null;
   activePlan: { id: string; plan_name: string; created_at: string } | null;
+  /** Weekday names (as stored) that have a workout in the active plan. */
+  workoutDayNames: string[];
 };
 
 /** One authenticated read of everything the Profile page needs. */
@@ -67,7 +69,7 @@ export async function fetchProfileBundle(): Promise<ProfileBundle> {
       .maybeSingle(),
     supabase
       .from("ai_plans")
-      .select("id, plan_name, created_at")
+      .select("id, plan_name, created_at, workout_days ( day_name )")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -85,6 +87,9 @@ export async function fetchProfileBundle(): Promise<ProfileBundle> {
     goals: (g.data as unknown as GoalsRow) ?? null,
     schedule: (s.data as unknown as ScheduleRow) ?? null,
     activePlan: (plan.data as ProfileBundle["activePlan"]) ?? null,
+    workoutDayNames: (((plan.data as any)?.workout_days ?? []) as { day_name: string }[]).map(
+      (w) => w.day_name,
+    ),
   };
 }
 
