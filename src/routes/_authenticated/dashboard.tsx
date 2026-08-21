@@ -1,10 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useServerFn } from "@tanstack/react-start";
-import { generatePlans } from "@/lib/gemini.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
 import { friendlyMessage } from "@/lib/friendly-errors";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,12 +27,10 @@ const navItems = [
 
 function Dashboard() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
-  const generateFn = useServerFn(generatePlans);
   const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [tab, setTab] = useState("home");
+
 
   async function load() {
     setLoading(true);
