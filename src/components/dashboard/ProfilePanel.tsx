@@ -666,14 +666,7 @@ export function ProfilePanel() {
       </SectionCard>
 
       {/* ACTIONS */}
-      {!editing && (
-        <Button
-          onClick={startEditing}
-          className="h-13 w-full rounded-2xl bg-cta-gradient py-3.5 text-[16px] font-bold text-primary-foreground"
-        >
-          <Pencil className="mr-2 h-5 w-5" /> Edit Details
-        </Button>
-      )}
+
 
       <Button
         variant="outline"
