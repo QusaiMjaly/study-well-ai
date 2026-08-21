@@ -15,6 +15,7 @@ import { friendlyMessage } from "@/lib/friendly-errors";
 
 export function MealsPanel() {
   const qc = useQueryClient();
+  const [recipe, setRecipe] = useState<MealItem | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-meals"],
     queryFn: () => fetchTodayMeals(),
