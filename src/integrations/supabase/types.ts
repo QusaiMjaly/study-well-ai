@@ -217,12 +217,16 @@ export type Database = {
           created_at: string
           fats: number | null
           id: string
+          image_path: string | null
+          image_prompt: string | null
+          image_status: string
           ingredients: string[]
           meal_day_id: string
           meal_name: string
           meal_order: number
           meal_type: string | null
           notes: string | null
+          preparation_steps: string[]
           protein: number | null
           scheduled_time: string | null
         }
@@ -232,12 +236,16 @@ export type Database = {
           created_at?: string
           fats?: number | null
           id?: string
+          image_path?: string | null
+          image_prompt?: string | null
+          image_status?: string
           ingredients?: string[]
           meal_day_id: string
           meal_name: string
           meal_order?: number
           meal_type?: string | null
           notes?: string | null
+          preparation_steps?: string[]
           protein?: number | null
           scheduled_time?: string | null
         }
@@ -247,12 +255,16 @@ export type Database = {
           created_at?: string
           fats?: number | null
           id?: string
+          image_path?: string | null
+          image_prompt?: string | null
+          image_status?: string
           ingredients?: string[]
           meal_day_id?: string
           meal_name?: string
           meal_order?: number
           meal_type?: string | null
           notes?: string | null
+          preparation_steps?: string[]
           protein?: number | null
           scheduled_time?: string | null
         }
