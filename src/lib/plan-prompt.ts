@@ -85,7 +85,8 @@ Return JSON only, no markdown, no explanation, exactly this shape:
   "meal_days": [
     { "day_name": "monday", "total_calories": 2200, "protein": 130, "carbohydrates": 250, "fats": 70,
       "meals": [ { "meal_order": 1, "meal_name": "", "meal_type": "breakfast", "scheduled_time": "08:00",
-        "calories": 450, "protein": 30, "carbohydrates": 50, "fats": 12, "ingredients": ["oats"], "notes": "" } ] }
+        "calories": 450, "protein": 30, "carbohydrates": 50, "fats": 12, "ingredients": ["oats"], "notes": "",
+        "preparation_steps": ["Step 1", "Step 2"], "image_prompt": "" } ] }
   ],
   "daily_tips": [ { "day_name": "monday", "tip_text": "" } ]
 }`;
