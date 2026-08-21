@@ -7,7 +7,7 @@ const BUCKET = "meal-images";
 
 export type MealImageResult = {
   status: "ready" | "unavailable";
-  url: string | null;
+  url?: string | null;
   /** Friendly reason when status is "unavailable". */
   message?: string;
   /** Transient failures may be retried later by the user. */
