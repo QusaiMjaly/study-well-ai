@@ -87,6 +87,66 @@ export type Database = {
           },
         ]
       }
+      exercise_media: {
+        Row: {
+          aliases: string[]
+          animation_url: string | null
+          attribution: string | null
+          category: string | null
+          common_mistakes: string[]
+          created_at: string
+          cues: string[]
+          display_name: string
+          equipment: string | null
+          id: string
+          is_active: boolean
+          license: string | null
+          poster_url: string | null
+          primary_muscles: string[]
+          slug: string
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          animation_url?: string | null
+          attribution?: string | null
+          category?: string | null
+          common_mistakes?: string[]
+          created_at?: string
+          cues?: string[]
+          display_name: string
+          equipment?: string | null
+          id?: string
+          is_active?: boolean
+          license?: string | null
+          poster_url?: string | null
+          primary_muscles?: string[]
+          slug: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          animation_url?: string | null
+          attribution?: string | null
+          category?: string | null
+          common_mistakes?: string[]
+          created_at?: string
+          cues?: string[]
+          display_name?: string
+          equipment?: string | null
+          id?: string
+          is_active?: boolean
+          license?: string | null
+          poster_url?: string | null
+          primary_muscles?: string[]
+          slug?: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           biggest_challenge: string | null
@@ -552,6 +612,7 @@ export type Database = {
           duration_seconds: number | null
           exercise_name: string
           exercise_order: number
+          exercise_slug: string | null
           id: string
           notes: string | null
           reps: string | null
@@ -564,6 +625,7 @@ export type Database = {
           duration_seconds?: number | null
           exercise_name: string
           exercise_order?: number
+          exercise_slug?: string | null
           id?: string
           notes?: string | null
           reps?: string | null
@@ -576,6 +638,7 @@ export type Database = {
           duration_seconds?: number | null
           exercise_name?: string
           exercise_order?: number
+          exercise_slug?: string | null
           id?: string
           notes?: string | null
           reps?: string | null
