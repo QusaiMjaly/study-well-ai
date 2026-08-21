@@ -36,6 +36,9 @@ export const MealItemSchema = z.object({
   fats: z.number().min(0).max(300),
   ingredients: z.array(z.string().min(1)).default([]),
   notes: z.string().nullable().optional().transform((v) => v ?? null),
+  // Backward compatible: older plans have neither field.
+  preparation_steps: z.array(z.string().min(1)).optional().default([]),
+  image_prompt: z.string().nullable().optional().transform((v) => v ?? null),
 });
 
 export const MealDaySchema = z.object({
