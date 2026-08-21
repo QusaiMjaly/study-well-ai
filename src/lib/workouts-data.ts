@@ -11,6 +11,7 @@ export type WorkoutExercise = {
   duration_seconds: number | null;
   rest_seconds: number | null;
   notes: string | null;
+  exercise_slug?: string | null;
 };
 
 export type NextWorkout = {
