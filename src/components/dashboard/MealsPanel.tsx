@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RecipeSheet } from "@/components/dashboard/RecipeSheet";
+import { BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +15,7 @@ import { friendlyMessage } from "@/lib/friendly-errors";
 
 export function MealsPanel() {
   const qc = useQueryClient();
+  const [recipe, setRecipe] = useState<MealItem | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-meals"],
     queryFn: () => fetchTodayMeals(),
@@ -122,10 +126,17 @@ export function MealsPanel() {
               done={completed.has(m.id)}
               busy={toggle.isPending && toggle.variables?.id === m.id}
               onToggle={() => toggle.mutate({ id: m.id, completed: !completed.has(m.id) })}
+              onViewRecipe={() => setRecipe(m)}
             />
           ))}
         </div>
       )}
+
+      <RecipeSheet
+        meal={recipe}
+        open={recipe !== null}
+        onOpenChange={(v) => !v && setRecipe(null)}
+      />
     </div>
   );
 }
@@ -165,11 +176,13 @@ function MealCard({
   done,
   busy,
   onToggle,
+  onViewRecipe,
 }: {
   meal: MealItem;
   done: boolean;
   busy: boolean;
   onToggle: () => void;
+  onViewRecipe: () => void;
 }) {
   return (
     <Card
@@ -246,6 +259,14 @@ function MealCard({
         ) : (
           "Mark as Completed"
         )}
+      </Button>
+
+      <Button
+        onClick={onViewRecipe}
+        variant="ghost"
+        className="mt-2 h-10 w-full rounded-2xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <BookOpen className="mr-2 h-4 w-4" /> View Recipe
       </Button>
     </Card>
   );
