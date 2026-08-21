@@ -13,6 +13,8 @@ export type MealItem = {
   fats: number | null;
   ingredients: string[];
   notes: string | null;
+  preparation_steps?: string[];
+  image_status?: string | null;
 };
 
 export type TodayMeals = {
