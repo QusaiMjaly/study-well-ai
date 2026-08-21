@@ -69,6 +69,8 @@ HARD RULES
 - meal_days must cover all 7 days: sunday, monday, tuesday, wednesday, thursday, friday, saturday.
 - daily_tips must contain one short motivational/coaching tip for each of the 7 days.
 - Times are strings in 24h "HH:mm" format. Day names lowercase English.
+- Every meal MUST include "preparation_steps": 3 to 6 concise ordered steps describing how to prepare THAT meal, using ONLY that meal's ingredients and matching the planned portion/calories.
+- Every meal MUST include "image_prompt": one short sentence describing the finished plated dish (food only, no people, no brands, no text or logos in the image, natural lighting, top-down or 3/4 view).
 ${retryProblems?.length ? `\nYOUR PREVIOUS ATTEMPT WAS REJECTED. Fix these problems:\n- ${retryProblems.join("\n- ")}` : ""}
 
 OUTPUT
