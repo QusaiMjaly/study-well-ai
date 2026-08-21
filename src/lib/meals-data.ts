@@ -45,7 +45,7 @@ export async function fetchTodayMeals(now = new Date()): Promise<TodayMeals> {
     .select(
       `id,
        meal_days ( id, day_name, total_calories, protein,
-         meal_items ( id, meal_order, meal_name, meal_type, scheduled_time, calories, protein, carbohydrates, fats, ingredients, notes ) )`,
+         meal_items ( id, meal_order, meal_name, meal_type, scheduled_time, calories, protein, carbohydrates, fats, ingredients, notes, preparation_steps, image_status ) )`,
     )
     .eq("user_id", u.user.id)
     .eq("is_active", true)
