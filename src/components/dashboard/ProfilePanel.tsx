@@ -349,7 +349,7 @@ export function ProfilePanel() {
         </div>
         {!data.profile && (
           <p className="mt-4 rounded-2xl bg-white/15 p-3 text-[13px]">
-            No profile details saved yet — complete onboarding or use Edit Details below.
+            No profile details saved yet — complete onboarding or edit the sections below.
           </p>
         )}
       </section>
