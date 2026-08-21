@@ -64,7 +64,7 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
     .select(
       `id,
        workout_days ( id, day_name, workout_title, workout_type, duration_minutes, estimated_calories, scheduled_start, scheduled_end, notes,
-         workout_exercises ( id, exercise_order, exercise_name, sets, reps, duration_seconds, rest_seconds, notes ) )`,
+         workout_exercises ( id, exercise_order, exercise_name, sets, reps, duration_seconds, rest_seconds, notes, exercise_slug ) )`,
     )
     .eq("user_id", u.user.id)
     .eq("is_active", true)
