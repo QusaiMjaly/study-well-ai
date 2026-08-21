@@ -126,10 +126,17 @@ export function MealsPanel() {
               done={completed.has(m.id)}
               busy={toggle.isPending && toggle.variables?.id === m.id}
               onToggle={() => toggle.mutate({ id: m.id, completed: !completed.has(m.id) })}
+              onViewRecipe={() => setRecipe(m)}
             />
           ))}
         </div>
       )}
+
+      <RecipeSheet
+        meal={recipe}
+        open={recipe !== null}
+        onOpenChange={(v) => !v && setRecipe(null)}
+      />
     </div>
   );
 }
