@@ -80,7 +80,7 @@ Return JSON only, no markdown, no explanation, exactly this shape:
   "workout_days": [
     { "day_name": "monday", "workout_title": "", "workout_type": "", "duration_minutes": 45,
       "estimated_calories": 320, "scheduled_start": "17:00", "scheduled_end": "17:45", "notes": "",
-      "exercises": [ { "exercise_order": 1, "exercise_name": "", "sets": 3, "reps": "12", "duration_seconds": null, "rest_seconds": 60, "notes": "" } ] }
+      "exercises": [ { "exercise_order": 1, "exercise_name": "", "exercise_slug": null, "sets": 3, "reps": "12", "duration_seconds": null, "rest_seconds": 60, "notes": "" } ] }
   ],
   "meal_days": [
     { "day_name": "monday", "total_calories": 2200, "protein": 130, "carbohydrates": 250, "fats": 70,
