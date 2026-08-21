@@ -1,10 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useServerFn } from "@tanstack/react-start";
-import { generatePlans } from "@/lib/gemini.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
 import { friendlyMessage } from "@/lib/friendly-errors";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,12 +27,10 @@ const navItems = [
 
 function Dashboard() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
-  const generateFn = useServerFn(generatePlans);
   const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [tab, setTab] = useState("home");
+
 
   async function load() {
     setLoading(true);
@@ -60,20 +54,8 @@ function Dashboard() {
     load();
   }, []);
 
-  async function regenerate() {
-    setRegenerating(true);
-    try {
-      await generateFn({ data: {} });
-      // Every plan-derived cache must refresh, via the shared invalidation helper.
-      await invalidatePlanCaches(qc);
-      toast.success("New plans generated!");
-      await load();
-    } catch (e) {
-      toast.error(friendlyMessage(e, "We couldn't regenerate your plan. Please try again."));
-    } finally {
-      setRegenerating(false);
-    }
-  }
+
+
 
 
   return (
@@ -104,19 +86,14 @@ function Dashboard() {
               </h1>
               <p className="text-base text-muted-foreground">Here's your plan for today</p>
 
-              <button
-                type="button"
-                onClick={regenerate}
-                disabled={regenerating}
-                aria-label="Regenerate plan with AI"
-                className="absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-cta-gradient text-primary-foreground shadow-card transition-opacity hover:opacity-95 disabled:opacity-70"
+              {/* Decorative brand mark — intentionally non-interactive. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-cta-gradient text-primary-foreground shadow-card"
               >
-                {regenerating ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-5 w-5" />
-                )}
-              </button>
+                <Sparkles className="h-5 w-5" />
+              </span>
+
             </header>
 
             {/* Content */}

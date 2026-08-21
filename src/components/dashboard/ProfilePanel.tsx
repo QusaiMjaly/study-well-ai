@@ -214,10 +214,12 @@ function emptyEdits(b: ProfileBundle): ProfileEdits {
   };
 }
 
+type EditSection = "personal" | "preferences" | null;
+
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<EditSection>(null);
   const [form, setForm] = useState<ProfileEdits | null>(null);
   const [editedAt, setEditedAt] = useState<number | null>(null);
 
@@ -235,7 +237,8 @@ export function ProfilePanel() {
     },
     onSuccess: async () => {
       setEditedAt(Date.now());
-      setEditing(false);
+      setEditing(null);
+      setForm(null);
       toast.success("Profile updated");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["profile-bundle"] }),
@@ -279,10 +282,16 @@ export function ProfilePanel() {
   const email = data.profile?.email ?? data.authEmail;
   const stale = isPlanStale(data, editedAt);
 
-  function startEditing() {
+  /** Seeds the form from stored values so an unrelated section can never drift. */
+  function startEditing(section: Exclude<EditSection, null>) {
     if (!data) return;
     setForm(emptyEdits(data));
-    setEditing(true);
+    setEditing(section);
+  }
+
+  function cancelEditing() {
+    setEditing(null);
+    setForm(null);
   }
 
   async function signOut() {
@@ -290,16 +299,38 @@ export function ProfilePanel() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const editButton = (
+  const pencilFor = (section: Exclude<EditSection, null>, label: string) => (
     <button
       type="button"
-      onClick={startEditing}
-      aria-label="Edit details"
-      className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      onClick={() => startEditing(section)}
+      disabled={editing !== null && editing !== section}
+      aria-label={label}
+      className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
     >
       <Pencil className="h-[18px] w-[18px]" />
     </button>
   );
+
+  const editActions = (
+    <div className="mt-5 flex gap-3">
+      <Button
+        onClick={() => save.mutate()}
+        disabled={save.isPending}
+        className="h-11 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
+      >
+        {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+      </Button>
+      <Button
+        variant="outline"
+        className="h-11 rounded-2xl"
+        onClick={cancelEditing}
+        disabled={save.isPending}
+      >
+        Cancel
+      </Button>
+    </div>
+  );
+
 
   return (
     <div className="space-y-4">
@@ -318,7 +349,7 @@ export function ProfilePanel() {
         </div>
         {!data.profile && (
           <p className="mt-4 rounded-2xl bg-white/15 p-3 text-[13px]">
-            No profile details saved yet — complete onboarding or use Edit Details below.
+            No profile details saved yet — complete onboarding or edit the sections below.
           </p>
         )}
       </section>
@@ -333,54 +364,64 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {/* EDIT MODE */}
-      {editing && form ? (
-        <Card className="gap-0 rounded-3xl border-border/60 p-5 shadow-soft">
-          <h3 className="text-[18px] font-bold leading-6">Edit Details</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="full_name">Full name</Label>
-              <Input
-                id="full_name"
-                value={form.full_name}
-                maxLength={100}
-                className="rounded-xl"
-                onChange={(ev) => setForm({ ...form, full_name: ev.target.value })}
+      {/* PERSONAL INFO */}
+      <SectionCard
+        icon={<User className="h-5 w-5 text-primary-foreground" />}
+        iconClass="bg-primary"
+        title="Personal Info"
+        action={pencilFor("personal", "Edit personal info")}
+      >
+        {editing === "personal" && form ? (
+          <>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="full_name">Full name</Label>
+                <Input
+                  id="full_name"
+                  value={form.full_name}
+                  maxLength={100}
+                  className="rounded-xl"
+                  onChange={(ev) => setForm({ ...form, full_name: ev.target.value })}
+                />
+              </div>
+              <NumberField
+                id="age"
+                label="Age"
+                value={form.age}
+                min={13}
+                max={100}
+                onChange={(v) => setForm({ ...form, age: v })}
               />
-            </div>
-
-            <NumberField
-              id="age"
-              label="Age"
-              value={form.age}
-              min={13}
-              max={100}
-              onChange={(v) => setForm({ ...form, age: v })}
-            />
-            <SelectField
-              id="gender"
-              label="Gender"
-              value={form.gender}
-              options={GENDERS}
-              onChange={(v) => setForm({ ...form, gender: v })}
-            />
-            <NumberField
-              id="height"
-              label="Height (cm)"
-              value={form.height}
-              min={100}
-              max={250}
-              onChange={(v) => setForm({ ...form, height: v })}
-            />
-            <NumberField
-              id="weight"
-              label="Current weight (kg)"
-              value={form.weight}
-              min={30}
-              max={300}
-              onChange={(v) => setForm({ ...form, weight: v })}
-            />
-            <div className="sm:col-span-2">
+              <SelectField
+                id="gender"
+                label="Gender"
+                value={form.gender}
+                options={GENDERS}
+                onChange={(v) => setForm({ ...form, gender: v })}
+              />
+              <NumberField
+                id="height"
+                label="Height (cm)"
+                value={form.height}
+                min={100}
+                max={250}
+                onChange={(v) => setForm({ ...form, height: v })}
+              />
+              <NumberField
+                id="weight"
+                label="Weight (kg)"
+                value={form.weight}
+                min={30}
+                max={300}
+                onChange={(v) => setForm({ ...form, weight: v })}
+              />
+              <SelectField
+                id="goal_type"
+                label="Goal"
+                value={form.goal_type}
+                options={GOALS}
+                onChange={(v) => setForm({ ...form, goal_type: v })}
+              />
               <SelectField
                 id="activity_level"
                 label="Activity level"
@@ -389,148 +430,108 @@ export function ProfilePanel() {
                 onChange={(v) => setForm({ ...form, activity_level: v })}
               />
             </div>
-            <SelectField
-              id="goal_type"
-              label="Main goal"
-              value={form.goal_type}
-              options={GOALS}
-              onChange={(v) => setForm({ ...form, goal_type: v })}
+            {editActions}
+          </>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
+            <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
+            <Field label="Weight" value={data.profile?.weight ? `${data.profile.weight} kg` : ""} />
+            <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+            <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
+            <Field
+              label="Activity level"
+              value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
             />
-            <NumberField
-              id="target_weight"
-              label="Target weight (kg)"
-              value={form.target_weight}
-              min={30}
-              max={300}
-              onChange={(v) => setForm({ ...form, target_weight: v })}
-            />
-            <SelectField
-              id="workout_preference"
-              label="Workout preference"
-              value={form.workout_preference}
-              options={WORKOUT_PREFS}
-              onChange={(v) => setForm({ ...form, workout_preference: v })}
-            />
-            <SelectField
-              id="meal_preference"
-              label="Meal preference"
-              value={form.meal_preference}
-              options={MEAL_PREFS}
-              onChange={(v) => setForm({ ...form, meal_preference: v })}
-            />
-            <SelectField
-              id="workout_duration"
-              label="Preferred duration"
-              value={form.workout_duration}
-              options={DURATIONS}
-              onChange={(v) => setForm({ ...form, workout_duration: v })}
-            />
-            <SelectField
-              id="preferred_time"
-              label="Preferred time"
-              value={form.preferred_time}
-              options={TIMES}
-              onChange={(v) => setForm({ ...form, preferred_time: v })}
-            />
-            <div className="sm:col-span-2">
-              <SelectField
-                id="biggest_challenge"
-                label="Biggest challenge"
-                value={form.biggest_challenge}
-                options={CHALLENGES}
-                onChange={(v) => setForm({ ...form, biggest_challenge: v })}
-              />
-            </div>
           </div>
-          <div className="mt-5 flex gap-3">
-            <Button
-              onClick={() => save.mutate()}
-              disabled={save.isPending}
-              className="h-12 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
-            >
-              {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes
-            </Button>
-            <Button
-              variant="outline"
-              className="h-12 rounded-2xl"
-              onClick={() => setEditing(false)}
-              disabled={save.isPending}
-            >
-              Cancel
-            </Button>
-          </div>
-        </Card>
-      ) : (
-        <>
-          {/* PERSONAL INFO */}
-          <SectionCard
-            icon={<User className="h-5 w-5 text-primary-foreground" />}
-            iconClass="bg-primary"
-            title="Personal Info"
-            action={editButton}
-          >
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
-              <Field
-                label="Height"
-                value={data.profile?.height ? `${data.profile.height} cm` : ""}
-              />
-              <Field
-                label="Weight"
-                value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
-              />
-              <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
-              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
-              <Field
-                label="Activity level"
-                value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
-              />
-            </div>
-          </SectionCard>
+        )}
+      </SectionCard>
 
-          {/* PREFERENCES */}
-          <SectionCard
-            icon={<Settings className="h-5 w-5 text-success-foreground" />}
-            iconClass="bg-success"
-            title="Preferences"
-            action={editButton}
-          >
-            {!data.goals ? (
-              <p className="mt-3 text-[13px] text-muted-foreground">
-                No preferences saved yet. Add them with Edit Details.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-2.5">
-                <PrefRow
-                  icon={<Dumbbell className="h-[18px] w-[18px]" />}
-                  label="Workout"
-                  value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
-                />
-                <PrefRow
-                  icon={<Apple className="h-[18px] w-[18px]" />}
-                  label="Meal type"
-                  value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
-                />
-                <PrefRow
-                  icon={<CalendarDays className="h-[18px] w-[18px]" />}
-                  label="Duration"
-                  value={labelOf(DURATIONS, data.goals.workout_duration)}
-                />
-                <PrefRow
-                  icon={<Clock className="h-[18px] w-[18px]" />}
-                  label="Preferred time"
-                  value={labelOf(TIMES, data.goals.preferred_time)}
-                />
-                <PrefRow
-                  icon={<Sparkles className="h-[18px] w-[18px]" />}
+      {/* PREFERENCES */}
+      <SectionCard
+        icon={<Settings className="h-5 w-5 text-success-foreground" />}
+        iconClass="bg-success"
+        title="Preferences"
+        action={pencilFor("preferences", "Edit preferences")}
+      >
+        {editing === "preferences" && form ? (
+          <>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <SelectField
+                id="workout_preference"
+                label="Workout"
+                value={form.workout_preference}
+                options={WORKOUT_PREFS}
+                onChange={(v) => setForm({ ...form, workout_preference: v })}
+              />
+              <SelectField
+                id="meal_preference"
+                label="Meal type"
+                value={form.meal_preference}
+                options={MEAL_PREFS}
+                onChange={(v) => setForm({ ...form, meal_preference: v })}
+              />
+              <SelectField
+                id="workout_duration"
+                label="Duration"
+                value={form.workout_duration}
+                options={DURATIONS}
+                onChange={(v) => setForm({ ...form, workout_duration: v })}
+              />
+              <SelectField
+                id="preferred_time"
+                label="Preferred time"
+                value={form.preferred_time}
+                options={TIMES}
+                onChange={(v) => setForm({ ...form, preferred_time: v })}
+              />
+              <div className="sm:col-span-2">
+                <SelectField
+                  id="biggest_challenge"
                   label="Biggest challenge"
-                  value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
+                  value={form.biggest_challenge}
+                  options={CHALLENGES}
+                  onChange={(v) => setForm({ ...form, biggest_challenge: v })}
                 />
               </div>
-            )}
-          </SectionCard>
-        </>
-      )}
+            </div>
+            {editActions}
+          </>
+        ) : !data.goals ? (
+          <p className="mt-3 text-[13px] text-muted-foreground">
+            No preferences saved yet. Tap the pencil to add them.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-2.5">
+            <PrefRow
+              icon={<Dumbbell className="h-[18px] w-[18px]" />}
+              label="Workout"
+              value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
+            />
+            <PrefRow
+              icon={<Apple className="h-[18px] w-[18px]" />}
+              label="Meal type"
+              value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
+            />
+            <PrefRow
+              icon={<CalendarDays className="h-[18px] w-[18px]" />}
+              label="Duration"
+              value={labelOf(DURATIONS, data.goals.workout_duration)}
+            />
+            <PrefRow
+              icon={<Clock className="h-[18px] w-[18px]" />}
+              label="Preferred time"
+              value={labelOf(TIMES, data.goals.preferred_time)}
+            />
+            <PrefRow
+              icon={<Sparkles className="h-[18px] w-[18px]" />}
+              label="Biggest challenge"
+              value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
+            />
+          </div>
+        )}
+      </SectionCard>
+
 
       {/* YOUR SCHEDULE */}
       <Card className="gap-0 rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[0.06] to-success/[0.08] p-5 shadow-soft">
@@ -665,14 +666,7 @@ export function ProfilePanel() {
       </SectionCard>
 
       {/* ACTIONS */}
-      {!editing && (
-        <Button
-          onClick={startEditing}
-          className="h-13 w-full rounded-2xl bg-cta-gradient py-3.5 text-[16px] font-bold text-primary-foreground"
-        >
-          <Pencil className="mr-2 h-5 w-5" /> Edit Details
-        </Button>
-      )}
+
 
       <Button
         variant="outline"
