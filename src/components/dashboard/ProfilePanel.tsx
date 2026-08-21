@@ -214,10 +214,12 @@ function emptyEdits(b: ProfileBundle): ProfileEdits {
   };
 }
 
+type EditSection = "personal" | "preferences" | null;
+
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<EditSection>(null);
   const [form, setForm] = useState<ProfileEdits | null>(null);
   const [editedAt, setEditedAt] = useState<number | null>(null);
 
@@ -235,7 +237,8 @@ export function ProfilePanel() {
     },
     onSuccess: async () => {
       setEditedAt(Date.now());
-      setEditing(false);
+      setEditing(null);
+      setForm(null);
       toast.success("Profile updated");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["profile-bundle"] }),
@@ -279,10 +282,16 @@ export function ProfilePanel() {
   const email = data.profile?.email ?? data.authEmail;
   const stale = isPlanStale(data, editedAt);
 
-  function startEditing() {
+  /** Seeds the form from stored values so an unrelated section can never drift. */
+  function startEditing(section: Exclude<EditSection, null>) {
     if (!data) return;
     setForm(emptyEdits(data));
-    setEditing(true);
+    setEditing(section);
+  }
+
+  function cancelEditing() {
+    setEditing(null);
+    setForm(null);
   }
 
   async function signOut() {
@@ -290,16 +299,38 @@ export function ProfilePanel() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const editButton = (
+  const pencilFor = (section: Exclude<EditSection, null>, label: string) => (
     <button
       type="button"
-      onClick={startEditing}
-      aria-label="Edit details"
-      className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      onClick={() => startEditing(section)}
+      disabled={editing !== null && editing !== section}
+      aria-label={label}
+      className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
     >
       <Pencil className="h-[18px] w-[18px]" />
     </button>
   );
+
+  const editActions = (
+    <div className="mt-5 flex gap-3">
+      <Button
+        onClick={() => save.mutate()}
+        disabled={save.isPending}
+        className="h-11 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
+      >
+        {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+      </Button>
+      <Button
+        variant="outline"
+        className="h-11 rounded-2xl"
+        onClick={cancelEditing}
+        disabled={save.isPending}
+      >
+        Cancel
+      </Button>
+    </div>
+  );
+
 
   return (
     <div className="space-y-4">
