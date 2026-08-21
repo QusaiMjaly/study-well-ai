@@ -104,19 +104,14 @@ function Dashboard() {
               </h1>
               <p className="text-base text-muted-foreground">Here's your plan for today</p>
 
-              <button
-                type="button"
-                onClick={regenerate}
-                disabled={regenerating}
-                aria-label="Regenerate plan with AI"
-                className="absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-cta-gradient text-primary-foreground shadow-card transition-opacity hover:opacity-95 disabled:opacity-70"
+              {/* Decorative brand mark — intentionally non-interactive. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute right-6 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-cta-gradient text-primary-foreground shadow-card"
               >
-                {regenerating ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-5 w-5" />
-                )}
-              </button>
+                <Sparkles className="h-5 w-5" />
+              </span>
+
             </header>
 
             {/* Content */}
