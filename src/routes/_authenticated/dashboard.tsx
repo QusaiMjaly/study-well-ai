@@ -60,20 +60,8 @@ function Dashboard() {
     load();
   }, []);
 
-  async function regenerate() {
-    setRegenerating(true);
-    try {
-      await generateFn({ data: {} });
-      // Every plan-derived cache must refresh, via the shared invalidation helper.
-      await invalidatePlanCaches(qc);
-      toast.success("New plans generated!");
-      await load();
-    } catch (e) {
-      toast.error(friendlyMessage(e, "We couldn't regenerate your plan. Please try again."));
-    } finally {
-      setRegenerating(false);
-    }
-  }
+
+
 
 
   return (
