@@ -11,6 +11,8 @@ export const ExerciseSchema = z.object({
   duration_seconds: z.number().int().min(0).nullable().optional().transform((v) => v ?? null),
   rest_seconds: z.number().int().min(0).nullable().optional().transform((v) => v ?? null),
   notes: z.string().nullable().optional().transform((v) => v ?? null),
+  // Canonical demo-library id when an accurate match exists; null otherwise.
+  exercise_slug: z.string().nullable().optional().transform((v) => v ?? null),
 });
 
 export const WorkoutDaySchema = z.object({

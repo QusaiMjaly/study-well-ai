@@ -4,6 +4,19 @@ import type { AiPlan } from "./plan-schema";
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const PLAN_MODEL = "google/gemini-3-flash-preview";
 
+/** Mirrors the seeded public.exercise_media catalogue. Unmatched movements use null. */
+export const CANONICAL_EXERCISE_SLUGS = [
+  "push_up", "squat", "bodyweight_lunge", "plank", "glute_bridge", "mountain_climber",
+  "burpee", "jumping_jack", "crunch", "sit_up", "bicycle_crunch", "russian_twist",
+  "superman", "dead_bug", "high_knees", "wall_sit", "tricep_dip", "pull_up",
+  "dumbbell_bench_press", "dumbbell_shoulder_press", "dumbbell_row", "bicep_curl",
+  "barbell_squat", "deadlift", "lat_pulldown", "leg_press", "treadmill_run",
+  "stationary_bike", "jump_rope", "walking", "incline_dumbbell_press", "dumbbell_chest_fly",
+  "lateral_raise", "front_raise", "rear_delt_fly", "seated_cable_row", "hammer_curl",
+  "tricep_pushdown", "overhead_tricep_extension", "romanian_deadlift", "leg_extension",
+  "leg_curl", "calf_raise",
+] as const;
+
 export type PlanInputs = {
   profile: {
     full_name: string | null;
@@ -71,6 +84,10 @@ HARD RULES
 - Times are strings in 24h "HH:mm" format. Day names lowercase English.
 - Every meal MUST include "preparation_steps": 3 to 6 concise ordered steps describing how to prepare THAT meal, using ONLY that meal's ingredients and matching the planned portion/calories.
 - Every meal MUST include "image_prompt": one short sentence describing the finished plated dish (food only, no people, no brands, no text or logos in the image, natural lighting, top-down or 3/4 view).
+- Every exercise MUST include "exercise_slug". Prefer a slug from the SUPPORTED EXERCISE SLUGS list ONLY when it is an accurate match for the movement you prescribed. If no listed slug accurately matches, you are free to prescribe any other appropriate exercise and MUST set "exercise_slug": null. Never force an approximate or incorrect slug, and never invent a slug that is not on the list.
+
+SUPPORTED EXERCISE SLUGS
+${CANONICAL_EXERCISE_SLUGS.join(", ")}
 ${retryProblems?.length ? `\nYOUR PREVIOUS ATTEMPT WAS REJECTED. Fix these problems:\n- ${retryProblems.join("\n- ")}` : ""}
 
 OUTPUT
@@ -80,7 +97,7 @@ Return JSON only, no markdown, no explanation, exactly this shape:
   "workout_days": [
     { "day_name": "monday", "workout_title": "", "workout_type": "", "duration_minutes": 45,
       "estimated_calories": 320, "scheduled_start": "17:00", "scheduled_end": "17:45", "notes": "",
-      "exercises": [ { "exercise_order": 1, "exercise_name": "", "sets": 3, "reps": "12", "duration_seconds": null, "rest_seconds": 60, "notes": "" } ] }
+      "exercises": [ { "exercise_order": 1, "exercise_name": "", "exercise_slug": null, "sets": 3, "reps": "12", "duration_seconds": null, "rest_seconds": 60, "notes": "" } ] }
   ],
   "meal_days": [
     { "day_name": "monday", "total_calories": 2200, "protein": 130, "carbohydrates": 250, "fats": 70,

@@ -12,6 +12,7 @@ import {
   Sparkles,
   Target,
   Timer,
+  PlayCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatTime } from "@/lib/dashboard-data";
@@ -24,9 +25,11 @@ import {
 } from "@/lib/workouts-data";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+import { ExerciseDemoSheet } from "@/components/dashboard/ExerciseDemoSheet";
 
 export function WorkoutsPanel() {
   const qc = useQueryClient();
+  const [demo, setDemo] = useState<WorkoutExercise | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-workout"],
     queryFn: () => fetchTodayWorkout(),
@@ -137,6 +140,7 @@ export function WorkoutsPanel() {
               completed={data.completedExerciseIds.includes(ex.id)}
               disabled={toggleExercise.isPending}
               onToggle={(completed) => toggleExercise.mutate({ id: ex.id, completed })}
+              onViewDemo={() => setDemo(ex)}
             />
           ))}
         </div>
@@ -178,6 +182,12 @@ export function WorkoutsPanel() {
           "Complete Workout"
         )}
       </Button>
+
+      <ExerciseDemoSheet
+        exercise={demo}
+        open={demo !== null}
+        onOpenChange={(v) => !v && setDemo(null)}
+      />
     </div>
   );
 }
@@ -205,11 +215,13 @@ function ExerciseCard({
   completed,
   disabled,
   onToggle,
+  onViewDemo,
 }: {
   ex: WorkoutExercise;
   completed: boolean;
   disabled: boolean;
   onToggle: (completed: boolean) => void;
+  onViewDemo: () => void;
 }) {
   return (
     <Card
@@ -259,6 +271,14 @@ function ExerciseCard({
       {ex.notes ? (
         <p className="mt-2.5 pl-13 text-[12px] leading-4 text-muted-foreground">{ex.notes}</p>
       ) : null}
+
+      <button
+        type="button"
+        onClick={onViewDemo}
+        className="mt-2.5 ml-13 flex items-center gap-1.5 text-[13px] font-semibold text-primary transition-colors hover:text-primary/80"
+      >
+        <PlayCircle className="h-4 w-4" /> View demo
+      </button>
     </Card>
   );
 }
