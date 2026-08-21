@@ -260,6 +260,14 @@ function MealCard({
           "Mark as Completed"
         )}
       </Button>
+
+      <Button
+        onClick={onViewRecipe}
+        variant="ghost"
+        className="mt-2 h-10 w-full rounded-2xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <BookOpen className="mr-2 h-4 w-4" /> View Recipe
+      </Button>
     </Card>
   );
 }
