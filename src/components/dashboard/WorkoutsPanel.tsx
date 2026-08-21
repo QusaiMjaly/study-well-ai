@@ -182,6 +182,12 @@ export function WorkoutsPanel() {
           "Complete Workout"
         )}
       </Button>
+
+      <ExerciseDemoSheet
+        exercise={demo}
+        open={demo !== null}
+        onOpenChange={(v) => !v && setDemo(null)}
+      />
     </div>
   );
 }
