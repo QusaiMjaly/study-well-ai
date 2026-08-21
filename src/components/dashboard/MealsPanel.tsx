@@ -176,11 +176,13 @@ function MealCard({
   done,
   busy,
   onToggle,
+  onViewRecipe,
 }: {
   meal: MealItem;
   done: boolean;
   busy: boolean;
   onToggle: () => void;
+  onViewRecipe: () => void;
 }) {
   return (
     <Card
