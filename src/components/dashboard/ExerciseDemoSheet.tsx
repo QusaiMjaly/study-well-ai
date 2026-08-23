@@ -42,14 +42,17 @@ export function ExerciseDemoSheet({
               <Skeleton className="h-48 w-full" />
             ) : data?.animation_url ? (
               <video
+                key={data.slug}
                 src={data.animation_url}
                 poster={data.poster_url ?? undefined}
-                autoPlay
-                loop
+                autoPlay={!reducedMotion}
+                loop={!reducedMotion}
                 muted
                 playsInline
                 controls
-                className="h-48 w-full object-cover motion-reduce:[animation:none]"
+                preload="none"
+                aria-label={`${data.display_name} demonstration`}
+                className="h-48 w-full object-cover"
               />
             ) : data?.poster_url ? (
               <img
