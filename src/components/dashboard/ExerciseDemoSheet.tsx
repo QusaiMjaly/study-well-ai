@@ -156,6 +156,21 @@ export function ExerciseDemoSheet({
   );
 }
 
+/** True when the user has asked the OS to reduce motion. Hydration-safe. */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return reduced;
+}
+
 function Pill({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <span
