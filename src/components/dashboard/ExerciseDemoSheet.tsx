@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +15,7 @@ export function ExerciseDemoSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const reducedMotion = usePrefersReducedMotion();
   const { data, isLoading } = useQuery({
     queryKey: ["exercise-media", exercise?.exercise_slug ?? null, exercise?.exercise_name ?? ""],
     queryFn: () => fetchExerciseMedia(exercise?.exercise_slug, exercise?.exercise_name ?? ""),
@@ -40,14 +42,17 @@ export function ExerciseDemoSheet({
               <Skeleton className="h-48 w-full" />
             ) : data?.animation_url ? (
               <video
+                key={data.slug}
                 src={data.animation_url}
                 poster={data.poster_url ?? undefined}
-                autoPlay
-                loop
+                autoPlay={!reducedMotion}
+                loop={!reducedMotion}
                 muted
                 playsInline
                 controls
-                className="h-48 w-full object-cover motion-reduce:[animation:none]"
+                preload="none"
+                aria-label={`${data.display_name} demonstration`}
+                className="h-48 w-full object-cover"
               />
             ) : data?.poster_url ? (
               <img
@@ -149,6 +154,21 @@ export function ExerciseDemoSheet({
       </SheetContent>
     </Sheet>
   );
+}
+
+/** True when the user has asked the OS to reduce motion. Hydration-safe. */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return reduced;
 }
 
 function Pill({ children, className = "" }: { children: React.ReactNode; className?: string }) {
