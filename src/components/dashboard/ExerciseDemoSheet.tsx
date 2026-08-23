@@ -15,6 +15,7 @@ export function ExerciseDemoSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const reducedMotion = usePrefersReducedMotion();
   const { data, isLoading } = useQuery({
     queryKey: ["exercise-media", exercise?.exercise_slug ?? null, exercise?.exercise_name ?? ""],
     queryFn: () => fetchExerciseMedia(exercise?.exercise_slug, exercise?.exercise_name ?? ""),
