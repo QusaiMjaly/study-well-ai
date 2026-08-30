@@ -4,13 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
-import { generateAiPlan } from "@/lib/plan.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { usePlanRegeneration } from "@/lib/plan-regeneration";
 
 import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyMessage } from "@/lib/friendly-errors";
+
 
 export const Route = createFileRoute("/_authenticated/schedule-update")({
   head: () => ({
@@ -37,11 +37,11 @@ function ScheduleUpdate() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeTimetable);
-  const generate = useServerFn(generateAiPlan);
+  const { requestRegeneration, isGenerating } = usePlanRegeneration();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
   const [done, setDone] = useState(false);
+
 
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
