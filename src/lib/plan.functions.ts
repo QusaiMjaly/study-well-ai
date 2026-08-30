@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { AiPlanSchema, validatePlanAgainstSchedule, type AiPlan } from "./plan-schema";
+import {
+  AiPlanSchema,
+  validatePlanAgainstSchedule,
+  validatePlanExercises,
+  type AiPlan,
+} from "./plan-schema";
 import {
   GATEWAY_URL,
   PLAN_MODEL,
@@ -9,7 +14,9 @@ import {
   toSavePayload,
   type PlanInputs,
 } from "./plan-prompt";
+import { selectCandidates, type CatalogueRow } from "./exercise-selection";
 import type { ScheduleJson } from "./schedule-schema";
+
 
 export const generateAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
