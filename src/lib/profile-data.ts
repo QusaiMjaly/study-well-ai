@@ -115,96 +115,24 @@ export function totalClasses(schedule: ScheduleRow | null) {
 }
 
 /**
- * The active plan is stale when profile/goals data used to build it changed afterwards.
- * `goals` rows are append-only from onboarding, so a newer goals row means newer inputs.
+ * The active plan is stale when profile/goals/schedule data used to build it changed afterwards.
+ * `goals` rows are append-only, so a newer goals row means newer planning inputs.
  */
 export function isPlanStale(bundle: ProfileBundle, editedAt: number | null) {
   if (!bundle.activePlan) return false;
   const planTime = new Date(bundle.activePlan.created_at).getTime();
   if (editedAt && editedAt > planTime) return true;
   const goalsTime = bundle.goals?.created_at ? new Date(bundle.goals.created_at).getTime() : 0;
-  return goalsTime > planTime;
+  const scheduleTime = bundle.schedule?.created_at
+    ? new Date(bundle.schedule.created_at).getTime()
+    : 0;
+  return goalsTime > planTime || scheduleTime > planTime;
 }
 
-export type ProfileEdits = {
-  full_name: string;
-  age: string;
-  gender: string;
-  height: string;
-  weight: string;
-  activity_level: string;
-  goal_type: string;
-  target_weight: string;
-  workout_preference: string;
-  meal_preference: string;
-  workout_duration: string;
-  preferred_time: string;
-  biggest_challenge: string;
-};
+export {
+  validateEdits,
+  PLAN_AFFECTING_FIELDS,
+  type ProfileEdits,
+  type PlanAffectingField,
+} from "./profile-fields";
 
-const num = (v: string) => (v.trim() === "" ? null : Number(v));
-
-export function validateEdits(e: ProfileEdits): string | null {
-  if (!e.full_name.trim()) return "Please enter your full name.";
-  if (e.full_name.trim().length > 100) return "Name must be under 100 characters.";
-  const age = num(e.age);
-  if (age !== null && (!Number.isFinite(age) || age < 13 || age > 100))
-    return "Age must be between 13 and 100.";
-  const height = num(e.height);
-  if (height !== null && (!Number.isFinite(height) || height < 100 || height > 250))
-    return "Height must be between 100 and 250 cm.";
-  const weight = num(e.weight);
-  if (weight !== null && (!Number.isFinite(weight) || weight < 30 || weight > 300))
-    return "Weight must be between 30 and 300 kg.";
-  const target = num(e.target_weight);
-  if (target !== null && (!Number.isFinite(target) || target < 30 || target > 300))
-    return "Target weight must be between 30 and 300 kg.";
-  if (e.biggest_challenge.length > 300) return "Challenge must be under 300 characters.";
-  return null;
-}
-
-/** Updates only the signed-in user's own profile + latest goals row. */
-export async function saveProfileEdits(bundle: ProfileBundle, e: ProfileEdits) {
-  const { data: u } = await supabase.auth.getUser();
-  const userId = u.user?.id;
-  if (!userId) throw new Error("Not signed in");
-
-  const { error: pErr } = await supabase.from("profiles").upsert(
-    {
-      id: userId,
-      email: bundle.profile?.email ?? bundle.authEmail,
-      full_name: e.full_name.trim(),
-      age: num(e.age),
-      gender: e.gender || null,
-      height: num(e.height),
-      weight: num(e.weight),
-      activity_level: e.activity_level || null,
-    },
-    { onConflict: "id" },
-  );
-  if (pErr) throw pErr;
-
-  const goalPayload = {
-    user_id: userId,
-    goal_type: e.goal_type || null,
-    target_weight: num(e.target_weight),
-    workout_preference: e.workout_preference || null,
-    meal_preference: e.meal_preference || null,
-    workout_duration: e.workout_duration || null,
-    preferred_time: e.preferred_time || null,
-    biggest_challenge: e.biggest_challenge.trim() || null,
-    workout_days: bundle.goals?.workout_days ?? null,
-  };
-
-  if (bundle.goals?.id) {
-    const { error } = await supabase
-      .from("goals")
-      .update(goalPayload)
-      .eq("id", bundle.goals.id)
-      .eq("user_id", userId);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from("goals").insert(goalPayload);
-    if (error) throw error;
-  }
-}
