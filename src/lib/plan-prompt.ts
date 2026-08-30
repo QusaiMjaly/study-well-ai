@@ -73,10 +73,12 @@ HARD RULES
 - Times are strings in 24h "HH:mm" format. Day names lowercase English.
 - Every meal MUST include "preparation_steps": 3 to 6 concise ordered steps describing how to prepare THAT meal, using ONLY that meal's ingredients and matching the planned portion/calories.
 - Every meal MUST include "image_prompt": one short sentence describing the finished plated dish (food only, no people, no brands, no text or logos in the image, natural lighting, top-down or 3/4 view).
-- Every exercise MUST include "exercise_slug". Prefer a slug from the SUPPORTED EXERCISE SLUGS list ONLY when it is an accurate match for the movement you prescribed. If no listed slug accurately matches, you are free to prescribe any other appropriate exercise and MUST set "exercise_slug": null. Never force an approximate or incorrect slug, and never invent a slug that is not on the list.
+- Every exercise MUST include "exercise_slug" and it MUST be copied EXACTLY from the ALLOWED EXERCISE CATALOGUE below. Never invent, modify, shorten or omit a slug, and never use a slug that is not listed. "exercise_name" must be the display name of that same catalogue exercise.
+- Build a well-structured program: you do NOT need to use every listed exercise or every movement family, and do not repeat the same exercise twice in one workout.
 
-SUPPORTED EXERCISE SLUGS
-${CANONICAL_EXERCISE_SLUGS.join(", ")}
+ALLOWED EXERCISE CATALOGUE (choose exercise_slug ONLY from this list)
+${formatCandidatesForPrompt(candidates)}
+
 ${retryProblems?.length ? `\nYOUR PREVIOUS ATTEMPT WAS REJECTED. Fix these problems:\n- ${retryProblems.join("\n- ")}` : ""}
 
 OUTPUT
