@@ -219,42 +219,18 @@ function emptyEdits(b: ProfileBundle): ProfileEdits {
   };
 }
 
-type EditSection = "personal" | "preferences" | null;
-
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const saveDetails = useServerFn(saveProfileDetails);
-  const generate = useServerFn(generateAiPlan);
-  const [editing, setEditing] = useState<EditSection>(null);
+  const { requestRegeneration, isGenerating, hasFailed } = usePlanRegeneration();
+  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<ProfileEdits | null>(null);
-  const [regenFailed, setRegenFailed] = useState(false);
-  /** Guards against a second generation for the same edit (double click, remount). */
-  const generating = useRef(false);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["profile-bundle"],
     queryFn: fetchProfileBundle,
   });
-
-  /** Runs the existing generation path and refreshes every plan-derived cache. */
-  async function runRegeneration() {
-    if (generating.current) return;
-    generating.current = true;
-    try {
-      await generate(undefined as never);
-      setRegenFailed(false);
-      await invalidatePlanCaches(qc);
-      toast.success("Your plan was updated");
-    } catch (e) {
-      setRegenFailed(true);
-      toast.error(
-        friendlyMessage(e, "Your details were updated, but we couldn't refresh your plan yet."),
-      );
-    } finally {
-      generating.current = false;
-    }
-  }
 
   const save = useMutation({
     mutationFn: async () => {
@@ -262,18 +238,23 @@ export function ProfilePanel() {
       return (await saveDetails({ data: form })) as { changed: boolean };
     },
     onSuccess: async (result) => {
-      setEditing(null);
+      setEditing(false);
       setForm(null);
       toast.success("Profile updated");
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
-      if (result?.changed) await runRegeneration();
+      // Exactly one regeneration per Save, owned by the app-level controller
+      // so navigating away can't cancel it or turn it into a failure.
+      if (result?.changed) void requestRegeneration();
       else await qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
     onError: (e) => toast.error(friendlyMessage(e)),
   });
 
-  const retry = useMutation({ mutationFn: runRegeneration });
-  const busy = save.isPending || retry.isPending;
+  const retry = useMutation({ mutationFn: () => requestRegeneration() });
+  /** Blocks a duplicate Save only; it never blocks navigation. */
+  const busy = save.isPending || retry.isPending || isGenerating;
+
+
 
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
