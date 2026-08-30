@@ -26,7 +26,11 @@ export type PlanInputs = {
   schedule: ScheduleJson | null;
 };
 
-export function buildPlanPrompt(inputs: PlanInputs, retryProblems?: string[]) {
+export function buildPlanPrompt(
+  inputs: PlanInputs,
+  candidates: Candidate[],
+  retryProblems?: string[],
+) {
   const { profile, goals, schedule } = inputs;
 
   const scheduleText = schedule
