@@ -242,7 +242,7 @@ export function ProfilePanel() {
     if (generating.current) return;
     generating.current = true;
     try {
-      await generate({ data: undefined } as never);
+      await generate(undefined as never);
       setRegenFailed(false);
       await invalidatePlanCaches(qc);
       toast.success("Your plan was updated");

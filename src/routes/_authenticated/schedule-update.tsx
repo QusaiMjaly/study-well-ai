@@ -83,7 +83,7 @@ function ScheduleUpdate() {
       // New class times change every workout/meal constraint, so refresh the plan.
       setRegenerating(true);
       try {
-        await generate({ data: undefined } as never);
+        await generate(undefined as never);
         await invalidatePlanCaches(qc);
         toast.success("Your plan was updated for the new schedule.");
       } catch (e) {
