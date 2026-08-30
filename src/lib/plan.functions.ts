@@ -77,10 +77,19 @@ export const generateAiPlan = createServerFn({ method: "POST" })
 
     const allowedSlugs = new Set(candidates.map((c) => c.slug));
 
+    logPlanDiagnostic({
+      event: "candidates",
+      poolSize: candidates.length,
+      families: new Set(candidates.map((c) => c.family)).size,
+    });
+
     let problems: string[] = [];
     let plan: AiPlan | null = null;
+    let attemptsUsed = 0;
 
     for (let attempt = 0; attempt < 2 && !plan; attempt++) {
+      attemptsUsed = attempt + 1;
+      logPlanDiagnostic({ event: "attempt", attempt: attemptsUsed });
       const res = await fetch(GATEWAY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
