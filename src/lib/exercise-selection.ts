@@ -101,6 +101,17 @@ const CATEGORY_TO_FAMILY: Record<string, MovementFamily> = {
 
 const HOME_EQUIPMENT = new Set(["bodyweight", "mat", "band"]);
 
+/**
+ * Simple cardio the student can always do. `walking` needs no equipment at all,
+ * so it stays eligible for home pools despite its legacy `cardio` equipment value.
+ */
+const SIMPLE_CARDIO_GYM = ["treadmill_run", "stationary_bike", "walking"];
+const SIMPLE_CARDIO_HOME = ["walking", "jump_rope"];
+const HOME_ELIGIBLE_CARDIO = new Set(["walking"]);
+
+/** How many conditioning slots are held for simple cardio in endurance pools. */
+const CARDIO_RESERVED = 3;
+
 type GoalBucket = "general" | "strength" | "endurance";
 
 function goalBucket(goalType: string | null): GoalBucket {
@@ -112,12 +123,18 @@ function goalBucket(goalType: string | null): GoalBucket {
 
 type Level = "beginner" | "typical" | "advanced";
 
+/**
+ * Activity level is a *suitability* signal, not a claim about training skill:
+ * only a sedentary student is steered towards beginner movements first, and even
+ * then intermediate exercises stay eligible.
+ */
 function experienceLevel(activityLevel: string | null, goal: GoalBucket): Level {
   const a = (activityLevel ?? "").toLowerCase();
-  if (!a || /sedentary|light|low|beginner/.test(a)) return "beginner";
-  if (/very[_ -]?active|athlete|advanced/.test(a)) {
+  if (!a || /sedentary/.test(a)) return "beginner";
+  if (/very|athlete|advanced/.test(a)) {
     return goal === "strength" ? "advanced" : "typical";
   }
+  // light + moderate (and anything unrecognised but present) are typical students.
   return "typical";
 }
 
@@ -132,6 +149,7 @@ function fallbackDifficulties(level: Level): string[] {
   if (level === "beginner") return ["beginner", "intermediate"];
   return allowedDifficulties(level);
 }
+
 
 const QUOTAS: Record<GoalBucket, Record<MovementFamily, number>> = {
   general: {
@@ -240,7 +258,7 @@ export function selectCandidates(
   for (const row of catalogue) {
     const c = toCandidate(row);
     if (!c) continue;
-    if (homeOnly && !HOME_EQUIPMENT.has(c.equipment)) continue;
+    if (homeOnly && !HOME_EQUIPMENT.has(c.equipment) && !HOME_ELIGIBLE_CARDIO.has(c.slug)) continue;
     if (!fallback.has(c.difficulty)) continue;
     const list = byFamily.get(c.family) ?? [];
     list.push(c);
@@ -251,18 +269,64 @@ export function selectCandidates(
     catalogue.filter((r) => r.ymove_exercise_id).map((r) => r.slug),
   );
 
-  const picked: Candidate[] = [];
-  for (const family of MOVEMENT_FAMILIES) {
-    const pool = byFamily.get(family) ?? [];
-    const ranked = [...pool].sort((a, b) => {
+  const rank = (pool: Candidate[]) =>
+    [...pool].sort((a, b) => {
       const diff = Number(!preferred.has(a.difficulty)) - Number(!preferred.has(b.difficulty));
       if (diff !== 0) return diff;
       const demo = Number(!hasDemo.has(a.slug)) - Number(!hasDemo.has(b.slug));
       if (demo !== 0) return demo;
       return hash(ctx.userId + a.slug) - hash(ctx.userId + b.slug);
     });
-    picked.push(...ranked.slice(0, quotas[family]));
+
+  // Simple cardio has no YMove demo, so mapped-first ranking would always drop it.
+  // Endurance (and home general-fitness) pools hold a few conditioning slots for it.
+  const reserveCardio = goal === "endurance" || (homeOnly && goal !== "strength");
+  const cardioOrder = homeOnly ? SIMPLE_CARDIO_HOME : SIMPLE_CARDIO_GYM;
+  const cardioReserved: Candidate[] = reserveCardio
+    ? cardioOrder
+        .map((slug) => (byFamily.get("conditioning") ?? []).find((c) => c.slug === slug))
+        .filter((c): c is Candidate => Boolean(c))
+        .slice(0, CARDIO_RESERVED)
+    : [];
+  const reservedSlugs = new Set(cardioReserved.map((c) => c.slug));
+
+  const picked: Candidate[] = [];
+  // Shoulders has no home-suitable isolation work; give the unused quota to pressing.
+  const carryOver: Partial<Record<MovementFamily, number>> = {};
+  for (const family of MOVEMENT_FAMILIES) {
+    const pool = byFamily.get(family) ?? [];
+    const quota = quotas[family] + (carryOver[family] ?? 0);
+    let chosen: Candidate[];
+    if (family === "conditioning" && cardioReserved.length) {
+      const rest = rank(pool.filter((c) => !reservedSlugs.has(c.slug)));
+      chosen = [...cardioReserved, ...rest.slice(0, Math.max(0, quota - cardioReserved.length))];
+    } else {
+      chosen = rank(pool).slice(0, quota);
+    }
+    picked.push(...chosen);
+
+    const deficit = quota - chosen.length;
+    if (deficit > 0 && family === "shoulders") {
+      carryOver.vertical_push = (carryOver.vertical_push ?? 0) + deficit;
+    }
   }
+
+  // vertical_push is selected before shoulders, so redistribute in a second pass.
+  let deficitLeft = carryOver.vertical_push ?? 0;
+  if (deficitLeft > 0) {
+    const chosenSlugs = new Set(picked.map((c) => c.slug));
+    for (const family of ["vertical_push", "horizontal_push"] as const) {
+      if (deficitLeft <= 0) break;
+      const extra = rank((byFamily.get(family) ?? []).filter((c) => !chosenSlugs.has(c.slug)));
+      for (const c of extra.slice(0, deficitLeft)) {
+        picked.push(c);
+        chosenSlugs.add(c.slug);
+        deficitLeft--;
+      }
+    }
+  }
+
+
 
   // Top up towards the floor when quotas leave the pool thin (typical for "home").
   if (picked.length < MIN_CANDIDATES) {
