@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
+
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,11 +55,11 @@ import {
   type ProfileEdits,
 } from "@/lib/profile-data";
 import { saveProfileDetails } from "@/lib/profile.functions";
-import { generateAiPlan } from "@/lib/plan.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { usePlanRegeneration } from "@/lib/plan-regeneration";
 import { normalizeDay } from "@/lib/day-utils";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+
 
 
 const DAY_LABELS: Record<string, string> = {
