@@ -120,12 +120,25 @@ export const generateAiPlan = createServerFn({ method: "POST" })
         parsedJson = extractJson(raw);
       } catch {
         problems = ["The response was not valid JSON."];
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: "invalid_json",
+        });
         continue;
       }
 
       const parsed = AiPlanSchema.safeParse(parsedJson);
       if (!parsed.success) {
         problems = parsed.error.issues.slice(0, 8).map((i) => `${i.path.join(".")}: ${i.message}`);
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: "schema",
+          problemCount: parsed.error.issues.length,
+        });
         continue;
       }
 
@@ -133,10 +146,17 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       const exerciseProblems = validatePlanExercises(parsed.data, allowedSlugs);
       if (scheduleProblems.length || exerciseProblems.length) {
         problems = [...scheduleProblems, ...exerciseProblems].slice(0, 8);
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: exerciseProblems.length ? "exercises" : "schedule",
+          problemCount: scheduleProblems.length + exerciseProblems.length,
+        });
         continue;
       }
 
-
+      logPlanDiagnostic({ event: "validation", attempt: attemptsUsed, passed: true });
       plan = parsed.data;
     }
 
