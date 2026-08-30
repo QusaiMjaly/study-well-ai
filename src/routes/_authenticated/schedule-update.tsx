@@ -192,7 +192,12 @@ function ScheduleUpdate() {
             className="h-13 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground shadow-card"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Analysing your timetable…" : "Analyze & Update Schedule"}
+            {regenerating
+              ? "Updating your plan…"
+              : loading
+                ? "Analysing your timetable…"
+                : "Analyze & Update Schedule"}
+
           </Button>
 
           <button
