@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dumbbell, Info, ListChecks, TriangleAlert, VideoOff } from "lucide-react";
-import { fetchExerciseMedia } from "@/lib/exercise-media";
+import { getExerciseDemo } from "@/lib/exercise-demo.functions";
 import type { WorkoutExercise } from "@/lib/workouts-data";
 
 export function ExerciseDemoSheet({
@@ -16,12 +17,44 @@ export function ExerciseDemoSheet({
   onOpenChange: (v: boolean) => void;
 }) {
   const reducedMotion = usePrefersReducedMotion();
-  const { data, isLoading } = useQuery({
-    queryKey: ["exercise-media", exercise?.exercise_slug ?? null, exercise?.exercise_name ?? ""],
-    queryFn: () => fetchExerciseMedia(exercise?.exercise_slug, exercise?.exercise_name ?? ""),
+  const fetchDemo = useServerFn(getExerciseDemo);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["exercise-demo", exercise?.exercise_slug ?? null, exercise?.exercise_name ?? ""],
+    queryFn: () =>
+      fetchDemo({
+        data: {
+          slug: exercise?.exercise_slug ?? null,
+          exerciseName: exercise?.exercise_name ?? "",
+        },
+      }),
     enabled: open && !!exercise,
-    staleTime: 30 * 60_000,
+    // Provider media URLs are temporary — always fetch fresh when a demo opens.
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
   });
+
+  // One refetch attempt per sheet session when a temporary URL has expired.
+  const retriedRef = useRef(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  useEffect(() => {
+    if (!open) {
+      retriedRef.current = false;
+      setVideoFailed(false);
+    }
+  }, [open]);
+
+  const onVideoError = () => {
+    if (!retriedRef.current) {
+      retriedRef.current = true;
+      void refetch();
+      return;
+    }
+    setVideoFailed(true);
+  };
+
+  const video = videoFailed ? null : (data?.video ?? null);
+  const showUnavailable = !!data && !video;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -39,28 +72,29 @@ export function ExerciseDemoSheet({
           {/* Demo media */}
           <div className="overflow-hidden rounded-2xl bg-muted">
             {isLoading ? (
-              <Skeleton className="h-48 w-full" />
-            ) : data?.animation_url ? (
+              <Skeleton className="h-64 w-full" />
+            ) : video ? (
               <video
-                key={data.slug}
-                src={data.animation_url}
-                poster={data.poster_url ?? undefined}
+                key={video.url}
+                src={video.url}
+                poster={video.poster ?? undefined}
                 autoPlay={!reducedMotion}
                 loop={!reducedMotion}
                 muted
                 playsInline
                 controls
-                preload="none"
-                aria-label={`${data.display_name} demonstration`}
-                className="h-48 w-full object-cover"
+                preload="metadata"
+                onError={onVideoError}
+                aria-label={`${data?.display_name ?? "Exercise"} demonstration`}
+                className="mx-auto h-64 w-full max-w-[320px] object-contain"
               />
-            ) : data?.poster_url ? (
-              <img
-                src={data.poster_url}
-                alt={`${data.display_name} demonstration`}
-                loading="lazy"
-                className="h-48 w-full object-cover"
-              />
+            ) : showUnavailable ? (
+              <div className="flex h-48 flex-col items-center justify-center gap-2 px-6 text-center">
+                <VideoOff className="h-7 w-7 text-muted-foreground" />
+                <p className="text-[13px] text-muted-foreground">
+                  Exercise demo video is temporarily unavailable.
+                </p>
+              </div>
             ) : (
               <div className="flex h-48 flex-col items-center justify-center gap-2 px-6 text-center">
                 <VideoOff className="h-7 w-7 text-muted-foreground" />
@@ -70,6 +104,7 @@ export function ExerciseDemoSheet({
               </div>
             )}
           </div>
+
 
           {/* Plan prescription */}
           <div className="flex flex-wrap gap-2">
