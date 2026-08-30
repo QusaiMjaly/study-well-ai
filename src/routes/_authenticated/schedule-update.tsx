@@ -4,13 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
-import { generateAiPlan } from "@/lib/plan.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { usePlanRegeneration } from "@/lib/plan-regeneration";
 
 import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyMessage } from "@/lib/friendly-errors";
+
 
 export const Route = createFileRoute("/_authenticated/schedule-update")({
   head: () => ({
@@ -37,11 +37,11 @@ function ScheduleUpdate() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeTimetable);
-  const generate = useServerFn(generateAiPlan);
+  const { requestRegeneration, isGenerating } = usePlanRegeneration();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
   const [done, setDone] = useState(false);
+
 
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -88,24 +88,12 @@ function ScheduleUpdate() {
       toast.success("Schedule updated.");
 
       // New class times change every workout/meal constraint, so refresh the plan.
-      setRegenerating(true);
-      try {
-        await generate(undefined as never);
-        await invalidatePlanCaches(qc);
-        toast.success("Your plan was updated for the new schedule.");
-      } catch (e) {
-        toast.error(
-          friendlyMessage(
-            e,
-            "Your schedule was saved, but we couldn't refresh your plan yet. You can retry from Profile.",
-          ),
-        );
-      } finally {
-        setRegenerating(false);
-      }
+      // The global controller owns it, so leaving this page won't cancel it.
+      void requestRegeneration({ reason: "schedule" });
 
       setDone(true);
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
     } finally {
@@ -199,11 +187,12 @@ function ScheduleUpdate() {
             className="h-13 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground shadow-card"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {regenerating
+            {isGenerating
               ? "Updating your plan…"
               : loading
                 ? "Analysing your timetable…"
                 : "Analyze & Update Schedule"}
+
 
           </Button>
 

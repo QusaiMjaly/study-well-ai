@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
+
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,11 +55,11 @@ import {
   type ProfileEdits,
 } from "@/lib/profile-data";
 import { saveProfileDetails } from "@/lib/profile.functions";
-import { generateAiPlan } from "@/lib/plan.functions";
-import { invalidatePlanCaches } from "@/lib/plan-cache";
+import { usePlanRegeneration } from "@/lib/plan-regeneration";
 import { normalizeDay } from "@/lib/day-utils";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+
 
 
 const DAY_LABELS: Record<string, string> = {
@@ -218,42 +219,18 @@ function emptyEdits(b: ProfileBundle): ProfileEdits {
   };
 }
 
-type EditSection = "personal" | "preferences" | null;
-
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const saveDetails = useServerFn(saveProfileDetails);
-  const generate = useServerFn(generateAiPlan);
-  const [editing, setEditing] = useState<EditSection>(null);
+  const { requestRegeneration, isGenerating, hasFailed } = usePlanRegeneration();
+  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<ProfileEdits | null>(null);
-  const [regenFailed, setRegenFailed] = useState(false);
-  /** Guards against a second generation for the same edit (double click, remount). */
-  const generating = useRef(false);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["profile-bundle"],
     queryFn: fetchProfileBundle,
   });
-
-  /** Runs the existing generation path and refreshes every plan-derived cache. */
-  async function runRegeneration() {
-    if (generating.current) return;
-    generating.current = true;
-    try {
-      await generate(undefined as never);
-      setRegenFailed(false);
-      await invalidatePlanCaches(qc);
-      toast.success("Your plan was updated");
-    } catch (e) {
-      setRegenFailed(true);
-      toast.error(
-        friendlyMessage(e, "Your details were updated, but we couldn't refresh your plan yet."),
-      );
-    } finally {
-      generating.current = false;
-    }
-  }
 
   const save = useMutation({
     mutationFn: async () => {
@@ -261,18 +238,23 @@ export function ProfilePanel() {
       return (await saveDetails({ data: form })) as { changed: boolean };
     },
     onSuccess: async (result) => {
-      setEditing(null);
+      setEditing(false);
       setForm(null);
       toast.success("Profile updated");
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
-      if (result?.changed) await runRegeneration();
+      // Exactly one regeneration per Save, owned by the app-level controller
+      // so navigating away can't cancel it or turn it into a failure.
+      if (result?.changed) void requestRegeneration();
       else await qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
     onError: (e) => toast.error(friendlyMessage(e)),
   });
 
-  const retry = useMutation({ mutationFn: runRegeneration });
-  const busy = save.isPending || retry.isPending;
+  const retry = useMutation({ mutationFn: () => requestRegeneration() });
+  /** Blocks a duplicate Save only; it never blocks navigation. */
+  const busy = save.isPending || retry.isPending || isGenerating;
+
+
 
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
@@ -307,17 +289,17 @@ export function ProfilePanel() {
 
   const name = data.profile?.full_name?.trim();
   const email = data.profile?.email ?? data.authEmail;
-  const stale = isPlanStale(data, regenFailed);
+  const stale = isPlanStale(data, hasFailed);
 
-  /** Seeds the form from stored values so an unrelated section can never drift. */
-  function startEditing(section: Exclude<EditSection, null>) {
+  /** Seeds the whole form from stored values whenever edit mode opens. */
+  function startEditing() {
     if (!data) return;
     setForm(emptyEdits(data));
-    setEditing(section);
+    setEditing(true);
   }
 
   function cancelEditing() {
-    setEditing(null);
+    setEditing(false);
     setForm(null);
   }
 
@@ -326,12 +308,12 @@ export function ProfilePanel() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const pencilFor = (section: Exclude<EditSection, null>, label: string) => (
+  const editPencil = (
     <button
       type="button"
-      onClick={() => startEditing(section)}
-      disabled={editing !== null && editing !== section}
-      aria-label={label}
+      onClick={startEditing}
+      disabled={editing}
+      aria-label="Edit your details"
       className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
     >
       <Pencil className="h-[18px] w-[18px]" />
@@ -342,16 +324,22 @@ export function ProfilePanel() {
     <div className="mt-5 flex gap-3">
       <Button
         onClick={() => save.mutate()}
-        disabled={busy}
+        disabled={save.isPending}
         className="h-11 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
       >
-        {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+        {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
       </Button>
-      <Button variant="outline" className="h-11 rounded-2xl" onClick={cancelEditing} disabled={busy}>
+      <Button
+        variant="outline"
+        className="h-11 rounded-2xl"
+        onClick={cancelEditing}
+        disabled={save.isPending}
+      >
         Cancel
       </Button>
     </div>
   );
+
 
 
 
@@ -384,7 +372,7 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {!busy && regenFailed && (
+      {!busy && hasFailed && (
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-destructive/30 bg-destructive/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
           <div className="flex-1">
@@ -404,7 +392,8 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {!busy && !regenFailed && stale && (
+      {!busy && !hasFailed && stale && (
+
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="flex-1">
@@ -425,14 +414,14 @@ export function ProfilePanel() {
       )}
 
 
-      {/* PERSONAL INFO */}
+      {/* YOUR DETAILS — one card, one edit mode, one Save */}
       <SectionCard
         icon={<User className="h-5 w-5 text-primary-foreground" />}
         iconClass="bg-primary"
-        title="Personal Info"
-        action={pencilFor("personal", "Edit personal info")}
+        title="Your Details"
+        action={editPencil}
       >
-        {editing === "personal" && form ? (
+        {editing && form ? (
           <>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
@@ -477,47 +466,27 @@ export function ProfilePanel() {
                 onChange={(v) => setForm({ ...form, weight: v })}
               />
               <SelectField
-                id="goal_type"
-                label="Goal"
-                value={form.goal_type}
-                options={GOALS}
-                onChange={(v) => setForm({ ...form, goal_type: v })}
-              />
-              <SelectField
                 id="activity_level"
                 label="Activity level"
                 value={form.activity_level}
                 options={ACTIVITY_LEVELS}
                 onChange={(v) => setForm({ ...form, activity_level: v })}
               />
-            </div>
-            {editActions}
-          </>
-        ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
-            <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
-            <Field label="Weight" value={data.profile?.weight ? `${data.profile.weight} kg` : ""} />
-            <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
-            <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
-            <Field
-              label="Activity level"
-              value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
-            />
-          </div>
-        )}
-      </SectionCard>
-
-      {/* PREFERENCES */}
-      <SectionCard
-        icon={<Settings className="h-5 w-5 text-success-foreground" />}
-        iconClass="bg-success"
-        title="Preferences"
-        action={pencilFor("preferences", "Edit preferences")}
-      >
-        {editing === "preferences" && form ? (
-          <>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <SelectField
+                id="goal_type"
+                label="Goal"
+                value={form.goal_type}
+                options={GOALS}
+                onChange={(v) => setForm({ ...form, goal_type: v })}
+              />
+              <NumberField
+                id="target_weight"
+                label="Target weight (kg)"
+                value={form.target_weight}
+                min={30}
+                max={300}
+                onChange={(v) => setForm({ ...form, target_weight: v })}
+              />
               <SelectField
                 id="workout_preference"
                 label="Workout"
@@ -556,42 +525,72 @@ export function ProfilePanel() {
                 />
               </div>
             </div>
+            <p className="mt-3 text-[12px] text-muted-foreground">
+              Change everything you need, then save once — your plan refreshes a single time.
+            </p>
             {editActions}
           </>
-        ) : !data.goals ? (
-          <p className="mt-3 text-[13px] text-muted-foreground">
-            No preferences saved yet. Tap the pencil to add them.
-          </p>
         ) : (
-          <div className="mt-4 space-y-2.5">
-            <PrefRow
-              icon={<Dumbbell className="h-[18px] w-[18px]" />}
-              label="Workout"
-              value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
-            />
-            <PrefRow
-              icon={<Apple className="h-[18px] w-[18px]" />}
-              label="Meal type"
-              value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
-            />
-            <PrefRow
-              icon={<CalendarDays className="h-[18px] w-[18px]" />}
-              label="Duration"
-              value={labelOf(DURATIONS, data.goals.workout_duration)}
-            />
-            <PrefRow
-              icon={<Clock className="h-[18px] w-[18px]" />}
-              label="Preferred time"
-              value={labelOf(TIMES, data.goals.preferred_time)}
-            />
-            <PrefRow
-              icon={<Sparkles className="h-[18px] w-[18px]" />}
-              label="Biggest challenge"
-              value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
-            />
-          </div>
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
+              <Field
+                label="Height"
+                value={data.profile?.height ? `${data.profile.height} cm` : ""}
+              />
+              <Field
+                label="Weight"
+                value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
+              />
+              <Field
+                label="Target weight"
+                value={data.goals?.target_weight ? `${data.goals.target_weight} kg` : ""}
+              />
+              <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
+              <Field
+                label="Activity level"
+                value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
+              />
+            </div>
+
+            {!data.goals ? (
+              <p className="mt-3 text-[13px] text-muted-foreground">
+                No preferences saved yet. Tap the pencil to add them.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2.5">
+                <PrefRow
+                  icon={<Dumbbell className="h-[18px] w-[18px]" />}
+                  label="Workout"
+                  value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
+                />
+                <PrefRow
+                  icon={<Apple className="h-[18px] w-[18px]" />}
+                  label="Meal type"
+                  value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
+                />
+                <PrefRow
+                  icon={<CalendarDays className="h-[18px] w-[18px]" />}
+                  label="Duration"
+                  value={labelOf(DURATIONS, data.goals.workout_duration)}
+                />
+                <PrefRow
+                  icon={<Clock className="h-[18px] w-[18px]" />}
+                  label="Preferred time"
+                  value={labelOf(TIMES, data.goals.preferred_time)}
+                />
+                <PrefRow
+                  icon={<Sparkles className="h-[18px] w-[18px]" />}
+                  label="Biggest challenge"
+                  value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
+                />
+              </div>
+            )}
+          </>
         )}
       </SectionCard>
+
 
 
       {/* YOUR SCHEDULE */}
