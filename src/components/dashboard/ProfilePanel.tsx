@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,16 +48,18 @@ import {
   fetchProfileBundle,
   initialsOf,
   isPlanStale,
-  saveProfileEdits,
   scheduleDays,
   totalClasses,
-  validateEdits,
   type ProfileBundle,
   type ProfileEdits,
 } from "@/lib/profile-data";
+import { saveProfileDetails } from "@/lib/profile.functions";
+import { generateAiPlan } from "@/lib/plan.functions";
+import { invalidatePlanCaches } from "@/lib/plan-cache";
 import { normalizeDay } from "@/lib/day-utils";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+
 
 const DAY_LABELS: Record<string, string> = {
   sunday: "S",
@@ -219,34 +223,59 @@ type EditSection = "personal" | "preferences" | null;
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const saveDetails = useServerFn(saveProfileDetails);
+  const generate = useServerFn(generateAiPlan);
   const [editing, setEditing] = useState<EditSection>(null);
   const [form, setForm] = useState<ProfileEdits | null>(null);
   const [editedAt, setEditedAt] = useState<number | null>(null);
+  const [regenFailed, setRegenFailed] = useState(false);
+  /** Guards against a second generation for the same edit (double click, remount). */
+  const generating = useRef(false);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["profile-bundle"],
     queryFn: fetchProfileBundle,
   });
 
+  /** Runs the existing generation path and refreshes every plan-derived cache. */
+  async function runRegeneration() {
+    if (generating.current) return;
+    generating.current = true;
+    try {
+      await generate(undefined as never);
+      setRegenFailed(false);
+      await invalidatePlanCaches(qc);
+      toast.success("Your plan was updated");
+    } catch (e) {
+      setRegenFailed(true);
+      toast.error(
+        friendlyMessage(e, "Your details were updated, but we couldn't refresh your plan yet."),
+      );
+    } finally {
+      generating.current = false;
+    }
+  }
+
   const save = useMutation({
     mutationFn: async () => {
-      if (!data || !form) return;
-      const message = validateEdits(form);
-      if (message) throw new Error(message);
-      await saveProfileEdits(data, form);
+      if (!data || !form) return { changed: false };
+      return (await saveDetails({ data: form })) as { changed: boolean };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setEditedAt(Date.now());
       setEditing(null);
       setForm(null);
       toast.success("Profile updated");
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["profile-bundle"] }),
-        qc.invalidateQueries({ queryKey: ["active-plan"] }),
-      ]);
+      await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
+      if (result?.changed) await runRegeneration();
+      else await qc.invalidateQueries({ queryKey: ["active-plan"] });
     },
     onError: (e) => toast.error(friendlyMessage(e)),
   });
+
+  const retry = useMutation({ mutationFn: runRegeneration });
+  const busy = save.isPending || retry.isPending;
+
 
   const days = useMemo(() => scheduleDays(data?.schedule ?? null), [data]);
   const workoutDayKeys = useMemo(
@@ -315,21 +344,17 @@ export function ProfilePanel() {
     <div className="mt-5 flex gap-3">
       <Button
         onClick={() => save.mutate()}
-        disabled={save.isPending}
+        disabled={busy}
         className="h-11 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
       >
-        {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+        {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
       </Button>
-      <Button
-        variant="outline"
-        className="h-11 rounded-2xl"
-        onClick={cancelEditing}
-        disabled={save.isPending}
-      >
+      <Button variant="outline" className="h-11 rounded-2xl" onClick={cancelEditing} disabled={busy}>
         Cancel
       </Button>
     </div>
   );
+
 
 
   return (
@@ -354,15 +379,53 @@ export function ProfilePanel() {
         )}
       </section>
 
-      {stale && (
-        <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm">
-            Your active plan was generated using previous profile information. Generate a new plan to
-            apply these changes.
-          </p>
+      {busy && (
+        <Card className="flex flex-row items-center gap-3 rounded-2xl border-ai/30 bg-ai/5 p-4 shadow-soft">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-ai" />
+          <p className="text-sm font-medium">Updating your plan…</p>
         </Card>
       )}
+
+      {!busy && regenFailed && (
+        <Card className="flex flex-row items-start gap-3 rounded-2xl border-destructive/30 bg-destructive/5 p-4 shadow-soft">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div className="flex-1">
+            <p className="text-sm">
+              Your details were updated, but we couldn't refresh your plan yet. Your previous plan is
+              still available.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3 h-9 rounded-xl"
+              onClick={() => retry.mutate()}
+              disabled={busy}
+            >
+              Retry plan generation
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {!busy && !regenFailed && stale && (
+        <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="flex-1">
+            <p className="text-sm">
+              Your active plan was generated using previous information. Refresh it to apply these
+              changes.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3 h-9 rounded-xl"
+              onClick={() => retry.mutate()}
+              disabled={busy}
+            >
+              Refresh my plan
+            </Button>
+          </div>
+        </Card>
+      )}
+
 
       {/* PERSONAL INFO */}
       <SectionCard

@@ -4,6 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
+import { generateAiPlan } from "@/lib/plan.functions";
+import { invalidatePlanCaches } from "@/lib/plan-cache";
+
 import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -34,9 +37,12 @@ function ScheduleUpdate() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeTimetable);
+  const generate = useServerFn(generateAiPlan);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [done, setDone] = useState(false);
+
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -71,10 +77,27 @@ function ScheduleUpdate() {
       if (insErr) throw insErr;
 
       await analyze(undefined as never);
-
-      setDone(true);
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
       toast.success("Schedule updated.");
+
+      // New class times change every workout/meal constraint, so refresh the plan.
+      setRegenerating(true);
+      try {
+        await generate(undefined as never);
+        await invalidatePlanCaches(qc);
+        toast.success("Your plan was updated for the new schedule.");
+      } catch (e) {
+        toast.error(
+          friendlyMessage(
+            e,
+            "Your schedule was saved, but we couldn't refresh your plan yet. You can retry from Profile.",
+          ),
+        );
+      } finally {
+        setRegenerating(false);
+      }
+
+      setDone(true);
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
@@ -82,6 +105,7 @@ function ScheduleUpdate() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-page-gradient">
@@ -168,7 +192,12 @@ function ScheduleUpdate() {
             className="h-13 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground shadow-card"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Analysing your timetable…" : "Analyze & Update Schedule"}
+            {regenerating
+              ? "Updating your plan…"
+              : loading
+                ? "Analysing your timetable…"
+                : "Analyze & Update Schedule"}
+
           </Button>
 
           <button

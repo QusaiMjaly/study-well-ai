@@ -3,9 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   AiPlanSchema,
   validatePlanAgainstSchedule,
+  validatePlanDuration,
   validatePlanExercises,
   type AiPlan,
 } from "./plan-schema";
+
 import {
   GATEWAY_URL,
   PLAN_MODEL,
@@ -36,7 +38,7 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       supabase
         .from("goals")
         .select(
-          "goal_type, workout_preference, meal_preference, workout_duration, preferred_time, biggest_challenge",
+          "goal_type, target_weight, workout_preference, meal_preference, workout_duration, preferred_time, biggest_challenge",
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -144,17 +146,24 @@ export const generateAiPlan = createServerFn({ method: "POST" })
 
       const scheduleProblems = validatePlanAgainstSchedule(parsed.data, inputs.schedule);
       const exerciseProblems = validatePlanExercises(parsed.data, allowedSlugs);
-      if (scheduleProblems.length || exerciseProblems.length) {
-        problems = [...scheduleProblems, ...exerciseProblems].slice(0, 8);
+      const durationProblems = validatePlanDuration(parsed.data, goals?.workout_duration ?? null);
+      if (scheduleProblems.length || exerciseProblems.length || durationProblems.length) {
+        problems = [...scheduleProblems, ...exerciseProblems, ...durationProblems].slice(0, 8);
         logPlanDiagnostic({
           event: "validation",
           attempt: attemptsUsed,
           passed: false,
-          reason: exerciseProblems.length ? "exercises" : "schedule",
-          problemCount: scheduleProblems.length + exerciseProblems.length,
+          reason: exerciseProblems.length
+            ? "exercises"
+            : scheduleProblems.length
+              ? "schedule"
+              : "duration",
+          problemCount:
+            scheduleProblems.length + exerciseProblems.length + durationProblems.length,
         });
         continue;
       }
+
 
       logPlanDiagnostic({ event: "validation", attempt: attemptsUsed, passed: true });
       plan = parsed.data;

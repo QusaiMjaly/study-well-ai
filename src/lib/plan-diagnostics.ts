@@ -12,10 +12,11 @@ export type PlanDiagnostic =
       event: "validation";
       attempt: number;
       passed: boolean;
-      reason?: "invalid_json" | "schema" | "schedule" | "exercises";
+      reason?: "invalid_json" | "schema" | "schedule" | "exercises" | "duration";
       problemCount?: number;
     }
   | { event: "saved"; attempts: number; workoutDays: number; exercises: number };
+
 
 function enabled() {
   return process.env["NODE_ENV"] !== "production";
