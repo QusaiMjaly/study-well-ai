@@ -13,13 +13,15 @@ import { fetchTodayMeals, setMealCompleted, type MealItem } from "@/lib/meals-da
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
 import { MealChangeSheet } from "@/components/dashboard/MealChangeSheet";
-import { BalanceDayAction, type BalanceState } from "@/components/dashboard/BalanceDayAction";
+import { BalanceDayAction } from "@/components/dashboard/BalanceDayAction";
+import { shouldOfferBalance } from "@/lib/replacement-core";
 
 export function MealsPanel() {
   const qc = useQueryClient();
   const [recipe, setRecipe] = useState<MealItem | null>(null);
   const [changing, setChanging] = useState<MealItem | null>(null);
-  const [balance, setBalance] = useState<BalanceState | null>(null);
+  /** Set after a successful replacement; visibility is re-derived from fresh data. */
+  const [replaced, setReplaced] = useState<{ mealItemId: string; mealName: string } | null>(null);
 
   /** Local replacement: refresh plan-derived reads only, never a full regeneration. */
   const refreshMeals = () => {
@@ -84,6 +86,27 @@ export function MealsPanel() {
     .filter((m) => completed.has(m.id))
     .reduce((s, m) => s + Number(m.protein ?? 0), 0);
 
+  // ACTUAL day totals from the refetched items vs the plan's intended targets.
+  const actualCalories = Math.round(data.meals.reduce((s, m) => s + (m.calories ?? 0), 0));
+  const actualProtein = Math.round(
+    data.meals.reduce((s, m) => s + Number(m.protein ?? 0), 0),
+  );
+  const balance =
+    replaced && data.mealDayId && data.meals.some((m) => m.id === replaced.mealItemId) &&
+    shouldOfferBalance(
+      { calories: actualCalories, protein: actualProtein, carbohydrates: 0, fats: 0 },
+      { calories: data.targetCalories, protein: data.targetProtein },
+    )
+      ? {
+          planId: data.planId,
+          mealDayId: data.mealDayId,
+          lockedMealItemId: replaced.mealItemId,
+          lockedMealName: replaced.mealName,
+          totals: { calories: actualCalories, protein: actualProtein },
+          targets: { calories: data.targetCalories, protein: data.targetProtein },
+        }
+      : null;
+
   const dateLabel = new Date().toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
@@ -121,9 +144,9 @@ export function MealsPanel() {
       {balance ? (
         <BalanceDayAction
           state={balance}
-          onDismiss={() => setBalance(null)}
+          onDismiss={() => setReplaced(null)}
           onBalanced={() => {
-            setBalance(null);
+            setReplaced(null);
             refreshMeals();
           }}
         />
@@ -167,20 +190,11 @@ export function MealsPanel() {
         open={changing !== null}
         onOpenChange={(v) => !v && setChanging(null)}
         onApplied={(res) => {
-          const replaced = changing;
+          const name = changing?.meal_name ?? "your new meal";
           setChanging(null);
           refreshMeals();
           toast.success("Meal updated");
-          if (res.offerBalance) {
-            setBalance({
-              planId: data.planId,
-              mealDayId: res.mealDayId,
-              lockedMealItemId: res.mealItemId,
-              lockedMealName: replaced?.meal_name ?? "your new meal",
-              totals: { calories: res.totals.calories, protein: res.totals.protein },
-              targets: res.targets,
-            });
-          }
+          setReplaced({ mealItemId: res.mealItemId, mealName: name });
         }}
       />
     </div>
