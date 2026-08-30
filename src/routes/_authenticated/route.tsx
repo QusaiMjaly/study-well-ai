@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanRegenerationProvider } from "@/lib/plan-regeneration";
+import { PlanRegenerationBanner } from "@/components/dashboard/PlanRegenerationBanner";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -14,12 +16,19 @@ export const Route = createFileRoute("/_authenticated")({
 /**
  * The mobile app shell owns its own header and bottom navigation, so this
  * layout stays chrome-free. Logging out lives on the Profile tab.
+ *
+ * Plan regeneration state lives here (above every page) so it keeps running
+ * while the user navigates between Dashboard tabs and the schedule page.
  */
 function AuthenticatedLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      <Outlet />
-    </div>
+    <PlanRegenerationProvider>
+      <div className="min-h-screen bg-background">
+        <Outlet />
+        <PlanRegenerationBanner />
+      </div>
+    </PlanRegenerationProvider>
   );
 }
+
 
