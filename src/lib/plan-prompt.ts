@@ -1,21 +1,10 @@
 import type { ScheduleJson } from "./schedule-schema";
 import type { AiPlan } from "./plan-schema";
+import { formatCandidatesForPrompt, type Candidate } from "./exercise-selection";
 
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const PLAN_MODEL = "google/gemini-3-flash-preview";
 
-/** Mirrors the seeded public.exercise_media catalogue. Unmatched movements use null. */
-export const CANONICAL_EXERCISE_SLUGS = [
-  "push_up", "squat", "bodyweight_lunge", "plank", "glute_bridge", "mountain_climber",
-  "burpee", "jumping_jack", "crunch", "sit_up", "bicycle_crunch", "russian_twist",
-  "superman", "dead_bug", "high_knees", "wall_sit", "tricep_dip", "pull_up",
-  "dumbbell_bench_press", "dumbbell_shoulder_press", "dumbbell_row", "bicep_curl",
-  "barbell_squat", "deadlift", "lat_pulldown", "leg_press", "treadmill_run",
-  "stationary_bike", "jump_rope", "walking", "incline_dumbbell_press", "dumbbell_chest_fly",
-  "lateral_raise", "front_raise", "rear_delt_fly", "seated_cable_row", "hammer_curl",
-  "tricep_pushdown", "overhead_tricep_extension", "romanian_deadlift", "leg_extension",
-  "leg_curl", "calf_raise",
-] as const;
 
 export type PlanInputs = {
   profile: {
@@ -37,7 +26,11 @@ export type PlanInputs = {
   schedule: ScheduleJson | null;
 };
 
-export function buildPlanPrompt(inputs: PlanInputs, retryProblems?: string[]) {
+export function buildPlanPrompt(
+  inputs: PlanInputs,
+  candidates: Candidate[],
+  retryProblems?: string[],
+) {
   const { profile, goals, schedule } = inputs;
 
   const scheduleText = schedule
@@ -84,10 +77,12 @@ HARD RULES
 - Times are strings in 24h "HH:mm" format. Day names lowercase English.
 - Every meal MUST include "preparation_steps": 3 to 6 concise ordered steps describing how to prepare THAT meal, using ONLY that meal's ingredients and matching the planned portion/calories.
 - Every meal MUST include "image_prompt": one short sentence describing the finished plated dish (food only, no people, no brands, no text or logos in the image, natural lighting, top-down or 3/4 view).
-- Every exercise MUST include "exercise_slug". Prefer a slug from the SUPPORTED EXERCISE SLUGS list ONLY when it is an accurate match for the movement you prescribed. If no listed slug accurately matches, you are free to prescribe any other appropriate exercise and MUST set "exercise_slug": null. Never force an approximate or incorrect slug, and never invent a slug that is not on the list.
+- Every exercise MUST include "exercise_slug" and it MUST be copied EXACTLY from the ALLOWED EXERCISE CATALOGUE below. Never invent, modify, shorten or omit a slug, and never use a slug that is not listed. "exercise_name" must be the display name of that same catalogue exercise.
+- Build a well-structured program: you do NOT need to use every listed exercise or every movement family, and do not repeat the same exercise twice in one workout.
 
-SUPPORTED EXERCISE SLUGS
-${CANONICAL_EXERCISE_SLUGS.join(", ")}
+ALLOWED EXERCISE CATALOGUE (choose exercise_slug ONLY from this list)
+${formatCandidatesForPrompt(candidates)}
+
 ${retryProblems?.length ? `\nYOUR PREVIOUS ATTEMPT WAS REJECTED. Fix these problems:\n- ${retryProblems.join("\n- ")}` : ""}
 
 OUTPUT

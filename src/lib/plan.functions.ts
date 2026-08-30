@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { AiPlanSchema, validatePlanAgainstSchedule, type AiPlan } from "./plan-schema";
+import {
+  AiPlanSchema,
+  validatePlanAgainstSchedule,
+  validatePlanExercises,
+  type AiPlan,
+} from "./plan-schema";
 import {
   GATEWAY_URL,
   PLAN_MODEL,
@@ -9,7 +14,9 @@ import {
   toSavePayload,
   type PlanInputs,
 } from "./plan-prompt";
+import { selectCandidates, type CatalogueRow } from "./exercise-selection";
 import type { ScheduleJson } from "./schedule-schema";
+
 
 export const generateAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -51,6 +58,24 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       schedule: (scheduleRow?.schedule_json as unknown as ScheduleJson) ?? null,
     };
 
+    const { data: catalogue } = await supabase
+      .from("exercise_media")
+      .select("slug, display_name, category, equipment, difficulty, primary_muscles, ymove_exercise_id")
+      .eq("is_active", true);
+
+    const candidates = selectCandidates((catalogue ?? []) as CatalogueRow[], {
+      goalType: goals?.goal_type ?? null,
+      activityLevel: profile.activity_level ?? null,
+      workoutPreference: goals?.workout_preference ?? null,
+      userId,
+    });
+
+    if (!candidates.length) {
+      throw new Error("The exercise catalogue is unavailable right now. Please retry.");
+    }
+
+    const allowedSlugs = new Set(candidates.map((c) => c.slug));
+
     let problems: string[] = [];
     let plan: AiPlan | null = null;
 
@@ -61,9 +86,15 @@ export const generateAiPlan = createServerFn({ method: "POST" })
         body: JSON.stringify({
           model: PLAN_MODEL,
           response_format: { type: "json_object" },
-          messages: [{ role: "user", content: buildPlanPrompt(inputs, attempt ? problems : undefined) }],
+          messages: [
+            {
+              role: "user",
+              content: buildPlanPrompt(inputs, candidates, attempt ? problems : undefined),
+            },
+          ],
         }),
       });
+
 
       if (!res.ok) {
         if (res.status === 429) throw new Error("AI is busy right now. Please retry in a moment.");
@@ -89,10 +120,12 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       }
 
       const scheduleProblems = validatePlanAgainstSchedule(parsed.data, inputs.schedule);
-      if (scheduleProblems.length) {
-        problems = scheduleProblems.slice(0, 8);
+      const exerciseProblems = validatePlanExercises(parsed.data, allowedSlugs);
+      if (scheduleProblems.length || exerciseProblems.length) {
+        problems = [...scheduleProblems, ...exerciseProblems].slice(0, 8);
         continue;
       }
+
 
       plan = parsed.data;
     }

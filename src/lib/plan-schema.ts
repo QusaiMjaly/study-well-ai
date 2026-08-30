@@ -132,3 +132,41 @@ export function validatePlanAgainstSchedule(
 
   return problems;
 }
+
+/**
+ * Validates that every generated exercise uses a slug from the candidate pool
+ * that was supplied to the model for THIS generation. No fuzzy remapping.
+ */
+export function validatePlanExercises(plan: AiPlan, allowedSlugs: Set<string>): string[] {
+  const problems: string[] = [];
+  const invalid = new Set<string>();
+
+  for (const day of plan.workout_days) {
+    const seen = new Set<string>();
+    for (const ex of day.exercises) {
+      const slug = ex.exercise_slug;
+      if (!slug) {
+        problems.push(
+          `Exercise "${ex.exercise_name}" on ${day.day_name} is missing "exercise_slug".`,
+        );
+        continue;
+      }
+      if (!allowedSlugs.has(slug)) {
+        invalid.add(slug);
+        continue;
+      }
+      if (seen.has(slug)) {
+        problems.push(`Exercise "${slug}" is repeated in the ${day.day_name} workout.`);
+      }
+      seen.add(slug);
+    }
+  }
+
+  if (invalid.size) {
+    problems.push(
+      `Use only exercise_slug values from the provided allowed exercise catalogue. Invalid slugs in your last attempt: ${[...invalid].slice(0, 12).join(", ")}.`,
+    );
+  }
+
+  return problems;
+}
