@@ -180,6 +180,17 @@ export const applyMealReplacement = createServerFn({ method: "POST" })
       .eq("id", meal.id);
     if (upErr) throw new Error("The replacement could not be saved. Please try again.");
 
+    if (completion) {
+      // Only TODAY's completion for THIS item — history from other dates is untouched.
+      const { error: delErr } = await supabase
+        .from("meal_completions")
+        .delete()
+        .eq("user_id", userId)
+        .eq("meal_item_id", meal.id)
+        .eq("completed_on", data.today);
+      if (delErr) throw new Error("We couldn't update today's log. Please try again.");
+    }
+
     const targets = await dayTargets(supabase, data.planId, day.id, {
       calories: Number(day.total_calories ?? 0),
       protein: Number(day.protein ?? 0),
