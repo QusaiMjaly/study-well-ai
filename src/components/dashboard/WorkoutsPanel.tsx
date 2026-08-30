@@ -13,6 +13,7 @@ import {
   Target,
   Timer,
   PlayCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatTime } from "@/lib/dashboard-data";
@@ -26,10 +27,12 @@ import {
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
 import { ExerciseDemoSheet } from "@/components/dashboard/ExerciseDemoSheet";
+import { ExerciseChangeSheet } from "@/components/dashboard/ExerciseChangeSheet";
 
 export function WorkoutsPanel() {
   const qc = useQueryClient();
   const [demo, setDemo] = useState<WorkoutExercise | null>(null);
+  const [changing, setChanging] = useState<WorkoutExercise | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-workout"],
     queryFn: () => fetchTodayWorkout(),
@@ -141,6 +144,7 @@ export function WorkoutsPanel() {
               disabled={toggleExercise.isPending}
               onToggle={(completed) => toggleExercise.mutate({ id: ex.id, completed })}
               onViewDemo={() => setDemo(ex)}
+              onChange={() => setChanging(ex)}
             />
           ))}
         </div>
@@ -188,6 +192,19 @@ export function WorkoutsPanel() {
         open={demo !== null}
         onOpenChange={(v) => !v && setDemo(null)}
       />
+
+      <ExerciseChangeSheet
+        exercise={changing}
+        planId={data.planId}
+        completedToday={changing ? data.completedExerciseIds.includes(changing.id) : false}
+        open={changing !== null}
+        onOpenChange={(v) => !v && setChanging(null)}
+        onApplied={(name) => {
+          setChanging(null);
+          refresh();
+          toast.success(`Swapped to ${name}`);
+        }}
+      />
     </div>
   );
 }
@@ -216,12 +233,14 @@ function ExerciseCard({
   disabled,
   onToggle,
   onViewDemo,
+  onChange,
 }: {
   ex: WorkoutExercise;
   completed: boolean;
   disabled: boolean;
   onToggle: (completed: boolean) => void;
   onViewDemo: () => void;
+  onChange: () => void;
 }) {
   return (
     <Card
@@ -272,13 +291,22 @@ function ExerciseCard({
         <p className="mt-2.5 pl-13 text-[12px] leading-4 text-muted-foreground">{ex.notes}</p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onViewDemo}
-        className="mt-2.5 ml-13 flex items-center gap-1.5 text-[13px] font-semibold text-primary transition-colors hover:text-primary/80"
-      >
-        <PlayCircle className="h-4 w-4" /> View demo
-      </button>
+      <div className="mt-2.5 ml-13 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={onViewDemo}
+          className="flex items-center gap-1.5 text-[13px] font-semibold text-primary transition-colors hover:text-primary/80"
+        >
+          <PlayCircle className="h-4 w-4" /> View demo
+        </button>
+        <button
+          type="button"
+          onClick={onChange}
+          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <RefreshCw className="h-4 w-4" /> Change exercise
+        </button>
+      </div>
     </Card>
   );
 }

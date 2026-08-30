@@ -19,6 +19,8 @@ export type MealItem = {
 
 export type TodayMeals = {
   planId: string;
+  /** Today's meal_days row id (empty when the plan has no meals today). */
+  mealDayId: string;
   dayName: string;
   targetCalories: number;
   targetProtein: number;
@@ -83,6 +85,7 @@ export async function fetchTodayMeals(now = new Date()): Promise<TodayMeals> {
 
   return {
     planId: data.id,
+    mealDayId: (days[0]?.id as string | undefined) ?? "",
     dayName: DAYS[now.getDay()]!,
     targetCalories: Math.round(
       days.reduce((s: number, d: any) => s + (d.total_calories ?? 0), 0) || sumCal,

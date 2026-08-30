@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecipeSheet } from "@/components/dashboard/RecipeSheet";
-import { BookOpen } from "lucide-react";
+import { BookOpen, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,10 +12,20 @@ import { formatTime } from "@/lib/dashboard-data";
 import { fetchTodayMeals, setMealCompleted, type MealItem } from "@/lib/meals-data";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+import { MealChangeSheet } from "@/components/dashboard/MealChangeSheet";
+import { BalanceDayAction, type BalanceState } from "@/components/dashboard/BalanceDayAction";
 
 export function MealsPanel() {
   const qc = useQueryClient();
   const [recipe, setRecipe] = useState<MealItem | null>(null);
+  const [changing, setChanging] = useState<MealItem | null>(null);
+  const [balance, setBalance] = useState<BalanceState | null>(null);
+
+  /** Local replacement: refresh plan-derived reads only, never a full regeneration. */
+  const refreshMeals = () => {
+    void qc.invalidateQueries({ queryKey: ["today-meals"] });
+    void qc.invalidateQueries({ queryKey: ["active-plan"] });
+  };
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["today-meals"],
     queryFn: () => fetchTodayMeals(),
@@ -108,6 +118,17 @@ export function MealsPanel() {
         </div>
       </section>
 
+      {balance ? (
+        <BalanceDayAction
+          state={balance}
+          onDismiss={() => setBalance(null)}
+          onBalanced={() => {
+            setBalance(null);
+            refreshMeals();
+          }}
+        />
+      ) : null}
+
       {/* MEAL CARDS */}
       {data.meals.length === 0 ? (
         <Card className="rounded-2xl p-10 text-center shadow-soft">
@@ -127,6 +148,7 @@ export function MealsPanel() {
               busy={toggle.isPending && toggle.variables?.id === m.id}
               onToggle={() => toggle.mutate({ id: m.id, completed: !completed.has(m.id) })}
               onViewRecipe={() => setRecipe(m)}
+              onChange={() => setChanging(m)}
             />
           ))}
         </div>
@@ -136,6 +158,30 @@ export function MealsPanel() {
         meal={recipe}
         open={recipe !== null}
         onOpenChange={(v) => !v && setRecipe(null)}
+      />
+
+      <MealChangeSheet
+        meal={changing}
+        planId={data.planId}
+        completedToday={changing ? completed.has(changing.id) : false}
+        open={changing !== null}
+        onOpenChange={(v) => !v && setChanging(null)}
+        onApplied={(res) => {
+          const replaced = changing;
+          setChanging(null);
+          refreshMeals();
+          toast.success("Meal updated");
+          if (res.offerBalance) {
+            setBalance({
+              planId: data.planId,
+              mealDayId: res.mealDayId,
+              lockedMealItemId: res.mealItemId,
+              lockedMealName: replaced?.meal_name ?? "your new meal",
+              totals: { calories: res.totals.calories, protein: res.totals.protein },
+              targets: res.targets,
+            });
+          }
+        }}
       />
     </div>
   );
@@ -177,12 +223,14 @@ function MealCard({
   busy,
   onToggle,
   onViewRecipe,
+  onChange,
 }: {
   meal: MealItem;
   done: boolean;
   busy: boolean;
   onToggle: () => void;
   onViewRecipe: () => void;
+  onChange: () => void;
 }) {
   return (
     <Card
@@ -261,13 +309,22 @@ function MealCard({
         )}
       </Button>
 
-      <Button
-        onClick={onViewRecipe}
-        variant="ghost"
-        className="mt-2 h-10 w-full rounded-2xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-      >
-        <BookOpen className="mr-2 h-4 w-4" /> View Recipe
-      </Button>
+      <div className="mt-2 flex gap-2">
+        <Button
+          onClick={onViewRecipe}
+          variant="ghost"
+          className="h-10 flex-1 rounded-2xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <BookOpen className="mr-2 h-4 w-4" /> View Recipe
+        </Button>
+        <Button
+          onClick={onChange}
+          variant="ghost"
+          className="h-10 flex-1 rounded-2xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" /> Change Meal
+        </Button>
+      </div>
     </Card>
   );
 }
