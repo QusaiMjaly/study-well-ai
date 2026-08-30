@@ -372,7 +372,7 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {!busy && regenFailed && (
+      {!busy && hasFailed && (
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-destructive/30 bg-destructive/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
           <div className="flex-1">
@@ -392,7 +392,8 @@ export function ProfilePanel() {
         </Card>
       )}
 
-      {!busy && !regenFailed && stale && (
+      {!busy && !hasFailed && stale && (
+
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="flex-1">
