@@ -134,7 +134,31 @@ export const suggestExerciseReplacements = createServerFn({ method: "POST" })
       });
     }
     if (!suggestions.length) throw new Error("The AI suggestions were incomplete. Please try again.");
-    return { suggestions };
+
+    // If the model repeated a slug, top up from the same validated pool so the
+    // user always sees three distinct catalogue options.
+    const template = suggestions[0]!;
+    for (const c of pool) {
+      if (suggestions.length >= 3) break;
+      if (seen.has(c.slug)) continue;
+      seen.add(c.slug);
+      suggestions.push({
+        exercise_slug: c.slug,
+        exercise_name: c.name,
+        muscle: c.muscle,
+        family: c.family,
+        equipment: c.equipment,
+        difficulty: c.difficulty,
+        sets: template.sets,
+        reps: template.reps,
+        duration_seconds: template.duration_seconds,
+        rest_seconds: template.rest_seconds,
+        notes: null,
+        rationale: "Similar movement from your catalogue with the same prescription.",
+      });
+    }
+
+    return { suggestions: suggestions.slice(0, 3) };
   });
 
 export const requestSpecificExerciseReplacement = createServerFn({ method: "POST" })
