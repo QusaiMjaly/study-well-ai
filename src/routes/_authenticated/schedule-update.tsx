@@ -37,9 +37,12 @@ function ScheduleUpdate() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeTimetable);
+  const generate = useServerFn(generateAiPlan);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [done, setDone] = useState(false);
+
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
