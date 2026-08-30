@@ -88,24 +88,12 @@ function ScheduleUpdate() {
       toast.success("Schedule updated.");
 
       // New class times change every workout/meal constraint, so refresh the plan.
-      setRegenerating(true);
-      try {
-        await generate(undefined as never);
-        await invalidatePlanCaches(qc);
-        toast.success("Your plan was updated for the new schedule.");
-      } catch (e) {
-        toast.error(
-          friendlyMessage(
-            e,
-            "Your schedule was saved, but we couldn't refresh your plan yet. You can retry from Profile.",
-          ),
-        );
-      } finally {
-        setRegenerating(false);
-      }
+      // The global controller owns it, so leaving this page won't cancel it.
+      void requestRegeneration({ reason: "schedule" });
 
       setDone(true);
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
     } finally {
