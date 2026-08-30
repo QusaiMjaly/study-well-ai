@@ -69,14 +69,21 @@ function ScheduleUpdate() {
       const { error: upErr } = await supabase.storage.from("schedule-images").upload(path, file);
       if (upErr) throw upErr;
 
-      const { error: insErr } = await supabase.from("schedules").insert({
-        user_id: u.user.id,
-        image_url: path,
-        schedule_json: null,
-      });
+      // Candidate row: readers ignore rows without parsed schedule_json, and we
+      // remove it outright if parsing fails so it can never become the current schedule.
+      const { data: inserted, error: insErr } = await supabase
+        .from("schedules")
+        .insert({ user_id: u.user.id, image_url: path, schedule_json: null })
+        .select("id")
+        .single();
       if (insErr) throw insErr;
 
-      await analyze(undefined as never);
+      try {
+        await analyze(undefined as never);
+      } catch (e) {
+        await supabase.from("schedules").delete().eq("id", inserted.id).eq("user_id", u.user.id);
+        throw e;
+      }
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
       toast.success("Schedule updated.");
 

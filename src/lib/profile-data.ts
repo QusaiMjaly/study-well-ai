@@ -58,13 +58,16 @@ export async function fetchProfileBundle(): Promise<ProfileBundle> {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(1)
       .maybeSingle(),
     supabase
       .from("schedules")
       .select("id, image_url, schedule_json, created_at")
       .eq("user_id", user.id)
+      .not("schedule_json", "is", null)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(1)
       .maybeSingle(),
     supabase
@@ -115,13 +118,14 @@ export function totalClasses(schedule: ScheduleRow | null) {
 }
 
 /**
- * The active plan is stale when profile/goals/schedule data used to build it changed afterwards.
- * `goals` rows are append-only, so a newer goals row means newer planning inputs.
+ * The active plan is stale when planning inputs changed after it was built.
+ * Derived from persisted rows (a newer goals row or a newer *parsed* schedule);
+ * `pendingChange` only covers a saved plan-affecting edit whose regeneration failed.
  */
-export function isPlanStale(bundle: ProfileBundle, editedAt: number | null) {
+export function isPlanStale(bundle: ProfileBundle, pendingChange = false) {
   if (!bundle.activePlan) return false;
+  if (pendingChange) return true;
   const planTime = new Date(bundle.activePlan.created_at).getTime();
-  if (editedAt && editedAt > planTime) return true;
   const goalsTime = bundle.goals?.created_at ? new Date(bundle.goals.created_at).getTime() : 0;
   const scheduleTime = bundle.schedule?.created_at
     ? new Date(bundle.schedule.created_at).getTime()

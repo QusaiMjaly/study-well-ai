@@ -1,8 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  diffColumns,
   diffPlanFields,
+  GOALS_COLUMNS,
   num,
+  PROFILE_COLUMNS,
   snapshotFrom,
   validateEdits,
   type PlanAffectingField,
@@ -11,8 +14,11 @@ import {
 
 /**
  * Saves the signed-in user's profile + goals and reports whether any field that
- * AI plan generation actually reads changed. Goals are written append-only so
- * the newest row's created_at is a reliable "inputs changed at" signal.
+ * AI plan generation actually reads changed.
+ *
+ * Writes are conditional: `profiles` is only updated when a profile column
+ * changed, and a new (append-only) `goals` row is only inserted when a goals
+ * column actually changed. Pressing Save with no edits therefore writes nothing.
  */
 export const saveProfileDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -36,6 +42,7 @@ export const saveProfileDetails = createServerFn({ method: "POST" })
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
           .limit(1)
           .maybeSingle(),
       ]);
@@ -53,11 +60,6 @@ export const saveProfileDetails = createServerFn({ method: "POST" })
         activity_level: data.activity_level || null,
       };
 
-      const { error: pErr } = await supabase
-        .from("profiles")
-        .upsert(profilePayload, { onConflict: "id" });
-      if (pErr) throw new Error(pErr.message);
-
       const goalPayload = {
         user_id: userId,
         goal_type: data.goal_type || null,
@@ -70,8 +72,21 @@ export const saveProfileDetails = createServerFn({ method: "POST" })
         workout_days: goals?.workout_days ?? null,
       };
 
-      const { error: gErr } = await supabase.from("goals").insert(goalPayload);
-      if (gErr) throw new Error(gErr.message);
+      const profileChanged =
+        !profile || diffColumns(PROFILE_COLUMNS, profile, profilePayload).length > 0;
+      const goalsChanged = !goals || diffColumns(GOALS_COLUMNS, goals, goalPayload).length > 0;
+
+      if (profileChanged) {
+        const { error: pErr } = await supabase
+          .from("profiles")
+          .upsert(profilePayload, { onConflict: "id" });
+        if (pErr) throw new Error(pErr.message);
+      }
+
+      if (goalsChanged) {
+        const { error: gErr } = await supabase.from("goals").insert(goalPayload);
+        if (gErr) throw new Error(gErr.message);
+      }
 
       const next = snapshotFrom({ ...profilePayload, ...goalPayload });
       const changedFields = diffPlanFields(previous, next);

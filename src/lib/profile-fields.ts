@@ -94,3 +94,38 @@ export function diffPlanFields(
 ): PlanAffectingField[] {
   return PLAN_AFFECTING_FIELDS.filter((f) => previous[f] !== next[f]);
 }
+
+/** Columns stored on `profiles`. */
+export const PROFILE_COLUMNS = [
+  "full_name",
+  "age",
+  "gender",
+  "height",
+  "weight",
+  "activity_level",
+] as const;
+
+/** Columns stored on an appended `goals` row (excluding workout_days, which is carried over). */
+export const GOALS_COLUMNS = [
+  "goal_type",
+  "target_weight",
+  "workout_preference",
+  "meal_preference",
+  "workout_duration",
+  "preferred_time",
+  "biggest_challenge",
+] as const;
+
+/** Normalizes any profile/goals column so 70, "70", "70.0", "" and null compare consistently. */
+export function normalizeField(field: string, value: unknown): string | number | null {
+  return normalizeValue(field as PlanAffectingField, value);
+}
+
+/** Columns from `fields` whose normalized value differs between the two sources. */
+export function diffColumns(
+  fields: readonly string[],
+  previous: Record<string, unknown>,
+  next: Record<string, unknown>,
+): string[] {
+  return fields.filter((f) => normalizeField(f, previous[f]) !== normalizeField(f, next[f]));
+}
