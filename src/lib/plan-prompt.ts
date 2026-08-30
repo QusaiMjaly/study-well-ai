@@ -1,21 +1,10 @@
 import type { ScheduleJson } from "./schedule-schema";
 import type { AiPlan } from "./plan-schema";
+import { formatCandidatesForPrompt, type Candidate } from "./exercise-selection";
 
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const PLAN_MODEL = "google/gemini-3-flash-preview";
 
-/** Mirrors the seeded public.exercise_media catalogue. Unmatched movements use null. */
-export const CANONICAL_EXERCISE_SLUGS = [
-  "push_up", "squat", "bodyweight_lunge", "plank", "glute_bridge", "mountain_climber",
-  "burpee", "jumping_jack", "crunch", "sit_up", "bicycle_crunch", "russian_twist",
-  "superman", "dead_bug", "high_knees", "wall_sit", "tricep_dip", "pull_up",
-  "dumbbell_bench_press", "dumbbell_shoulder_press", "dumbbell_row", "bicep_curl",
-  "barbell_squat", "deadlift", "lat_pulldown", "leg_press", "treadmill_run",
-  "stationary_bike", "jump_rope", "walking", "incline_dumbbell_press", "dumbbell_chest_fly",
-  "lateral_raise", "front_raise", "rear_delt_fly", "seated_cable_row", "hammer_curl",
-  "tricep_pushdown", "overhead_tricep_extension", "romanian_deadlift", "leg_extension",
-  "leg_curl", "calf_raise",
-] as const;
 
 export type PlanInputs = {
   profile: {
