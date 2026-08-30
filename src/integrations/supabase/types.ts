@@ -106,6 +106,7 @@ export type Database = {
           slug: string
           source_url: string | null
           updated_at: string
+          ymove_exercise_id: string | null
         }
         Insert: {
           aliases?: string[]
@@ -125,6 +126,7 @@ export type Database = {
           slug: string
           source_url?: string | null
           updated_at?: string
+          ymove_exercise_id?: string | null
         }
         Update: {
           aliases?: string[]
@@ -144,6 +146,7 @@ export type Database = {
           slug?: string
           source_url?: string | null
           updated_at?: string
+          ymove_exercise_id?: string | null
         }
         Relationships: []
       }
