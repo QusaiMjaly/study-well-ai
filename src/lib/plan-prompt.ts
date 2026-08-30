@@ -58,6 +58,7 @@ STUDENT
 - Height: ${profile?.height ?? "unknown"} cm, Weight: ${profile?.weight ?? "unknown"} kg
 - Activity level: ${profile?.activity_level ?? "moderate"}
 - Goal: ${goals?.goal_type ?? "maintain"}
+- Target weight: ${goals?.target_weight ?? "not set"} kg
 - Workout location preference: ${goals?.workout_preference ?? "no_preference"}
 - Meal preference: ${goals?.meal_preference ?? "balanced"}
 - Workout duration preference: ${goals?.workout_duration ?? "flexible"} (minutes, or "flexible")
@@ -70,11 +71,12 @@ ${scheduleText}
 HARD RULES
 - Workouts MUST fit entirely inside a free slot and must NEVER overlap any class.
 - At most ONE workout per day. 3 to 6 workouts per week.
-- Workout length must match the duration preference (use 30-45 min when "flexible").
+- SESSION LENGTH: the student asked for ${band.label}. Every workout must set duration_minutes between ${band.minMinutes} and ${band.maxMinutes}, scheduled_end minus scheduled_start must equal duration_minutes, and each workout must contain ${band.minExercises}-${band.maxExercises} exercises. Structure it as: ${band.guidance}. Sets, reps and rest_seconds must realistically add up to the session length — do not simply relabel a longer or shorter workout.
 - Respect the preferred workout time (morning <12:00, afternoon 12:00-17:00, evening >=17:00) when a free slot allows it.
 - Respect the workout location preference (gym equipment only when "gym"; bodyweight/minimal when "home").
 - Meals must NEVER be scheduled during a class. Provide 3 to 5 meals per day.
-- Calories and protein must be realistic for the student's stats and goal (Mifflin-St Jeor + activity factor).
+- NUTRITION: compute maintenance calories from the student's age, gender, height, weight and activity level (Mifflin-St Jeor + activity factor), then adjust for the goal and target weight AND for the weekly training volume you just planned (number of sessions x session length). summary.daily_calories and summary.daily_protein must match the average of the meal_days totals, and each meal_day's total_calories/protein/carbohydrates/fats must equal the sum of that day's meals. Portion sizes and ingredient amounts must reflect those numbers.
+
 - meal_days must cover all 7 days: sunday, monday, tuesday, wednesday, thursday, friday, saturday.
 - daily_tips must contain one short motivational/coaching tip for each of the 7 days.
 - Times are strings in 24h "HH:mm" format. Day names lowercase English.
