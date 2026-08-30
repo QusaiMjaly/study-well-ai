@@ -4,6 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeTimetable } from "@/lib/schedule.functions";
+import { generateAiPlan } from "@/lib/plan.functions";
+import { invalidatePlanCaches } from "@/lib/plan-cache";
+
 import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
