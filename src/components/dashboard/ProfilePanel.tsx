@@ -414,14 +414,14 @@ export function ProfilePanel() {
       )}
 
 
-      {/* PERSONAL INFO */}
+      {/* YOUR DETAILS — one card, one edit mode, one Save */}
       <SectionCard
         icon={<User className="h-5 w-5 text-primary-foreground" />}
         iconClass="bg-primary"
-        title="Personal Info"
-        action={pencilFor("personal", "Edit personal info")}
+        title="Your Details"
+        action={editPencil}
       >
-        {editing === "personal" && form ? (
+        {editing && form ? (
           <>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
@@ -466,47 +466,27 @@ export function ProfilePanel() {
                 onChange={(v) => setForm({ ...form, weight: v })}
               />
               <SelectField
-                id="goal_type"
-                label="Goal"
-                value={form.goal_type}
-                options={GOALS}
-                onChange={(v) => setForm({ ...form, goal_type: v })}
-              />
-              <SelectField
                 id="activity_level"
                 label="Activity level"
                 value={form.activity_level}
                 options={ACTIVITY_LEVELS}
                 onChange={(v) => setForm({ ...form, activity_level: v })}
               />
-            </div>
-            {editActions}
-          </>
-        ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
-            <Field label="Height" value={data.profile?.height ? `${data.profile.height} cm` : ""} />
-            <Field label="Weight" value={data.profile?.weight ? `${data.profile.weight} kg` : ""} />
-            <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
-            <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
-            <Field
-              label="Activity level"
-              value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
-            />
-          </div>
-        )}
-      </SectionCard>
-
-      {/* PREFERENCES */}
-      <SectionCard
-        icon={<Settings className="h-5 w-5 text-success-foreground" />}
-        iconClass="bg-success"
-        title="Preferences"
-        action={pencilFor("preferences", "Edit preferences")}
-      >
-        {editing === "preferences" && form ? (
-          <>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <SelectField
+                id="goal_type"
+                label="Goal"
+                value={form.goal_type}
+                options={GOALS}
+                onChange={(v) => setForm({ ...form, goal_type: v })}
+              />
+              <NumberField
+                id="target_weight"
+                label="Target weight (kg)"
+                value={form.target_weight}
+                min={30}
+                max={300}
+                onChange={(v) => setForm({ ...form, target_weight: v })}
+              />
               <SelectField
                 id="workout_preference"
                 label="Workout"
@@ -545,42 +525,72 @@ export function ProfilePanel() {
                 />
               </div>
             </div>
+            <p className="mt-3 text-[12px] text-muted-foreground">
+              Change everything you need, then save once — your plan refreshes a single time.
+            </p>
             {editActions}
           </>
-        ) : !data.goals ? (
-          <p className="mt-3 text-[13px] text-muted-foreground">
-            No preferences saved yet. Tap the pencil to add them.
-          </p>
         ) : (
-          <div className="mt-4 space-y-2.5">
-            <PrefRow
-              icon={<Dumbbell className="h-[18px] w-[18px]" />}
-              label="Workout"
-              value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
-            />
-            <PrefRow
-              icon={<Apple className="h-[18px] w-[18px]" />}
-              label="Meal type"
-              value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
-            />
-            <PrefRow
-              icon={<CalendarDays className="h-[18px] w-[18px]" />}
-              label="Duration"
-              value={labelOf(DURATIONS, data.goals.workout_duration)}
-            />
-            <PrefRow
-              icon={<Clock className="h-[18px] w-[18px]" />}
-              label="Preferred time"
-              value={labelOf(TIMES, data.goals.preferred_time)}
-            />
-            <PrefRow
-              icon={<Sparkles className="h-[18px] w-[18px]" />}
-              label="Biggest challenge"
-              value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
-            />
-          </div>
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
+              <Field
+                label="Height"
+                value={data.profile?.height ? `${data.profile.height} cm` : ""}
+              />
+              <Field
+                label="Weight"
+                value={data.profile?.weight ? `${data.profile.weight} kg` : ""}
+              />
+              <Field
+                label="Target weight"
+                value={data.goals?.target_weight ? `${data.goals.target_weight} kg` : ""}
+              />
+              <Field label="Goal" value={labelOf(GOALS, data.goals?.goal_type)} />
+              <Field label="Gender" value={labelOf(GENDERS, data.profile?.gender)} />
+              <Field
+                label="Activity level"
+                value={labelOf(ACTIVITY_LEVELS, data.profile?.activity_level)}
+              />
+            </div>
+
+            {!data.goals ? (
+              <p className="mt-3 text-[13px] text-muted-foreground">
+                No preferences saved yet. Tap the pencil to add them.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2.5">
+                <PrefRow
+                  icon={<Dumbbell className="h-[18px] w-[18px]" />}
+                  label="Workout"
+                  value={labelOf(WORKOUT_PREFS, data.goals.workout_preference)}
+                />
+                <PrefRow
+                  icon={<Apple className="h-[18px] w-[18px]" />}
+                  label="Meal type"
+                  value={labelOf(MEAL_PREFS, data.goals.meal_preference)}
+                />
+                <PrefRow
+                  icon={<CalendarDays className="h-[18px] w-[18px]" />}
+                  label="Duration"
+                  value={labelOf(DURATIONS, data.goals.workout_duration)}
+                />
+                <PrefRow
+                  icon={<Clock className="h-[18px] w-[18px]" />}
+                  label="Preferred time"
+                  value={labelOf(TIMES, data.goals.preferred_time)}
+                />
+                <PrefRow
+                  icon={<Sparkles className="h-[18px] w-[18px]" />}
+                  label="Biggest challenge"
+                  value={labelOf(CHALLENGES, data.goals.biggest_challenge)}
+                />
+              </div>
+            )}
+          </>
         )}
       </SectionCard>
+
 
 
       {/* YOUR SCHEDULE */}
