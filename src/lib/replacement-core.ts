@@ -99,19 +99,20 @@ export async function loadMeal(
 }
 
 /**
- * Daily targets for a meal day.
+ * Intended daily targets for a meal day.
  *
- * The stored meal_days totals are the AI-generated targets, but they get
- * recomputed from the real items after a replacement — so the target for THIS
- * day is derived from the plan's other (untouched) days, falling back to the
- * day's own stored totals when it is the only day.
+ * meal_days.total_calories / protein are the plan's generated TARGETS and are
+ * never overwritten by replacements, so they are authoritative. Only when a day
+ * has no stored target do we fall back to the plan's other days.
  */
 export async function dayTargets(
   supabase: Db,
   planId: string,
   mealDayId: string,
-  fallback: { calories: number; protein: number },
+  stored: { calories: number; protein: number },
 ): Promise<{ calories: number; protein: number }> {
+  if (stored.calories > 0) return stored;
+
   const { data } = await supabase
     .from("meal_days")
     .select("id, total_calories, protein")
@@ -120,7 +121,7 @@ export async function dayTargets(
   const others = ((data ?? []) as any[]).filter(
     (d) => d.id !== mealDayId && (d.total_calories ?? 0) > 0,
   );
-  if (!others.length) return fallback;
+  if (!others.length) return stored;
 
   const avg = (nums: number[]) => Math.round(nums.reduce((s, n) => s + n, 0) / nums.length);
   return {
@@ -145,24 +146,20 @@ export function sumMeals(meals: any[]): DayTotals {
   };
 }
 
-/** Recomputes and persists meal_days totals from the actual stored meal items. */
+/**
+ * ACTUAL totals for a day, summed from the persisted meal items.
+ *
+ * These are intentionally NOT written back into meal_days: those columns hold
+ * the plan's intended targets, and overwriting them would make every deviation
+ * comparison compare a value against itself.
+ */
 export async function recomputeDayTotals(supabase: Db, mealDayId: string): Promise<DayTotals> {
   const { data } = await supabase
     .from("meal_items")
     .select("calories, protein, carbohydrates, fats")
     .eq("meal_day_id", mealDayId);
 
-  const totals = sumMeals((data ?? []) as any[]);
-  await supabase
-    .from("meal_days")
-    .update({
-      total_calories: totals.calories,
-      protein: totals.protein,
-      carbohydrates: totals.carbohydrates,
-      fats: totals.fats,
-    })
-    .eq("id", mealDayId);
-  return totals;
+  return sumMeals((data ?? []) as any[]);
 }
 
 /** Balance-my-day trigger: >=100 kcal, or >=5% of target kcal, or >=15 g protein. */
