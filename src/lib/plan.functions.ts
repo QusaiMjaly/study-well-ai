@@ -38,7 +38,7 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       supabase
         .from("goals")
         .select(
-          "goal_type, workout_preference, meal_preference, workout_duration, preferred_time, biggest_challenge",
+          "goal_type, target_weight, workout_preference, meal_preference, workout_duration, preferred_time, biggest_challenge",
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
