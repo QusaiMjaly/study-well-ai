@@ -227,7 +227,6 @@ export function ProfilePanel() {
   const generate = useServerFn(generateAiPlan);
   const [editing, setEditing] = useState<EditSection>(null);
   const [form, setForm] = useState<ProfileEdits | null>(null);
-  const [editedAt, setEditedAt] = useState<number | null>(null);
   const [regenFailed, setRegenFailed] = useState(false);
   /** Guards against a second generation for the same edit (double click, remount). */
   const generating = useRef(false);
@@ -262,7 +261,6 @@ export function ProfilePanel() {
       return (await saveDetails({ data: form })) as { changed: boolean };
     },
     onSuccess: async (result) => {
-      setEditedAt(Date.now());
       setEditing(null);
       setForm(null);
       toast.success("Profile updated");
@@ -309,7 +307,7 @@ export function ProfilePanel() {
 
   const name = data.profile?.full_name?.trim();
   const email = data.profile?.email ?? data.authEmail;
-  const stale = isPlanStale(data, editedAt);
+  const stale = isPlanStale(data, regenFailed);
 
   /** Seeds the form from stored values so an unrelated section can never drift. */
   function startEditing(section: Exclude<EditSection, null>) {
