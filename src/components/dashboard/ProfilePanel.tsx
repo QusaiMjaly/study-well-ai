@@ -289,17 +289,17 @@ export function ProfilePanel() {
 
   const name = data.profile?.full_name?.trim();
   const email = data.profile?.email ?? data.authEmail;
-  const stale = isPlanStale(data, regenFailed);
+  const stale = isPlanStale(data, hasFailed);
 
-  /** Seeds the form from stored values so an unrelated section can never drift. */
-  function startEditing(section: Exclude<EditSection, null>) {
+  /** Seeds the whole form from stored values whenever edit mode opens. */
+  function startEditing() {
     if (!data) return;
     setForm(emptyEdits(data));
-    setEditing(section);
+    setEditing(true);
   }
 
   function cancelEditing() {
-    setEditing(null);
+    setEditing(false);
     setForm(null);
   }
 
@@ -308,12 +308,12 @@ export function ProfilePanel() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const pencilFor = (section: Exclude<EditSection, null>, label: string) => (
+  const editPencil = (
     <button
       type="button"
-      onClick={() => startEditing(section)}
-      disabled={editing !== null && editing !== section}
-      aria-label={label}
+      onClick={startEditing}
+      disabled={editing}
+      aria-label="Edit your details"
       className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
     >
       <Pencil className="h-[18px] w-[18px]" />
@@ -324,16 +324,22 @@ export function ProfilePanel() {
     <div className="mt-5 flex gap-3">
       <Button
         onClick={() => save.mutate()}
-        disabled={busy}
+        disabled={save.isPending}
         className="h-11 flex-1 rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
       >
-        {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
+        {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
       </Button>
-      <Button variant="outline" className="h-11 rounded-2xl" onClick={cancelEditing} disabled={busy}>
+      <Button
+        variant="outline"
+        className="h-11 rounded-2xl"
+        onClick={cancelEditing}
+        disabled={save.isPending}
+      >
         Cancel
       </Button>
     </div>
   );
+
 
 
 
