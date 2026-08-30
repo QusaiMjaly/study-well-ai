@@ -264,7 +264,18 @@ export function selectCandidates(
     picked.push(...ranked.slice(0, quotas[family]));
   }
 
+  // Top up towards the floor when quotas leave the pool thin (typical for "home").
+  if (picked.length < MIN_CANDIDATES) {
+    const chosen = new Set(picked.map((c) => c.slug));
+    const rest = [...byFamily.values()]
+      .flat()
+      .filter((c) => !chosen.has(c.slug))
+      .sort((a, b) => hash(ctx.userId + a.slug) - hash(ctx.userId + b.slug));
+    picked.push(...rest.slice(0, MIN_CANDIDATES - picked.length));
+  }
+
   if (picked.length > MAX_CANDIDATES) {
+
     // Trim from the largest families first so balance is preserved.
     const counts = new Map<MovementFamily, number>();
     for (const c of picked) counts.set(c.family, (counts.get(c.family) ?? 0) + 1);
