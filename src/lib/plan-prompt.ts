@@ -1,5 +1,5 @@
 import type { ScheduleJson } from "./schedule-schema";
-import type { AiPlan } from "./plan-schema";
+import { durationBand, type AiPlan } from "./plan-schema";
 import { formatCandidatesForPrompt, type Candidate } from "./exercise-selection";
 
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -17,6 +17,7 @@ export type PlanInputs = {
   } | null;
   goals: {
     goal_type: string | null;
+    target_weight: number | null;
     workout_preference: string | null;
     meal_preference: string | null;
     workout_duration: string | null;
@@ -32,6 +33,8 @@ export function buildPlanPrompt(
   retryProblems?: string[],
 ) {
   const { profile, goals, schedule } = inputs;
+  const band = durationBand(goals?.workout_duration);
+
 
   const scheduleText = schedule
     ? schedule.days

@@ -3,9 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   AiPlanSchema,
   validatePlanAgainstSchedule,
+  validatePlanDuration,
   validatePlanExercises,
   type AiPlan,
 } from "./plan-schema";
+
 import {
   GATEWAY_URL,
   PLAN_MODEL,
