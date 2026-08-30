@@ -175,5 +175,12 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       throw new Error(`Your plan could not be saved (nothing was stored): ${saveErr.message}`);
     }
 
+    logPlanDiagnostic({
+      event: "saved",
+      attempts: attemptsUsed,
+      workoutDays: plan.workout_days.length,
+      exercises: plan.workout_days.reduce((n, d) => n + d.exercises.length, 0),
+    });
+
     return { planId: planId as unknown as string, summary: plan.summary };
   });
