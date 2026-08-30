@@ -50,8 +50,8 @@ export const generatePlans = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const [{ data: profile }, { data: goal }, { data: schedule }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("goals").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-      supabase.from("schedules").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("goals").select("*").eq("user_id", userId).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("schedules").select("*").eq("user_id", userId).not("schedule_json", "is", null).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     const ctx = {

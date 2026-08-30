@@ -42,13 +42,16 @@ export const generateAiPlan = createServerFn({ method: "POST" })
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(1)
         .maybeSingle(),
       supabase
         .from("schedules")
         .select("schedule_json")
         .eq("user_id", userId)
+        .not("schedule_json", "is", null)
         .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(1)
         .maybeSingle(),
     ]);
