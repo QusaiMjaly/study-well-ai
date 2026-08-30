@@ -96,6 +96,7 @@ export type Database = {
           common_mistakes: string[]
           created_at: string
           cues: string[]
+          difficulty: string | null
           display_name: string
           equipment: string | null
           id: string
@@ -116,6 +117,7 @@ export type Database = {
           common_mistakes?: string[]
           created_at?: string
           cues?: string[]
+          difficulty?: string | null
           display_name: string
           equipment?: string | null
           id?: string
@@ -136,6 +138,7 @@ export type Database = {
           common_mistakes?: string[]
           created_at?: string
           cues?: string[]
+          difficulty?: string | null
           display_name?: string
           equipment?: string | null
           id?: string
