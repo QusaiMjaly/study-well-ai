@@ -297,6 +297,7 @@ const RECOVERY_GOALS = ["Stay hydrated", "Get enough sleep", "Light stretching",
 
 function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
   const [showNext, setShowNext] = useState(false);
+  const [demo, setDemo] = useState<WorkoutExercise | null>(null);
   const next = data.nextWorkout;
 
   return (
@@ -369,7 +370,7 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[13px] font-bold text-primary">
                     {ex.exercise_order}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[14px] font-semibold leading-5">{ex.exercise_name}</p>
                     <div className="flex flex-wrap gap-x-3 text-[12px] text-muted-foreground">
                       {ex.sets ? <span>{ex.sets} sets</span> : null}
@@ -377,6 +378,13 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
                       {ex.duration_seconds ? <span>{ex.duration_seconds}s</span> : null}
                       {ex.rest_seconds ? <span>{ex.rest_seconds}s rest</span> : null}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setDemo(ex)}
+                      className="mt-1 flex items-center gap-1.5 text-[12px] font-semibold text-primary transition-colors hover:text-primary/80"
+                    >
+                      <PlayCircle className="h-3.5 w-3.5" /> View demo
+                    </button>
                   </div>
                 </div>
               ))}
@@ -388,6 +396,12 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
           Enjoy the rest — no further workouts are scheduled in your current plan week.
         </Card>
       )}
+
+      <ExerciseDemoSheet
+        exercise={demo}
+        open={demo !== null}
+        onOpenChange={(v) => !v && setDemo(null)}
+      />
     </div>
   );
 }
