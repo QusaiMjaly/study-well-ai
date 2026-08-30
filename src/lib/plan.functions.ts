@@ -120,10 +120,12 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       }
 
       const scheduleProblems = validatePlanAgainstSchedule(parsed.data, inputs.schedule);
-      if (scheduleProblems.length) {
-        problems = scheduleProblems.slice(0, 8);
+      const exerciseProblems = validatePlanExercises(parsed.data, allowedSlugs);
+      if (scheduleProblems.length || exerciseProblems.length) {
+        problems = [...scheduleProblems, ...exerciseProblems].slice(0, 8);
         continue;
       }
+
 
       plan = parsed.data;
     }
