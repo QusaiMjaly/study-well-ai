@@ -206,16 +206,6 @@ function hash(input: string): number {
   return (h >>> 0) / 4294967295;
 }
 
-const COMPOUND_FAMILIES = new Set<MovementFamily>([
-  "horizontal_push",
-  "vertical_push",
-  "horizontal_pull",
-  "vertical_pull",
-  "squat",
-  "hinge",
-  "lunge",
-]);
-
 export function toCandidate(row: CatalogueRow): Candidate | null {
   const family = CATEGORY_TO_FAMILY[(row.category ?? "").toLowerCase()];
   if (!family) return null;
@@ -269,8 +259,6 @@ export function selectCandidates(
       if (diff !== 0) return diff;
       const demo = Number(!hasDemo.has(a.slug)) - Number(!hasDemo.has(b.slug));
       if (demo !== 0) return demo;
-      const compound = COMPOUND_FAMILIES.has(family) ? 0 : 0;
-      if (compound !== 0) return compound;
       return hash(ctx.userId + a.slug) - hash(ctx.userId + b.slug);
     });
     picked.push(...ranked.slice(0, quotas[family]));
