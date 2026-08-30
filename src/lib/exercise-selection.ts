@@ -101,6 +101,17 @@ const CATEGORY_TO_FAMILY: Record<string, MovementFamily> = {
 
 const HOME_EQUIPMENT = new Set(["bodyweight", "mat", "band"]);
 
+/**
+ * Simple cardio the student can always do. `walking` needs no equipment at all,
+ * so it stays eligible for home pools despite its legacy `cardio` equipment value.
+ */
+const SIMPLE_CARDIO_GYM = ["treadmill_run", "stationary_bike", "walking"];
+const SIMPLE_CARDIO_HOME = ["walking", "jump_rope"];
+const HOME_ELIGIBLE_CARDIO = new Set(["walking"]);
+
+/** How many conditioning slots are held for simple cardio in endurance pools. */
+const CARDIO_RESERVED = 3;
+
 type GoalBucket = "general" | "strength" | "endurance";
 
 function goalBucket(goalType: string | null): GoalBucket {
@@ -112,12 +123,18 @@ function goalBucket(goalType: string | null): GoalBucket {
 
 type Level = "beginner" | "typical" | "advanced";
 
+/**
+ * Activity level is a *suitability* signal, not a claim about training skill:
+ * only a sedentary student is steered towards beginner movements first, and even
+ * then intermediate exercises stay eligible.
+ */
 function experienceLevel(activityLevel: string | null, goal: GoalBucket): Level {
   const a = (activityLevel ?? "").toLowerCase();
-  if (!a || /sedentary|light|low|beginner/.test(a)) return "beginner";
-  if (/very[_ -]?active|athlete|advanced/.test(a)) {
+  if (!a || /sedentary/.test(a)) return "beginner";
+  if (/very|athlete|advanced/.test(a)) {
     return goal === "strength" ? "advanced" : "typical";
   }
+  // light + moderate (and anything unrecognised but present) are typical students.
   return "typical";
 }
 
@@ -132,6 +149,7 @@ function fallbackDifficulties(level: Level): string[] {
   if (level === "beginner") return ["beginner", "intermediate"];
   return allowedDifficulties(level);
 }
+
 
 const QUOTAS: Record<GoalBucket, Record<MovementFamily, number>> = {
   general: {
