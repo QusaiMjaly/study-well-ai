@@ -312,21 +312,20 @@ export function selectCandidates(
   }
 
   // vertical_push is selected before shoulders, so redistribute in a second pass.
-  const shouldersDeficit = carryOver.vertical_push ?? 0;
-  if (shouldersDeficit > 0) {
+  let deficitLeft = carryOver.vertical_push ?? 0;
+  if (deficitLeft > 0) {
     const chosenSlugs = new Set(picked.map((c) => c.slug));
     for (const family of ["vertical_push", "horizontal_push"] as const) {
-      let left = shouldersDeficit - (picked.length - chosenSlugs.size);
-      if (left <= 0) break;
+      if (deficitLeft <= 0) break;
       const extra = rank((byFamily.get(family) ?? []).filter((c) => !chosenSlugs.has(c.slug)));
-      for (const c of extra.slice(0, left)) {
+      for (const c of extra.slice(0, deficitLeft)) {
         picked.push(c);
         chosenSlugs.add(c.slug);
-        left--;
+        deficitLeft--;
       }
-      if (left <= 0) break;
     }
   }
+
 
 
   // Top up towards the floor when quotas leave the pool thin (typical for "home").
