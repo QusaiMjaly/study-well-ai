@@ -15,6 +15,7 @@ import {
   type PlanInputs,
 } from "./plan-prompt";
 import { selectCandidates, type CatalogueRow } from "./exercise-selection";
+import { logPlanDiagnostic } from "./plan-diagnostics";
 import type { ScheduleJson } from "./schedule-schema";
 
 
@@ -76,10 +77,19 @@ export const generateAiPlan = createServerFn({ method: "POST" })
 
     const allowedSlugs = new Set(candidates.map((c) => c.slug));
 
+    logPlanDiagnostic({
+      event: "candidates",
+      poolSize: candidates.length,
+      families: new Set(candidates.map((c) => c.family)).size,
+    });
+
     let problems: string[] = [];
     let plan: AiPlan | null = null;
+    let attemptsUsed = 0;
 
     for (let attempt = 0; attempt < 2 && !plan; attempt++) {
+      attemptsUsed = attempt + 1;
+      logPlanDiagnostic({ event: "attempt", attempt: attemptsUsed });
       const res = await fetch(GATEWAY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
@@ -110,12 +120,25 @@ export const generateAiPlan = createServerFn({ method: "POST" })
         parsedJson = extractJson(raw);
       } catch {
         problems = ["The response was not valid JSON."];
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: "invalid_json",
+        });
         continue;
       }
 
       const parsed = AiPlanSchema.safeParse(parsedJson);
       if (!parsed.success) {
         problems = parsed.error.issues.slice(0, 8).map((i) => `${i.path.join(".")}: ${i.message}`);
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: "schema",
+          problemCount: parsed.error.issues.length,
+        });
         continue;
       }
 
@@ -123,10 +146,17 @@ export const generateAiPlan = createServerFn({ method: "POST" })
       const exerciseProblems = validatePlanExercises(parsed.data, allowedSlugs);
       if (scheduleProblems.length || exerciseProblems.length) {
         problems = [...scheduleProblems, ...exerciseProblems].slice(0, 8);
+        logPlanDiagnostic({
+          event: "validation",
+          attempt: attemptsUsed,
+          passed: false,
+          reason: exerciseProblems.length ? "exercises" : "schedule",
+          problemCount: scheduleProblems.length + exerciseProblems.length,
+        });
         continue;
       }
 
-
+      logPlanDiagnostic({ event: "validation", attempt: attemptsUsed, passed: true });
       plan = parsed.data;
     }
 
@@ -144,6 +174,13 @@ export const generateAiPlan = createServerFn({ method: "POST" })
     if (saveErr) {
       throw new Error(`Your plan could not be saved (nothing was stored): ${saveErr.message}`);
     }
+
+    logPlanDiagnostic({
+      event: "saved",
+      attempts: attemptsUsed,
+      workoutDays: plan.workout_days.length,
+      exercises: plan.workout_days.reduce((n, d) => n + d.exercises.length, 0),
+    });
 
     return { planId: planId as unknown as string, summary: plan.summary };
   });
