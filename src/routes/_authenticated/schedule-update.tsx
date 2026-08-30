@@ -71,10 +71,27 @@ function ScheduleUpdate() {
       if (insErr) throw insErr;
 
       await analyze(undefined as never);
-
-      setDone(true);
       await qc.invalidateQueries({ queryKey: ["profile-bundle"] });
       toast.success("Schedule updated.");
+
+      // New class times change every workout/meal constraint, so refresh the plan.
+      setRegenerating(true);
+      try {
+        await generate({ data: undefined } as never);
+        await invalidatePlanCaches(qc);
+        toast.success("Your plan was updated for the new schedule.");
+      } catch (e) {
+        toast.error(
+          friendlyMessage(
+            e,
+            "Your schedule was saved, but we couldn't refresh your plan yet. You can retry from Profile.",
+          ),
+        );
+      } finally {
+        setRegenerating(false);
+      }
+
+      setDone(true);
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
@@ -82,6 +99,7 @@ function ScheduleUpdate() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-page-gradient">
