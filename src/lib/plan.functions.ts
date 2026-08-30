@@ -15,6 +15,7 @@ import {
   type PlanInputs,
 } from "./plan-prompt";
 import { selectCandidates, type CatalogueRow } from "./exercise-selection";
+import { logPlanDiagnostic } from "./plan-diagnostics";
 import type { ScheduleJson } from "./schedule-schema";
 
 
