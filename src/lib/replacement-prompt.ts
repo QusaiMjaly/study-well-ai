@@ -90,7 +90,29 @@ const MEAL_JSON_SHAPE = `{
   "notes": "", "short_description": "one short line the student reads when choosing", "fit_note": null
 }`;
 
-function mealContextText(c: MealContext) {
+export type SpecificMealMode = "fit_plan" | "as_described";
+
+function mealContextText(c: MealContext, asDescribed = false) {
+  if (asDescribed) {
+    return `STUDENT (context only — NOT constraints on the requested food)
+${userContextText(c.user)}
+
+DAY: ${c.dayName}
+Daily targets (for later comparison only): ${c.targetCalories} kcal, ${c.targetProtein} g protein.
+Other meals that day: ${
+      c.otherMeals.length
+        ? c.otherMeals.map((m) => `${m.meal_name} (${m.calories ?? "?"} kcal)`).join("; ")
+        : "none"
+    }
+
+MEAL SLOT BEING REPLACED
+- ${c.original.meal_name} (${c.original.meal_type ?? "meal"}) at ${c.original.scheduled_time ?? "flexible"}
+- Its previous values (${c.original.calories ?? 0} kcal, ${c.original.protein ?? 0} g protein) are NOT a budget to respect.`;
+  }
+  return mealContextTextFit(c);
+}
+
+function mealContextTextFit(c: MealContext) {
   return `STUDENT
 ${userContextText(c.user)}
 
