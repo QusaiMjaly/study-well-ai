@@ -68,6 +68,7 @@ export function MealChangeSheet({
     setOptions(null);
     setSelected(null);
     setRequest("");
+    setRequestMode("fit_plan");
     setError(null);
     setConfirmNeeded(false);
     setApplying(false);
@@ -104,7 +105,7 @@ export function MealChangeSheet({
     setSelected(null);
     try {
       const res = await requestSpecific({
-        data: { mealItemId: meal.id, planId, request: request.trim() },
+        data: { mealItemId: meal.id, planId, request: request.trim(), mode: requestMode },
       });
       if (res.status !== "ok" || !res.meal) {
         setError(res.message ?? "That request didn't work. Try describing it differently.");
