@@ -149,7 +149,33 @@ Return JSON only, exactly:
 { "suggestions": [ ${MEAL_JSON_SHAPE}, ${MEAL_JSON_SHAPE}, ${MEAL_JSON_SHAPE} ] }`;
 }
 
-export function buildSpecificMealPrompt(c: MealContext, request: string) {
+export function buildSpecificMealPrompt(
+  c: MealContext,
+  request: string,
+  mode: SpecificMealMode = "fit_plan",
+) {
+  if (mode === "as_described") {
+    return `You are a nutrition estimator. The student is telling you what they want to eat (or already ate). Your job is to ESTIMATE that exact food, not to improve it.
+
+${mealContextText(c, true)}
+
+STUDENT DESCRIPTION: "${request}"
+
+HOW TO RESPOND
+- The description is the source of truth. Reproduce the food EXACTLY as described.
+- Do NOT substitute, lighten, shrink or "healthify" anything to satisfy their meal preference, goal, calorie target or macro split. No lettuce wraps, no low-carb buns, no removed sides, no leaner swaps — unless the student explicitly wrote them.
+- If the description is broad (e.g. "hamburger"), assume a conventional, typical restaurant/homemade version — never a fitness or low-carb version.
+- Estimate realistic calories, protein, carbohydrates and fats for that food and portion. The result MAY be far above or below the daily targets; that is expected and correct.
+- ingredients and preparation_steps must describe the food as described (conventional preparation).
+- Set "notes" to a short honest estimate caveat, e.g. "Estimated nutrition — add portion details for a closer estimate."
+- Set "fit_note" to null. Set "short_description" to a plain one-line description of the dish.
+- Only use status "unavailable" if the text is not a food at all or is unsafe; then explain kindly in "message".
+
+OUTPUT
+Return JSON only, exactly:
+{ "status": "ok" | "unavailable", "message": null, "meal": ${MEAL_JSON_SHAPE} }`;
+  }
+
   return `You are a university student nutrition coach. The student wants a SPECIFIC dish for one meal.
 
 ${mealContextText(c)}
