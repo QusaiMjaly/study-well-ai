@@ -58,7 +58,9 @@ export function MealChangeSheet({
   const [options, setOptions] = useState<MealReplacement[] | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [request, setRequest] = useState("");
+  const [requestMode, setRequestMode] = useState<RequestMode>("fit_plan");
   const [confirmNeeded, setConfirmNeeded] = useState(false);
+
 
   useEffect(() => {
     if (!open) return;
