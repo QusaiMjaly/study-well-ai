@@ -17,6 +17,20 @@ import {
 } from "@/lib/meal-replacement.functions";
 
 type Mode = "suggest" | "request";
+type RequestMode = "fit_plan" | "as_described";
+
+const REQUEST_MODES: { id: RequestMode; label: string; subtitle: string }[] = [
+  {
+    id: "fit_plan",
+    label: "Make it fit my plan",
+    subtitle: "Adjust portions and ingredients to better match my goals.",
+  },
+  {
+    id: "as_described",
+    label: "Keep it as I described",
+    subtitle: "Estimate the meal as-is. You can balance the rest of your day afterward.",
+  },
+];
 
 export function MealChangeSheet({
   meal,
