@@ -78,7 +78,10 @@ export const suggestMealReplacements = createServerFn({ method: "POST" })
 export const requestSpecificMealReplacement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    Target.extend({ request: z.string().trim().min(2).max(120) }).parse(d),
+    Target.extend({
+      request: z.string().trim().min(2).max(120),
+      mode: z.enum(["fit_plan", "as_described"]).default("fit_plan"),
+    }).parse(d),
   )
   .handler(
     async ({
@@ -106,6 +109,7 @@ export const requestSpecificMealReplacement = createServerFn({ method: "POST" })
               .map((m) => ({ meal_name: m.meal_name, calories: m.calories })),
           },
           data.request,
+          data.mode,
         ),
       );
 

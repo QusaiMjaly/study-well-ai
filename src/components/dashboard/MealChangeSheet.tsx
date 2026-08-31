@@ -17,6 +17,20 @@ import {
 } from "@/lib/meal-replacement.functions";
 
 type Mode = "suggest" | "request";
+type RequestMode = "fit_plan" | "as_described";
+
+const REQUEST_MODES: { id: RequestMode; label: string; subtitle: string }[] = [
+  {
+    id: "fit_plan",
+    label: "Make it fit my plan",
+    subtitle: "Adjust portions and ingredients to better match my goals.",
+  },
+  {
+    id: "as_described",
+    label: "Keep it as I described",
+    subtitle: "Estimate the meal as-is. You can balance the rest of your day afterward.",
+  },
+];
 
 export function MealChangeSheet({
   meal,
@@ -44,7 +58,9 @@ export function MealChangeSheet({
   const [options, setOptions] = useState<MealReplacement[] | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [request, setRequest] = useState("");
+  const [requestMode, setRequestMode] = useState<RequestMode>("fit_plan");
   const [confirmNeeded, setConfirmNeeded] = useState(false);
+
 
   useEffect(() => {
     if (!open) return;
@@ -52,6 +68,7 @@ export function MealChangeSheet({
     setOptions(null);
     setSelected(null);
     setRequest("");
+    setRequestMode("fit_plan");
     setError(null);
     setConfirmNeeded(false);
     setApplying(false);
@@ -88,7 +105,7 @@ export function MealChangeSheet({
     setSelected(null);
     try {
       const res = await requestSpecific({
-        data: { mealItemId: meal.id, planId, request: request.trim() },
+        data: { mealItemId: meal.id, planId, request: request.trim(), mode: requestMode },
       });
       if (res.status !== "ok" || !res.meal) {
         setError(res.message ?? "That request didn't work. Try describing it differently.");
@@ -178,23 +195,69 @@ export function MealChangeSheet({
           ) : null}
 
           {mode === "request" ? (
-            <div className="flex gap-2">
-              <Input
-                value={request}
-                onChange={(e) => setRequest(e.target.value)}
-                placeholder="e.g. Chicken pasta, shawarma, pancakes"
-                className="h-12 rounded-2xl"
-                onKeyDown={(e) => e.key === "Enter" && void submitRequest()}
-              />
-              <Button
-                onClick={() => void submitRequest()}
-                disabled={loading || request.trim().length < 2}
-                className="h-12 shrink-0 rounded-2xl"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
+            <div className="space-y-3">
+              <div className="grid gap-2">
+                {REQUEST_MODES.map((rm) => {
+                  const active = requestMode === rm.id;
+                  return (
+                    <button
+                      key={rm.id}
+                      type="button"
+                      onClick={() => setRequestMode(rm.id)}
+                      aria-pressed={active}
+                      className={`rounded-2xl border p-3 text-left transition-colors ${
+                        active
+                          ? "border-primary bg-primary/5"
+                          : "border-border/70 bg-background hover:bg-muted/50"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                            active ? "border-primary" : "border-border"
+                          }`}
+                        >
+                          {active ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
+                        </span>
+                        <span className="text-[14px] font-semibold leading-5">{rm.label}</span>
+                      </span>
+                      <span className="mt-1 block pl-6 text-[12px] leading-4 text-muted-foreground">
+                        {rm.subtitle}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  value={request}
+                  onChange={(e) => setRequest(e.target.value)}
+                  placeholder={
+                    requestMode === "as_described"
+                      ? "e.g. Double cheeseburger, regular bun, 2 patties, cheese, mayo, medium fries"
+                      : "e.g. Chicken pasta, shawarma, pancakes"
+                  }
+                  className="h-12 rounded-2xl"
+                  onKeyDown={(e) => e.key === "Enter" && void submitRequest()}
+                />
+                <Button
+                  onClick={() => void submitRequest()}
+                  disabled={loading || request.trim().length < 2}
+                  className="h-12 shrink-0 rounded-2xl"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {requestMode === "as_described" ? (
+                <p className="text-[12px] leading-4 text-muted-foreground">
+                  Nutrition will be an estimate — the more detail you give, the closer it gets.
+                </p>
+              ) : null}
             </div>
           ) : null}
+
 
           {loading ? (
             <div className="space-y-3">
