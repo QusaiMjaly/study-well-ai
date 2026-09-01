@@ -59,6 +59,7 @@ import { usePlanRegeneration } from "@/lib/plan-regeneration";
 import { normalizeDay } from "@/lib/day-utils";
 import { DataError } from "@/components/dashboard/DataError";
 import { friendlyMessage } from "@/lib/friendly-errors";
+import { ChangePasswordSheet } from "@/components/dashboard/ChangePasswordSheet";
 
 
 
@@ -708,14 +709,15 @@ export function ProfilePanel() {
         title="Settings"
       >
         <div className="mt-4 space-y-2.5">
-          <Link
-            to="/reset-password"
-            className="flex items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3.5 transition-colors hover:bg-muted"
+          <button
+            type="button"
+            onClick={() => setChangePasswordOpen(true)}
+            className="flex w-full items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3.5 text-left transition-colors hover:bg-muted"
           >
             <KeyRound className="h-[18px] w-[18px]" />
             <span className="flex-1 text-[15px] font-medium">Change password</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
+          </button>
           <div className="flex items-center gap-3 rounded-2xl bg-muted/60 px-4 py-3.5 text-muted-foreground">
             <Sparkles className="h-[18px] w-[18px]" />
             <span className="flex-1 text-[15px] font-medium">
