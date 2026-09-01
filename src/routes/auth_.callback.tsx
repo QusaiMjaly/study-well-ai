@@ -93,7 +93,6 @@ function AuthCallback() {
     return () => {
       active = false;
       window.clearTimeout(timer);
-      window.clearTimeout(timer);
       sub.subscription.unsubscribe();
     };
   }, [navigate]);
