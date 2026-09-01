@@ -119,33 +119,20 @@ function AuthPage() {
     }
   }
 
-  async function onForgotPassword() {
-    const emailError = validateEmail(email);
-    if (emailError) {
-      setFieldError("Enter your email above first, then tap “Forgot password?”");
-      return;
-    }
-    setLoading(true);
+  async function oauth(provider: "google") {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/reset-password",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + "/auth/callback" },
       });
       if (error) throw error;
-      toast.success("Password reset link sent — check your inbox.");
     } catch (err) {
-      toast.error(friendlyAuthMessage(err));
-    } finally {
-      setLoading(false);
+      const message = friendlyAuthMessage(err);
+      setFieldError(message);
+      toast.error(message);
     }
   }
 
-  async function oauth(provider: "google" | "facebook") {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin + "/onboarding" },
-    });
-    if (error) toast.error(friendlyAuthMessage(error));
-  }
 
 
   return (
