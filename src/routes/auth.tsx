@@ -187,16 +187,16 @@ function AuthPage() {
             </div>
             {mode === "signin" && (
               <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={onForgotPassword}
-                  disabled={loading}
-                  className="text-sm font-semibold text-primary hover:underline disabled:opacity-60"
+                <Link
+                  to="/forgot-password"
+                  search={email.trim() ? { email: email.trim() } : {}}
+                  className="text-sm font-semibold text-primary hover:underline"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
             )}
+
 
             {fieldError && (
               <p
