@@ -1,1 +1,7 @@
 project_id = "vbleuykhuxradezdrqvv"
+
+[auth.password]
+# Reject passwords found in known breach corpuses (HaveIBeenPwned).
+# For the hosted project this must also be toggled on in
+# Dashboard → Authentication → Sign In / Providers → Password.
+leaked_password_protection = true
