@@ -235,15 +235,8 @@ function AuthPage() {
               <GoogleIcon />
               Continue with Google
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => oauth("facebook")}
-              className="h-12 w-full rounded-xl border-border bg-background text-sm font-semibold"
-            >
-              <FacebookIcon />
-              Continue with Facebook
-            </Button>
+            {/* Facebook sign-in is intentionally hidden until the provider is configured. */}
+
           </div>
         </div>
 
