@@ -226,6 +226,7 @@ export function ProfilePanel() {
   const saveDetails = useServerFn(saveProfileDetails);
   const { requestRegeneration, isGenerating, hasFailed } = usePlanRegeneration();
   const [editing, setEditing] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [form, setForm] = useState<ProfileEdits | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -737,6 +738,8 @@ export function ProfilePanel() {
       >
         <LogOut className="mr-2 h-5 w-5" /> Log out
       </Button>
+
+      <ChangePasswordSheet open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </div>
   );
 }
