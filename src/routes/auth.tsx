@@ -60,6 +60,8 @@ function GoogleIcon() {
   );
 }
 
+// Kept for when Facebook OAuth is configured; currently unused.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function FacebookIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden="true">
@@ -119,33 +121,20 @@ function AuthPage() {
     }
   }
 
-  async function onForgotPassword() {
-    const emailError = validateEmail(email);
-    if (emailError) {
-      setFieldError("Enter your email above first, then tap “Forgot password?”");
-      return;
-    }
-    setLoading(true);
+  async function oauth(provider: "google") {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/reset-password",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + "/auth/callback" },
       });
       if (error) throw error;
-      toast.success("Password reset link sent — check your inbox.");
     } catch (err) {
-      toast.error(friendlyAuthMessage(err));
-    } finally {
-      setLoading(false);
+      const message = friendlyAuthMessage(err);
+      setFieldError(message);
+      toast.error(message);
     }
   }
 
-  async function oauth(provider: "google" | "facebook") {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin + "/onboarding" },
-    });
-    if (error) toast.error(friendlyAuthMessage(error));
-  }
 
 
   return (
@@ -200,16 +189,16 @@ function AuthPage() {
             </div>
             {mode === "signin" && (
               <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={onForgotPassword}
-                  disabled={loading}
-                  className="text-sm font-semibold text-primary hover:underline disabled:opacity-60"
+                <Link
+                  to="/forgot-password"
+                  search={email.trim() ? { email: email.trim() } : {}}
+                  className="text-sm font-semibold text-primary hover:underline"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
             )}
+
 
             {fieldError && (
               <p
@@ -248,15 +237,8 @@ function AuthPage() {
               <GoogleIcon />
               Continue with Google
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => oauth("facebook")}
-              className="h-12 w-full rounded-xl border-border bg-background text-sm font-semibold"
-            >
-              <FacebookIcon />
-              Continue with Facebook
-            </Button>
+            {/* Facebook sign-in is intentionally hidden until the provider is configured. */}
+
           </div>
         </div>
 
