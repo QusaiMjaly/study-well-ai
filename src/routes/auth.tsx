@@ -60,6 +60,8 @@ function GoogleIcon() {
   );
 }
 
+// Kept for when Facebook OAuth is configured; currently unused.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function FacebookIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden="true">
