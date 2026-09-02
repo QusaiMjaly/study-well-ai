@@ -610,14 +610,14 @@ export function ProfilePanel() {
                     day: "numeric",
                     year: "numeric",
                   })}`
-                : "No timetable uploaded yet"}
+                : "No weekly schedule yet"}
             </p>
           </div>
         </div>
 
         {!data.schedule ? (
           <p className="mt-4 text-[13px] text-muted-foreground">
-            Upload your timetable to personalise your plan.
+            Add your weekly study and busy blocks to personalise your plan.
           </p>
         ) : (
           <>
@@ -655,7 +655,7 @@ export function ProfilePanel() {
                         <span className="mt-0.5 h-3 w-3" aria-hidden />
                       )}
                       <span className="sr-only">
-                        {classCount > 0 ? `${hit?.count} classes` : "No classes"}
+                        {classCount > 0 ? `${hit?.count} blocks` : "No blocks"}
                         {hasWorkout ? ", workout day" : ""}
                       </span>
                     </div>
@@ -665,7 +665,7 @@ export function ProfilePanel() {
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="h-1.5 w-4 rounded-full bg-primary/35" aria-hidden />
-                  Classes ({totalClasses(data.schedule)})
+                  Blocks ({totalClasses(data.schedule)})
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
@@ -676,7 +676,7 @@ export function ProfilePanel() {
               </div>
               {!data.schedule.schedule_json && (
                 <p className="mt-3 text-[12px] text-muted-foreground">
-                  Timetable uploaded but not analysed yet.
+                  Schedule saved but not processed yet.
                 </p>
               )}
             </div>

@@ -39,16 +39,23 @@ export function buildPlanPrompt(
   const scheduleText = schedule
     ? schedule.days
         .map((d) => {
-          const classes = d.classes.length
-            ? d.classes.map((c) => `${c.start_time}-${c.end_time} ${c.course_name}`).join("; ")
-            : "no classes";
+          const busy = d.classes.length
+            ? d.classes
+                .map(
+                  (c) =>
+                    `${c.start_time}-${c.end_time} ${c.course_name} (${
+                      c.type === "busy" ? "BUSY" : "STUDY"
+                    })`,
+                )
+                .join("; ")
+            : "nothing scheduled";
           const free = d.free_slots.length
             ? d.free_slots.map((s) => `${s.start_time}-${s.end_time}`).join(", ")
             : "none";
-          return `${d.day}: classes [${classes}] | free [${free}]`;
+          return `${d.day}: unavailable [${busy}] | free [${free}]`;
         })
         .join("\n")
-    : "No timetable available. Assume classes 09:00-15:00 Sunday to Thursday.";
+    : "No weekly schedule available. Assume classes 09:00-15:00 Sunday to Thursday.";
 
   return `You are a university student fitness and nutrition coach. Build ONE personalised weekly plan.
 

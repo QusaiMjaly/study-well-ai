@@ -3,7 +3,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { analyzeTimetable } from "@/lib/schedule.functions";
+import { saveSchedule } from "@/lib/schedule.functions";
+import { WeeklyScheduleEditor } from "@/components/schedule/WeeklyScheduleEditor";
+import {
+  overlappingBlockIds,
+  scheduleToBlocks,
+  type ScheduleBlock,
+  type ScheduleJson,
+} from "@/lib/schedule-schema";
 import { generateAiPlan } from "@/lib/plan.functions";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +26,6 @@ import {
 } from "@/components/ui/select";
 import {
   Loader2,
-  Upload,
-  CalendarDays,
   Sparkles,
   ChevronLeft,
   TrendingDown,
@@ -154,7 +159,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const analyze = useServerFn(analyzeTimetable);
+  const persistSchedule = useServerFn(saveSchedule);
   const generate = useServerFn(generateAiPlan);
 
 
@@ -177,11 +182,9 @@ function Onboarding() {
   const [gender, setGender] = useState("");
   const [activity, setActivity] = useState("");
 
-  // Step 2
-  const [scheduleFile, setScheduleFile] = useState<File | null>(null);
-  /** A timetable already stored for this user (re-entry) means Step 2 is satisfied. */
-  const [hasStoredSchedule, setHasStoredSchedule] = useState(false);
-  const [scheduleUploaded, setScheduleUploaded] = useState(false);
+  // Step 2 — manual weekly schedule is the source of truth.
+  const [blocks, setBlocks] = useState<ScheduleBlock[]>([]);
+  const [imagePath, setImagePath] = useState<string | null>(null);
   const [step2Error, setStep2Error] = useState<string | null>(null);
 
   // Step 3
@@ -219,9 +222,11 @@ function Onboarding() {
             .maybeSingle(),
           supabase
             .from("schedules")
-            .select("id")
+            .select("schedule_json")
             .eq("user_id", u.user.id)
+            .not("schedule_json", "is", null)
             .order("created_at", { ascending: false })
+            .order("id", { ascending: false })
             .limit(1)
             .maybeSingle(),
           supabase
@@ -257,7 +262,7 @@ function Onboarding() {
           setPreferredTime(goals.preferred_time ?? "");
           setChallenge(goals.biggest_challenge ?? "");
         }
-        setHasStoredSchedule(Boolean(sch.data));
+        setBlocks(scheduleToBlocks((sch.data?.schedule_json as unknown as ScheduleJson) ?? null));
       } catch {
         // Prefill is best-effort; the user can still fill the form manually.
       } finally {
@@ -315,9 +320,14 @@ function Onboarding() {
   }
 
   async function saveStep2() {
-    if (!scheduleFile && !scheduleUploaded && !hasStoredSchedule) {
-      const message =
-        "We need a photo of your class timetable — the AI builds your week around it.";
+    if (blocks.length === 0) {
+      const message = "Add at least one study or busy block — the AI builds your week around it.";
+      setStep2Error(message);
+      toast.error(message);
+      return;
+    }
+    if (overlappingBlockIds(blocks).size > 0) {
+      const message = "Two blocks overlap. Fix the overlaps before continuing.";
       setStep2Error(message);
       toast.error(message);
       return;
@@ -325,30 +335,21 @@ function Onboarding() {
     setStep2Error(null);
     setLoading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
-
-      if (scheduleFile) {
-        const path = `${u.user.id}/${Date.now()}-${scheduleFile.name}`;
-        const { error: upErr } = await supabase.storage
-          .from("schedule-images")
-          .upload(path, scheduleFile);
-        if (upErr) throw upErr;
-
-        const { error: insErr } = await supabase.from("schedules").insert({
-          user_id: u.user.id,
-          image_url: path,
-          schedule_json: null,
-        });
-        if (insErr) throw insErr;
-        // Keep the upload if the user steps back and forward again — no re-upload.
-        setScheduleUploaded(true);
-        setHasStoredSchedule(true);
-        setScheduleFile(null);
-      }
+      await persistSchedule({
+        data: {
+          blocks: blocks.map(({ day, start_time, end_time, type, label }) => ({
+            day,
+            start_time,
+            end_time,
+            type,
+            label,
+          })),
+          imagePath,
+        },
+      });
       setStep(3);
     } catch (e) {
-      const message = friendlyMessage(e, "We couldn't upload your timetable. Please try again.");
+      const message = friendlyMessage(e, "We couldn't save your schedule. Please try again.");
       setStep2Error(message);
       toast.error(message);
     } finally {
@@ -374,8 +375,7 @@ function Onboarding() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("You are signed out. Please sign in again.");
 
-      // Real milestone 1: timetable extraction.
-      await analyze(undefined as never);
+      // Milestone 1: the weekly schedule was saved in step 2.
       setAiStage(1);
 
       // Plan generation: advance through the intermediate stages while the AI works.
@@ -640,53 +640,24 @@ function Onboarding() {
                 Your academic schedule
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                We'll plan workouts and meals around your classes.
+                Add your classes and other commitments — we'll plan around them.
               </p>
             </div>
 
-            <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
-              <h2 className="text-base font-semibold">Upload Schedule</h2>
+            <WeeklyScheduleEditor
+              blocks={blocks}
+              onChange={setBlocks}
+              onImageImported={setImagePath}
+            />
 
-              <label className="mt-4 flex h-44 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center transition-colors hover:bg-primary/10">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Upload className="h-5 w-5" />
-                </div>
-                <span className="text-sm font-semibold">
-                  {scheduleFile
-                    ? scheduleFile.name
-                    : hasStoredSchedule
-                      ? "Timetable on file — upload a new one to replace it"
-                      : "Upload timetable image"}
-                </span>
-                <span className="px-6 text-xs text-muted-foreground">
-                  PNG or JPG of your class timetable
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setScheduleFile(e.target.files?.[0] ?? null)}
-                />
-              </label>
-
-              {step2Error && (
-                <p
-                  role="alert"
-                  className="mt-3 rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
-                >
-                  {step2Error}
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={() => toast.info("Calendar sync is coming soon.")}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-semibold transition-colors hover:bg-muted/50"
+            {step2Error && (
+              <p
+                role="alert"
+                className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
               >
-                <CalendarDays className="h-4.5 w-4.5 text-muted-foreground" />
-                Connect Calendar
-              </button>
-            </section>
+                {step2Error}
+              </p>
+            )}
 
             <section className="rounded-2xl border border-ai/20 bg-ai/5 p-5">
               <div className="flex gap-3">
@@ -696,12 +667,13 @@ function Onboarding() {
                 <div>
                   <h3 className="text-sm font-semibold text-ai">AI Scheduling</h3>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    Our AI reads your timetable and finds the gaps between lectures, so your
-                    workouts and meals land at times you're actually free.
+                    Our AI finds the gaps between your blocks, so workouts and meals land at times
+                    you're actually free.
                   </p>
                 </div>
               </div>
             </section>
+
 
             <Button
               onClick={saveStep2}
@@ -811,8 +783,8 @@ function Onboarding() {
                   ["Activity", labelOf(ACTIVITY_LEVELS, activity)],
                   [
                     "Schedule",
-                    scheduleFile || scheduleUploaded || hasStoredSchedule
-                      ? "Timetable uploaded"
+                    blocks.length
+                      ? `${blocks.length} weekly block${blocks.length === 1 ? "" : "s"}`
                       : "Not provided",
                   ],
                   ["Workouts", labelOf(WORKOUT_PREFS, workoutPref)],
