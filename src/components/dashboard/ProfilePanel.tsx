@@ -676,7 +676,7 @@ export function ProfilePanel() {
               </div>
               {!data.schedule.schedule_json && (
                 <p className="mt-3 text-[12px] text-muted-foreground">
-                  Timetable uploaded but not analysed yet.
+                  Schedule saved but not processed yet.
                 </p>
               )}
             </div>
