@@ -610,7 +610,7 @@ export function ProfilePanel() {
                     day: "numeric",
                     year: "numeric",
                   })}`
-                : "No timetable uploaded yet"}
+                : "No weekly schedule yet"}
             </p>
           </div>
         </div>
