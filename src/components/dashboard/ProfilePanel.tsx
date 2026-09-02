@@ -655,7 +655,7 @@ export function ProfilePanel() {
                         <span className="mt-0.5 h-3 w-3" aria-hidden />
                       )}
                       <span className="sr-only">
-                        {classCount > 0 ? `${hit?.count} classes` : "No classes"}
+                        {classCount > 0 ? `${hit?.count} blocks` : "No blocks"}
                         {hasWorkout ? ", workout day" : ""}
                       </span>
                     </div>
