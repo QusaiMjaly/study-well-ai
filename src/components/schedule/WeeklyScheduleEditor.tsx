@@ -75,6 +75,11 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
     [blocks, activeDay],
   );
   const countFor = (day: DayKey) => blocks.filter((b) => b.day === day).length;
+  const typesFor = (day: DayKey) => {
+    const hasStudy = blocks.some((b) => b.day === day && b.type === "study");
+    const hasBusy = blocks.some((b) => b.day === day && b.type === "busy");
+    return { hasStudy, hasBusy, hasBlocks: hasStudy || hasBusy };
+  };
 
   function saveDraft() {
     if (!draft) return;
