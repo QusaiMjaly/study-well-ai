@@ -150,6 +150,7 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
         <div className="-mx-1 mt-4 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {DAYS.map((d) => {
             const active = d === activeDay;
+            const { hasStudy, hasBusy, hasBlocks } = typesFor(d);
             return (
               <button
                 key={d}
@@ -159,13 +160,21 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
                   "flex min-w-[52px] flex-col items-center gap-0.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors",
                   active
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border/60 bg-card text-muted-foreground hover:bg-muted/50",
+                    : hasBlocks
+                      ? "border-primary/25 bg-primary/[0.05] text-foreground hover:bg-primary/[0.09]"
+                      : "border-border/60 bg-card text-muted-foreground hover:bg-muted/50",
                 )}
               >
                 {DAY_SHORT[d]}
                 <span className={cn("text-[10px] font-medium", active ? "opacity-80" : "opacity-60")}>
                   {countFor(d)}
                 </span>
+                {!active && hasBlocks && (
+                  <span className="flex items-center gap-1" aria-hidden>
+                    {hasStudy && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {hasBusy && <span className="h-1.5 w-1.5 rounded-full bg-foreground/60" />}
+                  </span>
+                )}
               </button>
             );
           })}
