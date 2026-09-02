@@ -617,7 +617,7 @@ export function ProfilePanel() {
 
         {!data.schedule ? (
           <p className="mt-4 text-[13px] text-muted-foreground">
-            Upload your timetable to personalise your plan.
+            Add your weekly study and busy blocks to personalise your plan.
           </p>
         ) : (
           <>
