@@ -665,7 +665,7 @@ export function ProfilePanel() {
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="h-1.5 w-4 rounded-full bg-primary/35" aria-hidden />
-                  Classes ({totalClasses(data.schedule)})
+                  Blocks ({totalClasses(data.schedule)})
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
