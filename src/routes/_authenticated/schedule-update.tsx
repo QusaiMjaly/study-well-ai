@@ -151,6 +151,9 @@ function ScheduleUpdate() {
               blocks={blocks}
               onChange={setBlocks}
               onImageImported={setImagePath}
+              mode="managed"
+              saving={loading || isGenerating}
+              onSave={(next) => submit(next)}
             />
           )}
 
