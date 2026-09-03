@@ -13,7 +13,6 @@ import {
   type ScheduleJson,
 } from "@/lib/schedule-schema";
 
-import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyMessage } from "@/lib/friendly-errors";
@@ -50,7 +49,12 @@ function ScheduleUpdate() {
   const [done, setDone] = useState(false);
 
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (navTimer.current) clearTimeout(navTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (navTimer.current) clearTimeout(navTimer.current);
+    },
+    [],
+  );
 
   const { data: current, isLoading } = useQuery({
     queryKey: ["current-schedule"],
@@ -74,11 +78,16 @@ function ScheduleUpdate() {
     if (blocks === null && !isLoading) setBlocks(scheduleToBlocks(current ?? null));
   }, [current, isLoading, blocks]);
 
-  async function submit() {
-    const list = blocks ?? [];
-    if (list.length === 0) return toast.error("Add at least one study or busy block.");
-    if (overlappingBlockIds(list).size > 0)
-      return toast.error("Two blocks overlap. Fix them before saving.");
+  async function submit(next?: ScheduleBlock[]) {
+    const list = next ?? blocks ?? [];
+    if (list.length === 0) {
+      toast.error("Add at least one block.");
+      throw new Error("empty");
+    }
+    if (overlappingBlockIds(list).size > 0) {
+      toast.error("Two blocks overlap. Fix them before saving.");
+      throw new Error("overlap");
+    }
 
     setLoading(true);
     try {
@@ -105,6 +114,7 @@ function ScheduleUpdate() {
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
+      throw e;
     } finally {
       setLoading(false);
     }
@@ -132,7 +142,8 @@ function ScheduleUpdate() {
               Update your weekly schedule
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Edit your study and busy blocks — your profile, goals and preferences stay as they are.
+              Edit your study, work and other blocks — your profile, goals and preferences stay as
+              they are.
             </p>
           </div>
 
@@ -145,6 +156,9 @@ function ScheduleUpdate() {
               blocks={blocks}
               onChange={setBlocks}
               onImageImported={setImagePath}
+              mode="managed"
+              saving={loading || isGenerating}
+              onSave={(next) => submit(next)}
             />
           )}
 
@@ -155,22 +169,13 @@ function ScheduleUpdate() {
             </div>
           )}
 
-          <Button
-            onClick={submit}
-            disabled={loading || done || blocks === null}
-            className="h-13 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground shadow-card"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isGenerating ? "Updating your plan…" : loading ? "Saving…" : "Save schedule"}
-          </Button>
-
           <button
             type="button"
             onClick={() => navigate({ to: "/dashboard" })}
             disabled={loading}
             className="w-full text-sm font-medium text-muted-foreground hover:text-foreground"
           >
-            Cancel
+            Back to dashboard
           </button>
         </div>
       </div>

@@ -24,8 +24,22 @@ export const DAY_LABELS: Record<DayKey, string> = {
   saturday: "Saturday",
 };
 
-export const BLOCK_TYPES = ["study", "busy"] as const;
+/**
+ * Types accepted from persisted schedules. "busy" is the legacy value that
+ * older saved schedules used; it is read as "other" everywhere in the UI.
+ */
+export const STORED_BLOCK_TYPES = ["study", "work", "other", "busy"] as const;
+export type StoredBlockType = (typeof STORED_BLOCK_TYPES)[number];
+
+/** Types the editor offers and writes. */
+export const BLOCK_TYPES = ["study", "work", "other"] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
+
+export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
+  study: "Study",
+  work: "Work",
+  other: "Other",
+};
 
 const SlotSchema = z.object({
   start_time: z.string().regex(TIME),
@@ -44,7 +58,7 @@ const ClassSchema = z.object({
   start_time: z.string().regex(TIME),
   end_time: z.string().regex(TIME),
   location: z.string().nullable().optional().transform((v) => v ?? null),
-  type: z.enum(BLOCK_TYPES).optional().default("study"),
+  type: z.enum(STORED_BLOCK_TYPES).optional().default("study"),
 });
 
 export const ScheduleJsonSchema = z.object({
@@ -80,8 +94,12 @@ export const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(
 const toHHmm = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
-export function blockTypeOf(c: ScheduleClass): BlockType {
-  return c.type === "busy" ? "busy" : "study";
+/** Normalises a persisted block type into the current UI vocabulary. */
+export function blockTypeOf(c: { type?: StoredBlockType | string | null }): BlockType {
+  if (c.type === "work") return "work";
+  // Legacy "busy" blocks stay valid and simply read as "Other".
+  if (c.type === "other" || c.type === "busy") return "other";
+  return "study";
 }
 
 /** Drops invalid/overlapping blocks, sorts by start time and recomputes free slots. */
@@ -153,7 +171,10 @@ export function scheduleToBlocks(schedule: ScheduleJson | null | undefined): Sch
         start_time: c.start_time,
         end_time: c.end_time,
         type: blockTypeOf(c),
-        label: c.course_name && c.course_name !== "Busy" ? c.course_name : null,
+        label:
+          c.course_name && !["Busy", "Class", "Work", "Other"].includes(c.course_name)
+            ? c.course_name
+            : null,
       });
     }
   }
@@ -168,7 +189,9 @@ export function blocksToSchedule(blocks: ScheduleBlock[], timezone = "Asia/Jerus
       classes: blocks
         .filter((b) => b.day === day)
         .map((b) => ({
-          course_name: (b.label ?? "").trim() || (b.type === "busy" ? "Busy" : "Class"),
+          course_name:
+            (b.label ?? "").trim() ||
+            (b.type === "study" ? "Class" : BLOCK_TYPE_LABELS[b.type]),
           start_time: b.start_time,
           end_time: b.end_time,
           location: null,
@@ -193,7 +216,7 @@ export function validateBlock(b: {
   if (toMin(b.end_time) <= toMin(b.start_time)) return "End time must be after the start time.";
   if (toMin(b.end_time) - toMin(b.start_time) > 12 * 60)
     return "A single block can't be longer than 12 hours.";
-  if (!BLOCK_TYPES.includes(b.type as BlockType)) return "Choose Study or Busy.";
+  if (!BLOCK_TYPES.includes(b.type as BlockType)) return "Choose Study, Work or Other.";
   return null;
 }
 
