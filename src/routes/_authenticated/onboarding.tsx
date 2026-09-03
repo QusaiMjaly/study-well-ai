@@ -648,6 +648,7 @@ function Onboarding() {
               blocks={blocks}
               onChange={setBlocks}
               onImageImported={setImagePath}
+              mode="always"
             />
 
             {step2Error && (
