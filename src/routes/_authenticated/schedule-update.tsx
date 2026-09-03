@@ -74,11 +74,16 @@ function ScheduleUpdate() {
     if (blocks === null && !isLoading) setBlocks(scheduleToBlocks(current ?? null));
   }, [current, isLoading, blocks]);
 
-  async function submit() {
-    const list = blocks ?? [];
-    if (list.length === 0) return toast.error("Add at least one study or busy block.");
-    if (overlappingBlockIds(list).size > 0)
-      return toast.error("Two blocks overlap. Fix them before saving.");
+  async function submit(next?: ScheduleBlock[]) {
+    const list = next ?? blocks ?? [];
+    if (list.length === 0) {
+      toast.error("Add at least one block.");
+      throw new Error("empty");
+    }
+    if (overlappingBlockIds(list).size > 0) {
+      toast.error("Two blocks overlap. Fix them before saving.");
+      throw new Error("overlap");
+    }
 
     setLoading(true);
     try {
