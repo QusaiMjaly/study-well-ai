@@ -13,7 +13,6 @@ import {
   type ScheduleJson,
 } from "@/lib/schedule-schema";
 
-import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyMessage } from "@/lib/friendly-errors";
