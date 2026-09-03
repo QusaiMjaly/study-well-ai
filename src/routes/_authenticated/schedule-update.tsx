@@ -164,22 +164,13 @@ function ScheduleUpdate() {
             </div>
           )}
 
-          <Button
-            onClick={submit}
-            disabled={loading || done || blocks === null}
-            className="h-13 w-full rounded-2xl bg-cta-gradient text-base font-semibold text-primary-foreground shadow-card"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isGenerating ? "Updating your plan…" : loading ? "Saving…" : "Save schedule"}
-          </Button>
-
           <button
             type="button"
             onClick={() => navigate({ to: "/dashboard" })}
             disabled={loading}
             className="w-full text-sm font-medium text-muted-foreground hover:text-foreground"
           >
-            Cancel
+            Back to dashboard
           </button>
         </div>
       </div>
