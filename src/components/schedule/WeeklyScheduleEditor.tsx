@@ -1,7 +1,18 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, BookOpen, Briefcase, Clock, ImagePlus, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Blocks,
+  BookOpen,
+  Briefcase,
+  Clock,
+  ImagePlus,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +30,7 @@ import { friendlyMessage } from "@/lib/friendly-errors";
 import { uploadTimetableImage } from "@/lib/schedule-upload";
 import { importTimetableImage } from "@/lib/schedule.functions";
 import {
+  BLOCK_TYPE_LABELS,
   DAYS,
   DAY_LABELS,
   mergeImportedBlocks,
@@ -36,6 +48,14 @@ type Props = {
   onChange: (blocks: ScheduleBlock[]) => void;
   /** Storage path of the most recently imported image, if any. */
   onImageImported?: (path: string) => void;
+  /**
+   * "managed" (default): read-only timetable with an "Edit schedule" action.
+   * "always": the timetable is permanently editable (used during onboarding).
+   */
+  mode?: "managed" | "always";
+  /** Called when the user presses "Save changes" in managed mode. */
+  onSave?: (blocks: ScheduleBlock[]) => Promise<void> | void;
+  saving?: boolean;
 };
 
 const DAY_SHORT: Record<DayKey, string> = {
@@ -48,50 +68,159 @@ const DAY_SHORT: Record<DayKey, string> = {
   saturday: "Sat",
 };
 
-const emptyDraft = (day: DayKey): ScheduleBlock => ({
+const TYPE_ICON: Record<BlockType, typeof BookOpen> = {
+  study: BookOpen,
+  work: Briefcase,
+  other: Blocks,
+};
+
+type Draft = {
+  id: string;
+  days: DayKey[];
+  start_time: string;
+  end_time: string;
+  type: BlockType;
+  label: string | null;
+};
+
+const emptyDraft = (days: DayKey[]): Draft => ({
   id: "",
-  day,
+  days,
   start_time: "10:00",
   end_time: "12:00",
   type: "study",
   label: null,
 });
 
-export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Props) {
+export function WeeklyScheduleEditor({
+  blocks,
+  onChange,
+  onImageImported,
+  mode = "managed",
+  onSave,
+  saving = false,
+}: Props) {
+  const always = mode === "always";
+  const [editing, setEditing] = useState(always);
+  /** Local draft of the whole schedule while editing (managed mode). */
+  const [work, setWork] = useState<ScheduleBlock[]>(blocks);
   const [activeDay, setActiveDay] = useState<DayKey>(DAYS[new Date().getDay()]!);
-  const [draft, setDraft] = useState<ScheduleBlock | null>(null);
+  const [selectedDays, setSelectedDays] = useState<DayKey[]>([]);
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const runImport = useServerFn(importTimetableImage);
 
-  const overlaps = useMemo(() => overlappingBlockIds(blocks), [blocks]);
-  const dayBlocks = useMemo(
-    () =>
-      blocks
-        .filter((b) => b.day === activeDay)
-        .sort((a, b) => toMin(a.start_time) - toMin(b.start_time)),
-    [blocks, activeDay],
-  );
-  const countFor = (day: DayKey) => blocks.filter((b) => b.day === day).length;
+  // Keep the local draft in sync with persisted data while not editing.
+  useEffect(() => {
+    if (always || !editing) setWork(blocks);
+  }, [blocks, editing, always]);
+
+  const current = always ? blocks : editing ? work : blocks;
+  const setCurrent = (next: ScheduleBlock[]) => {
+    if (always) onChange(next);
+    else setWork(next);
+  };
+
+  const overlaps = useMemo(() => overlappingBlockIds(current), [current]);
+
+  const visibleDays: DayKey[] =
+    editing && selectedDays.length > 0
+      ? DAYS.filter((d) => selectedDays.includes(d))
+      : [activeDay];
+
+  const blocksFor = (day: DayKey) =>
+    current
+      .filter((b) => b.day === day)
+      .sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
+
+  const countFor = (day: DayKey) => current.filter((b) => b.day === day).length;
   const typesFor = (day: DayKey) => {
-    const hasStudy = blocks.some((b) => b.day === day && b.type === "study");
-    const hasBusy = blocks.some((b) => b.day === day && b.type === "busy");
+    const hasStudy = current.some((b) => b.day === day && b.type === "study");
+    const hasBusy = current.some((b) => b.day === day && b.type !== "study");
     return { hasStudy, hasBusy, hasBlocks: hasStudy || hasBusy };
   };
 
+  function toggleDay(d: DayKey) {
+    if (!editing) return setActiveDay(d);
+    setSelectedDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+  }
+
+  function enterEdit() {
+    setWork(blocks);
+    setSelectedDays([activeDay]);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setWork(blocks);
+    setSelectedDays([]);
+    setDraft(null);
+    setEditing(false);
+  }
+
+  async function saveEdit() {
+    if (overlappingBlockIds(work).size > 0)
+      return toast.error("Two blocks overlap. Fix them before saving.");
+    onChange(work);
+    try {
+      await onSave?.(work);
+      setEditing(false);
+      setSelectedDays([]);
+    } catch {
+      /* the parent surfaces its own error toast */
+    }
+  }
+
   function saveDraft() {
     if (!draft) return;
-    const err = validateBlock(draft);
+    const days = draft.days;
+    if (days.length === 0) return setDraftError("Select at least one day.");
+
+    const err = validateBlock({ ...draft, day: days[0]! });
     if (err) return setDraftError(err);
-    const clean: ScheduleBlock = {
-      ...draft,
-      id: draft.id || newBlockId(),
-      label: (draft.label ?? "").trim() || null,
-    };
-    onChange(draft.id ? blocks.map((b) => (b.id === draft.id ? clean : b)) : [...blocks, clean]);
-    setActiveDay(clean.day);
+
+    const label = (draft.label ?? "").trim() || null;
+
+    if (draft.id) {
+      // Editing an existing block only ever changes that one block.
+      const day = days[0]!;
+      const updated: ScheduleBlock = {
+        id: draft.id,
+        day,
+        start_time: draft.start_time,
+        end_time: draft.end_time,
+        type: draft.type,
+        label,
+      };
+      const next = current.map((b) => (b.id === draft.id ? updated : b));
+      if (overlappingBlockIds(next).has(draft.id))
+        return setDraftError(`This time overlaps another block on ${DAY_LABELS[day]}.`);
+      setCurrent(next);
+      setActiveDay(day);
+    } else {
+      // One add action creates an independent block on every selected day.
+      const additions: ScheduleBlock[] = days.map((day) => ({
+        id: newBlockId(),
+        day,
+        start_time: draft.start_time,
+        end_time: draft.end_time,
+        type: draft.type,
+        label,
+      }));
+      const next = [...current, ...additions];
+      const bad = overlappingBlockIds(next);
+      const conflicting = additions.filter((a) => bad.has(a.id)).map((a) => DAY_LABELS[a.day]);
+      if (conflicting.length > 0)
+        return setDraftError(
+          `This time overlaps existing blocks on ${conflicting.join(", ")}. Nothing was added.`,
+        );
+      setCurrent(next);
+      setActiveDay(days[0]!);
+    }
+
     setDraft(null);
     setDraftError(null);
   }
@@ -114,8 +243,8 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
         return;
       }
 
-      const merged = mergeImportedBlocks(blocks, result.blocks);
-      onChange(merged.blocks);
+      const merged = mergeImportedBlocks(current, result.blocks);
+      setCurrent(merged.blocks);
       onImageImported?.(path);
       toast.success(
         `Imported ${merged.addedCount} study block${merged.addedCount === 1 ? "" : "s"}${
@@ -131,31 +260,63 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
     }
   }
 
+  const allSelected = selectedDays.length === DAYS.length;
+  const addLabel =
+    selectedDays.length > 1 ? `Add to ${selectedDays.length} days` : "Add time block";
+
   return (
     <div className="space-y-4">
-      {/* PRIMARY: manual weekly schedule */}
+      {/* PRIMARY: the weekly schedule (same timetable in view and edit mode) */}
       <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold">Your weekly schedule</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Add your classes (Study) and anything else you're busy with.
+              {editing
+                ? "Tap days to select them, then add or edit blocks."
+                : "Your classes (Study) and anything else you're busy with."}
             </p>
           </div>
-          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-            {blocks.length}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+              {current.length}
+            </span>
+            {!always && !editing && (
+              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={enterEdit}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit schedule
+              </Button>
+            )}
+          </div>
         </div>
+
+        {editing && (
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              {selectedDays.length === 0
+                ? "Select at least one day"
+                : `${selectedDays.length} day${selectedDays.length === 1 ? "" : "s"} selected`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedDays(allSelected ? [] : [...DAYS])}
+              className="text-xs font-semibold text-primary"
+            >
+              {allSelected ? "Clear all" : "Select all"}
+            </button>
+          </div>
+        )}
 
         <div className="-mx-1 mt-4 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {DAYS.map((d) => {
-            const active = d === activeDay;
+            const active = editing ? selectedDays.includes(d) : d === activeDay;
             const { hasStudy, hasBusy, hasBlocks } = typesFor(d);
             return (
               <button
                 key={d}
                 type="button"
-                onClick={() => setActiveDay(d)}
+                aria-pressed={editing ? active : undefined}
+                onClick={() => toggleDay(d)}
                 className={cn(
                   "flex min-w-[52px] flex-col items-center gap-0.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors",
                   active
@@ -163,6 +324,7 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
                     : hasBlocks
                       ? "border-primary/25 bg-primary/[0.05] text-foreground hover:bg-primary/[0.09]"
                       : "border-border/60 bg-card text-muted-foreground hover:bg-muted/50",
+                  editing && active && "ring-2 ring-primary/30 ring-offset-1 ring-offset-card",
                 )}
               >
                 {DAY_SHORT[d]}
@@ -180,165 +342,236 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
           })}
         </div>
 
-        <div className="mt-4 space-y-2.5">
-          {dayBlocks.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center">
-              <Clock className="mx-auto h-5 w-5 text-muted-foreground" />
-              <p className="mt-2 text-sm font-medium">Nothing on {DAY_LABELS[activeDay]}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Add a study or busy block below.</p>
-            </div>
-          )}
-
-          {dayBlocks.map((b) => {
-            const study = b.type === "study";
-            const bad = overlaps.has(b.id);
+        <div className="mt-4 space-y-4">
+          {visibleDays.map((day) => {
+            const dayBlocks = blocksFor(day);
             return (
-              <div
-                key={b.id}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border p-3",
-                  bad
-                    ? "border-destructive/50 bg-destructive/5"
-                    : study
-                      ? "border-primary/25 bg-primary/5"
-                      : "border-border/60 bg-muted/40",
+              <div key={day} className="space-y-2.5">
+                {visibleDays.length > 1 && (
+                  <p className="text-xs font-semibold text-muted-foreground">{DAY_LABELS[day]}</p>
                 )}
-              >
-                <div
-                  className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                    study ? "bg-primary/10 text-primary" : "bg-foreground/10 text-foreground",
-                  )}
-                  aria-hidden
-                >
-                  {study ? <BookOpen className="h-4.5 w-4.5" /> : <Briefcase className="h-4.5 w-4.5" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {b.label ?? (study ? "Class" : "Busy")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {b.start_time}–{b.end_time} · {study ? "Study" : "Busy (B)"}
-                  </p>
-                  {bad && (
-                    <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-destructive">
-                      <AlertTriangle className="h-3.5 w-3.5" /> Overlaps another block
+
+                {dayBlocks.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center">
+                    <Clock className="mx-auto h-5 w-5 text-muted-foreground" />
+                    <p className="mt-2 text-sm font-medium">Nothing on {DAY_LABELS[day]}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {editing ? "Add a block below." : "Press Edit schedule to add one."}
                     </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  aria-label="Edit block"
-                  onClick={() => {
-                    setDraftError(null);
-                    setDraft(b);
-                  }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Delete block"
-                  onClick={() => onChange(blocks.filter((x) => x.id !== b.id))}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                  </div>
+                )}
+
+                {dayBlocks.map((b) => {
+                  const study = b.type === "study";
+                  const bad = overlaps.has(b.id);
+                  const Icon = TYPE_ICON[b.type];
+                  return (
+                    <div
+                      key={b.id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border p-3",
+                        bad
+                          ? "border-destructive/50 bg-destructive/5"
+                          : study
+                            ? "border-primary/25 bg-primary/5"
+                            : b.type === "work"
+                              ? "border-border/60 bg-muted/40"
+                              : "border-border/60 bg-muted/25",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                          study ? "bg-primary/10 text-primary" : "bg-foreground/10 text-foreground",
+                        )}
+                        aria-hidden
+                      >
+                        <Icon className="h-4.5 w-4.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">
+                          {b.label ?? BLOCK_TYPE_LABELS[b.type]}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {b.start_time}–{b.end_time} · {BLOCK_TYPE_LABELS[b.type]}
+                        </p>
+                        {bad && (
+                          <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-destructive">
+                            <AlertTriangle className="h-3.5 w-3.5" /> Overlaps another block
+                          </p>
+                        )}
+                      </div>
+                      {editing && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Edit block"
+                            onClick={() => {
+                              setDraftError(null);
+                              setDraft({ ...b, days: [b.day] });
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Delete block"
+                            onClick={() => setCurrent(current.filter((x) => x.id !== b.id))}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setDraftError(null);
-            setDraft(emptyDraft(activeDay));
-          }}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-semibold transition-colors hover:bg-muted/50"
-        >
-          <Plus className="h-4.5 w-4.5 text-primary" />
-          Add time block
-        </button>
+        {editing && (
+          <button
+            type="button"
+            disabled={selectedDays.length === 0}
+            onClick={() => {
+              setDraftError(null);
+              setDraft(emptyDraft(selectedDays));
+            }}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-sm font-semibold transition-colors hover:bg-muted/50 disabled:opacity-50"
+          >
+            <Plus className="h-4.5 w-4.5 text-primary" />
+            {selectedDays.length === 0 ? "Select a day to add a block" : addLabel}
+          </button>
+        )}
+
+        {!always && editing && (
+          <div className="mt-4 flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1 rounded-xl"
+              disabled={saving}
+              onClick={cancelEdit}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 rounded-xl"
+              disabled={saving}
+              onClick={() => void saveEdit()}
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save changes
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* SECONDARY: image import helper */}
-      <section className="rounded-2xl border border-border/60 bg-card p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-            {importing ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <ImagePlus className="h-4.5 w-4.5" />}
+      {(always || editing) && (
+        <section className="rounded-2xl border border-border/60 bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              {importing ? (
+                <Loader2 className="h-4.5 w-4.5 animate-spin" />
+              ) : (
+                <ImagePlus className="h-4.5 w-4.5" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Import from a timetable image</p>
+              <p className="text-xs text-muted-foreground">
+                Optional — we'll read it and fill the blocks for you to review.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={importing}
+              onClick={() => fileRef.current?.click()}
+              className="rounded-xl"
+            >
+              {importing ? "Reading…" : "Upload"}
+            </Button>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">Import from a timetable image</p>
-            <p className="text-xs text-muted-foreground">
-              Optional — we'll read it and fill the blocks for you to review.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={importing}
-            onClick={() => fileRef.current?.click()}
-            className="rounded-xl"
-          >
-            {importing ? "Reading…" : "Upload"}
-          </Button>
-        </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
-        />
-      </section>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
+          />
+        </section>
+      )}
 
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
         <DialogContent className="max-w-[360px] rounded-2xl">
           <DialogHeader>
             <DialogTitle>{draft?.id ? "Edit block" : "Add time block"}</DialogTitle>
-            <DialogDescription>Study is your classes. Busy is anything else.</DialogDescription>
+            <DialogDescription>
+              {draft && !draft.id && draft.days.length > 1
+                ? `Creates a separate block on ${draft.days.length} days — you can edit each one later.`
+                : "Study is your classes. Work and Other are anything else."}
+            </DialogDescription>
           </DialogHeader>
 
           {draft && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                {(["study", "busy"] as BlockType[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setDraft({ ...draft, type: t })}
-                    className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors",
-                      draft.type === t
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border/60 text-muted-foreground hover:bg-muted/50",
-                    )}
-                  >
-                    {t === "study" ? <BookOpen className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
-                    {t === "study" ? "Study" : "Busy"}
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                {(["study", "work", "other"] as BlockType[]).map((t) => {
+                  const Icon = TYPE_ICON[t];
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setDraft({ ...draft, type: t })}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-colors",
+                        draft.type === t
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border/60 text-muted-foreground hover:bg-muted/50",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {BLOCK_TYPE_LABELS[t]}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1">
-                {DAYS.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDraft({ ...draft, day: d })}
-                    className={cn(
-                      "min-w-[48px] rounded-xl border px-2 py-1.5 text-xs font-semibold transition-colors",
-                      draft.day === d
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/60 text-muted-foreground hover:bg-muted/50",
-                    )}
-                  >
-                    {DAY_SHORT[d]}
-                  </button>
-                ))}
+                {DAYS.map((d) => {
+                  const on = draft.days.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() =>
+                        setDraft({
+                          ...draft,
+                          days: draft.id
+                            ? [d]
+                            : on
+                              ? draft.days.filter((x) => x !== d)
+                              : [...draft.days, d],
+                        })
+                      }
+                      className={cn(
+                        "min-w-[48px] rounded-xl border px-2 py-1.5 text-xs font-semibold transition-colors",
+                        on
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border/60 text-muted-foreground hover:bg-muted/50",
+                      )}
+                    >
+                      {DAY_SHORT[d]}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -386,7 +619,9 @@ export function WeeklyScheduleEditor({ blocks, onChange, onImageImported }: Prop
               Cancel
             </Button>
             <Button type="button" className="rounded-xl" onClick={saveDraft}>
-              Save block
+              {draft && !draft.id && draft.days.length > 1
+                ? `Add to ${draft.days.length} days`
+                : "Save block"}
             </Button>
           </DialogFooter>
         </DialogContent>
