@@ -138,7 +138,7 @@ function ScheduleUpdate() {
               Update your weekly schedule
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Edit your study and busy blocks — your profile, goals and preferences stay as they are.
+              Edit your study, work and other blocks — your profile, goals and preferences stay as they are.
             </p>
           </div>
 
