@@ -1,3 +1,4 @@
+import { blockTypeOf } from "./schedule-schema";
 import type { ScheduleJson } from "./schedule-schema";
 import { durationBand, type AiPlan } from "./plan-schema";
 import { formatCandidatesForPrompt, type Candidate } from "./exercise-selection";
@@ -43,9 +44,9 @@ export function buildPlanPrompt(
             ? d.classes
                 .map(
                   (c) =>
-                    `${c.start_time}-${c.end_time} ${c.course_name} (${
-                      c.type === "busy" ? "BUSY" : "STUDY"
-                    })`,
+                    `${c.start_time}-${c.end_time} ${c.course_name} (${blockTypeOf(
+                      c,
+                    ).toUpperCase()})`,
                 )
                 .join("; ")
             : "nothing scheduled";
