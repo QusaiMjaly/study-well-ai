@@ -127,14 +127,10 @@ export function WeeklyScheduleEditor({
   const overlaps = useMemo(() => overlappingBlockIds(current), [current]);
 
   const visibleDays: DayKey[] =
-    editing && selectedDays.length > 0
-      ? DAYS.filter((d) => selectedDays.includes(d))
-      : [activeDay];
+    editing && selectedDays.length > 0 ? DAYS.filter((d) => selectedDays.includes(d)) : [activeDay];
 
   const blocksFor = (day: DayKey) =>
-    current
-      .filter((b) => b.day === day)
-      .sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
+    current.filter((b) => b.day === day).sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
 
   const countFor = (day: DayKey) => current.filter((b) => b.day === day).length;
   const typesFor = (day: DayKey) => {
@@ -282,7 +278,13 @@ export function WeeklyScheduleEditor({
               {current.length}
             </span>
             {!always && !editing && (
-              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={enterEdit}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={enterEdit}
+              >
                 <Pencil className="mr-1.5 h-3.5 w-3.5" />
                 Edit schedule
               </Button>
@@ -328,7 +330,9 @@ export function WeeklyScheduleEditor({
                 )}
               >
                 {DAY_SHORT[d]}
-                <span className={cn("text-[10px] font-medium", active ? "opacity-80" : "opacity-60")}>
+                <span
+                  className={cn("text-[10px] font-medium", active ? "opacity-80" : "opacity-60")}
+                >
                   {countFor(d)}
                 </span>
                 {!active && hasBlocks && (
@@ -607,7 +611,10 @@ export function WeeklyScheduleEditor({
               </label>
 
               {draftError && (
-                <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                <p
+                  role="alert"
+                  className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive"
+                >
                   {draftError}
                 </p>
               )}
@@ -615,7 +622,12 @@ export function WeeklyScheduleEditor({
           )}
 
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button type="button" variant="ghost" className="rounded-xl" onClick={() => setDraft(null)}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-xl"
+              onClick={() => setDraft(null)}
+            >
               Cancel
             </Button>
             <Button type="button" className="rounded-xl" onClick={saveDraft}>

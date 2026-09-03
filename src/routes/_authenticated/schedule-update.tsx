@@ -49,7 +49,12 @@ function ScheduleUpdate() {
   const [done, setDone] = useState(false);
 
   const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (navTimer.current) clearTimeout(navTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (navTimer.current) clearTimeout(navTimer.current);
+    },
+    [],
+  );
 
   const { data: current, isLoading } = useQuery({
     queryKey: ["current-schedule"],
@@ -137,7 +142,8 @@ function ScheduleUpdate() {
               Update your weekly schedule
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Edit your study, work and other blocks — your profile, goals and preferences stay as they are.
+              Edit your study, work and other blocks — your profile, goals and preferences stay as
+              they are.
             </p>
           </div>
 
