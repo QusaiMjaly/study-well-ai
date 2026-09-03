@@ -110,6 +110,7 @@ function ScheduleUpdate() {
       navTimer.current = setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (e) {
       toast.error(friendlyMessage(e, "We couldn't update your schedule. Please retry."));
+      throw e;
     } finally {
       setLoading(false);
     }
