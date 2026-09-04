@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ChefHat, ImageOff, Loader2, RefreshCw, Utensils } from "lucide-react";
+import { ChefHat, ImageOff, Loader2, RefreshCw, Sparkles, Utensils } from "lucide-react";
 import { ensureMealImage, type MealImageResult } from "@/lib/meal-image.functions";
 import type { MealItem } from "@/lib/meals-data";
 
@@ -61,7 +60,7 @@ export function RecipeSheet({
           {/* Dish image */}
           <div className="overflow-hidden rounded-2xl bg-muted">
             {loading ? (
-              <Skeleton className="h-48 w-full" />
+              <AiImageGenerating />
             ) : image?.status === "ready" && image.url ? (
               <img
                 src={image.url}
@@ -138,5 +137,17 @@ export function RecipeSheet({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function AiImageGenerating() {
+  return (
+    <div className="ai-shimmer relative flex h-48 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-ai/8 text-ai">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 motion-safe:animate-pulse" />
+        <span className="text-sm font-semibold">Creating your meal image…</span>
+      </div>
+      <p className="text-xs text-ai/80">AI is generating a preview</p>
+    </div>
   );
 }
