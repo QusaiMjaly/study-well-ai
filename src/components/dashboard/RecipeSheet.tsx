@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ChefHat, ImageOff, Loader2, RefreshCw, Utensils } from "lucide-react";
+import { ChefHat, ImageOff, RefreshCw, Sparkles, Utensils } from "lucide-react";
 import { ensureMealImage, type MealImageResult } from "@/lib/meal-image.functions";
 import type { MealItem } from "@/lib/meals-data";
 
