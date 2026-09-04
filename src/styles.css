@@ -221,21 +221,22 @@
 @utility ai-shimmer {
   position: relative;
   overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklab, var(--ai) 18%, transparent) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: ai-shimmer-slide 2s infinite linear;
+  }
 }
 
-@utility ai-shimmer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in oklab, var(--ai) 18%, transparent) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: ai-shimmer-slide 2s infinite linear;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .ai-shimmer::before {
