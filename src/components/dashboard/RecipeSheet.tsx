@@ -139,3 +139,15 @@ export function RecipeSheet({
     </Sheet>
   );
 }
+
+function AiImageGenerating() {
+  return (
+    <div className="ai-shimmer relative flex h-48 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-ai/8 text-ai">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 motion-safe:animate-pulse" />
+        <span className="text-sm font-semibold">Creating your meal image…</span>
+      </div>
+      <p className="text-xs text-ai/80">AI is generating a preview</p>
+    </div>
+  );
+}
