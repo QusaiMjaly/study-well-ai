@@ -60,7 +60,7 @@ export function RecipeSheet({
           {/* Dish image */}
           <div className="overflow-hidden rounded-2xl bg-muted">
             {loading ? (
-              <Skeleton className="h-48 w-full" />
+              <AiImageGenerating />
             ) : image?.status === "ready" && image.url ? (
               <img
                 src={image.url}
