@@ -356,12 +356,9 @@ export function WeeklyScheduleEditor({
                 )}
 
                 {dayBlocks.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center">
-                    <Clock className="mx-auto h-5 w-5 text-muted-foreground" />
-                    <p className="mt-2 text-sm font-medium">Nothing on {DAY_LABELS[day]}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {editing ? "Add a block below." : "Press Edit schedule to add one."}
-                    </p>
+                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 px-3 py-2.5 text-center">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">Nothing on {DAY_LABELS[day]}</p>
                   </div>
                 )}
 
