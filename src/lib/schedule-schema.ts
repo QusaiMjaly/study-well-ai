@@ -90,6 +90,11 @@ export type ScheduleBlock = {
 const DAY_START = "08:00";
 const DAY_END = "22:00";
 
+/** Full-day range used by the "Busy all day" quick action. */
+// טווח היום המלא, משמש לפעולה המהירה "עסוק כל היום"
+export const ALL_DAY_START = "00:00";
+export const ALL_DAY_END = "23:59";
+
 export const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 const toHHmm = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
