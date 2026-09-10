@@ -14,6 +14,7 @@ export type MealImageResult = {
   retryable?: boolean;
 };
 
+// הפונקציה ממירה מחרוזת base64 לבייטים כדי לשמור את התמונה באחסון
 function b64ToBytes(b64: string) {
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
@@ -25,6 +26,7 @@ function b64ToBytes(b64: string) {
  * Lazily generates (once) and returns a signed URL for a meal's plated dish image.
  * Never throws for generation problems — always returns a friendly result.
  */
+// הפונקציה יוצרת פעם אחת תמונת AI של המנה ומחזירה קישור חתום; אם כבר קיימת — מחזירה את הקיימת
 export const ensureMealImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { mealItemId: string }) => {

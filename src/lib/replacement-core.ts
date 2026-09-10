@@ -12,6 +12,7 @@ import type { BalancedMeal } from "./replacement-schema";
 /** Loosely typed client: the generated Database types are applied by callers. */
 type Db = any;
 
+// הפונקציה טוענת את פרטי הפרופיל והיעדים של המשתמש כהקשר עבור החלפת ארוחה או תרגיל
 export async function loadUserContext(supabase: Db, userId: string): Promise<UserContext> {
   const [{ data: profile }, { data: goals }] = await Promise.all([
     supabase
@@ -46,6 +47,7 @@ export async function loadUserContext(supabase: Db, userId: string): Promise<Use
   };
 }
 
+// הפונקציה זורקת שגיאת "התוכנית כבר לא עדכנית" כשהפריט שהמשתמש מנסה להחליף לא קיים או לא שלו
 export function staleError(): never {
   throw new Error(STALE_MESSAGE);
 }
@@ -63,6 +65,7 @@ export type LoadedMeal = {
  * Loads a meal with its day, sibling meals and owning plan.
  * Ownership comes from RLS; plan activity and identity are re-derived here.
  */
+// הפונקציה טוענת ארוחה יחד עם היום שלה, שאר הארוחות והתוכנית, ומוודאת שהכל עדיין פעיל ושייך למשתמש
 export async function loadMeal(
   supabase: Db,
   mealItemId: string,
@@ -105,6 +108,7 @@ export async function loadMeal(
  * never overwritten by replacements, so they are authoritative. Only when a day
  * has no stored target do we fall back to the plan's other days.
  */
+// הפונקציה מחזירה את יעדי הקלוריות והחלבון היומיים של התוכנית (היעד המקורי, לא הסכום בפועל)
 export async function dayTargets(
   supabase: Db,
   planId: string,
@@ -137,6 +141,7 @@ export type DayTotals = {
   fats: number;
 };
 
+// הפונקציה מסכמת קלוריות ומאקרו של רשימת ארוחות
 export function sumMeals(meals: any[]): DayTotals {
   return {
     calories: Math.round(meals.reduce((s, m) => s + Number(m.calories ?? 0), 0)),
@@ -153,6 +158,7 @@ export function sumMeals(meals: any[]): DayTotals {
  * the plan's intended targets, and overwriting them would make every deviation
  * comparison compare a value against itself.
  */
+// הפונקציה מחשבת את סך הקלוריות בפועל של היום לפי הארוחות השמורות (בלי לדרוס את היעדים)
 export async function recomputeDayTotals(supabase: Db, mealDayId: string): Promise<DayTotals> {
   const { data } = await supabase
     .from("meal_items")
@@ -163,6 +169,7 @@ export async function recomputeDayTotals(supabase: Db, mealDayId: string): Promi
 }
 
 /** Balance-my-day trigger: >=100 kcal, or >=5% of target kcal, or >=15 g protein. */
+// הפונקציה בודקת אם היום סטה מספיק מהיעד כדי להציע את פעולת "איזון היום"
 export function shouldOfferBalance(
   totals: DayTotals,
   targets: { calories: number; protein: number },
@@ -182,6 +189,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
  * A meal keeps its existing photo only when the represented dish is unchanged:
  * same name, same image prompt AND the same ingredient set.
  */
+// הפונקציה בודקת אם המנה נשארה זהה, כדי לדעת אם אפשר לשמור את התמונה הקיימת שלה
 export function imageStillValid(
   before: { meal_name: string; image_prompt: string | null; ingredients: string[] | null },
   after: { meal_name: string; image_prompt: string | null; ingredients: string[] },
@@ -193,6 +201,7 @@ export function imageStillValid(
   return a === b;
 }
 
+// הפונקציה בונה את עדכון הארוחה במסד, ומאפסת את התמונה אם המנה השתנתה
 export function balancedMealUpdate(existing: any, next: BalancedMeal) {
   const keepImage = imageStillValid(existing, next);
   return {
@@ -218,6 +227,7 @@ export type LoadedExercise = {
   planId: string;
 };
 
+// הפונקציה טוענת תרגיל יחד עם יום האימון שלו ומוודאת שהוא עדיין פעיל ושייך למשתמש
 export async function loadExercise(
   supabase: Db,
   exerciseId: string,

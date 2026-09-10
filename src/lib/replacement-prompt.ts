@@ -19,6 +19,7 @@ export type UserContext = {
   biggest_challenge: string | null;
 };
 
+// הפונקציה מעצבת את פרטי המשתמש כטקסט קצר שמוכנס להנחיות של ה-AI
 export function userContextText(u: UserContext) {
   return [
     `- Age: ${u.age ?? "unknown"}, Gender: ${u.gender ?? "unknown"}`,
@@ -32,6 +33,7 @@ export function userContextText(u: UserContext) {
 }
 
 /** One structured Gemini call. Throws friendly errors; never leaks provider text. */
+// הפונקציה שולחת הנחיה אחת ל-AI ומחזירה תשובת JSON מובנית, עם הודעות שגיאה ידידותיות
 export async function callStructuredJson(prompt: string): Promise<unknown> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured on the server.");
@@ -92,6 +94,7 @@ const MEAL_JSON_SHAPE = `{
 
 export type SpecificMealMode = "fit_plan" | "as_described";
 
+// הפונקציה בונה את טקסט ההקשר של הארוחה, בגרסה רגילה או בגרסת "בדיוק כמו שתיארתי"
 function mealContextText(c: MealContext, asDescribed = false) {
   if (asDescribed) {
     return `STUDENT (context only — NOT constraints on the requested food)
@@ -112,6 +115,7 @@ MEAL SLOT BEING REPLACED
   return mealContextTextFit(c);
 }
 
+// הפונקציה בונה את טקסט ההקשר של הארוחה עבור מצב "שיתאים לתוכנית שלי"
 function mealContextTextFit(c: MealContext) {
   return `STUDENT
 ${userContextText(c.user)}
@@ -136,6 +140,7 @@ RULES
 - Do NOT include meal_order, scheduled_time or any ids: those are inherited.`;
 }
 
+// הפונקציה בונה את ההנחיה ל-AI להציע 3 ארוחות חלופיות
 export function buildMealSuggestionsPrompt(c: MealContext) {
   return `You are a university student nutrition coach. Propose EXACTLY 3 alternative meals to replace one meal.
 
@@ -149,6 +154,7 @@ Return JSON only, exactly:
 { "suggestions": [ ${MEAL_JSON_SHAPE}, ${MEAL_JSON_SHAPE}, ${MEAL_JSON_SHAPE} ] }`;
 }
 
+// הפונקציה בונה את ההנחיה ל-AI ליצור ארוחה ספציפית שהמשתמש ביקש, לפי המצב הנבחר
 export function buildSpecificMealPrompt(
   c: MealContext,
   request: string,
@@ -221,6 +227,7 @@ export type BalanceContext = {
   }[];
 };
 
+// הפונקציה בונה את ההנחיה ל-AI לאזן את שאר הארוחות של היום סביב הארוחה שהמשתמש נעל
 export function buildBalanceDayPrompt(c: BalanceContext) {
   return `You are a university student nutrition coach. Rebalance ONE day so the daily totals move back towards target.
 
@@ -276,6 +283,7 @@ export type ExerciseContext = {
 
 const EX_JSON = `{ "exercise_slug": "", "sets": 3, "reps": "10-12", "duration_seconds": null, "rest_seconds": 60, "notes": "", "rationale": "" }`;
 
+// הפונקציה בונה את טקסט ההקשר של התרגיל שמחליפים, כולל רשימת התרגילים המותרים מהקטלוג
 function exerciseContextText(c: ExerciseContext, pool: Candidate[]) {
   return `STUDENT
 ${userContextText(c.user)}
@@ -292,6 +300,7 @@ slug | name | muscle | equipment | difficulty | family
 ${pool.map((p) => `${p.slug} | ${p.name} | ${p.muscle} | ${p.equipment} | ${p.difficulty} | ${p.family}`).join("\n")}`;
 }
 
+// הפונקציה בונה את ההנחיה ל-AI להציע 3 תרגילים חלופיים
 export function buildExerciseSuggestionsPrompt(c: ExerciseContext, pool: Candidate[]) {
   return `You are a strength coach. Propose EXACTLY 3 replacement exercises for one exercise inside an existing workout.
 
@@ -309,6 +318,7 @@ Return JSON only, exactly:
 { "suggestions": [ ${EX_JSON}, ${EX_JSON}, ${EX_JSON} ] }`;
 }
 
+// הפונקציה בונה את ההנחיה ל-AI למצוא תרגיל ספציפי שהמשתמש ביקש ולבדוק שהוא מתאים להקשר
 export function buildSpecificExercisePrompt(
   c: ExerciseContext,
   pool: Candidate[],

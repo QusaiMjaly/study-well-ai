@@ -95,6 +95,7 @@ const toHHmm = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 /** Normalises a persisted block type into the current UI vocabulary. */
+// הפונקציה ממירה סוג בלוק שמור לסוג שהממשק מכיר (busy ישן הופך ל-Other)
 export function blockTypeOf(c: { type?: StoredBlockType | string | null }): BlockType {
   if (c.type === "work") return "work";
   // Legacy "busy" blocks stay valid and simply read as "Other".
@@ -103,6 +104,7 @@ export function blockTypeOf(c: { type?: StoredBlockType | string | null }): Bloc
 }
 
 /** Drops invalid/overlapping blocks, sorts by start time and recomputes free slots. */
+// הפונקציה מסדרת את הלו"ז: מסירה בלוקים לא תקינים או חופפים, ממיינת לפי שעה ומחשבת חלונות פנויים
 export function normalizeSchedule(input: ScheduleJson): ScheduleJson {
   const warnings = [...input.warnings];
 
@@ -154,12 +156,14 @@ export function normalizeSchedule(input: ScheduleJson): ScheduleJson {
 /* ------------------------------------------------------------------ */
 
 let seq = 0;
+// הפונקציה יוצרת מזהה ייחודי לבלוק חדש בעורך הלו"ז
 export function newBlockId() {
   seq += 1;
   return `b${Date.now().toString(36)}${seq}`;
 }
 
 /** Flattens a stored schedule into editable blocks (legacy classes become STUDY). */
+// הפונקציה הופכת לו"ז שמור לרשימת בלוקים שהעורך יכול להציג ולערוך
 export function scheduleToBlocks(schedule: ScheduleJson | null | undefined): ScheduleBlock[] {
   if (!schedule) return [];
   const blocks: ScheduleBlock[] = [];
@@ -181,6 +185,7 @@ export function scheduleToBlocks(schedule: ScheduleJson | null | undefined): Sch
   return blocks;
 }
 
+// הפונקציה הופכת את הבלוקים מהעורך חזרה למבנה הלו"ז הרשמי לשמירה
 export function blocksToSchedule(blocks: ScheduleBlock[], timezone = "Asia/Jerusalem"): ScheduleJson {
   return normalizeSchedule({
     timezone,
@@ -205,6 +210,7 @@ export function blocksToSchedule(blocks: ScheduleBlock[], timezone = "Asia/Jerus
 }
 
 /** Field-level validation for a single block; returns a friendly error or null. */
+// הפונקציה בודקת שבלוק בודד תקין (יום, שעות, סוג) ומחזירה הודעת שגיאה ידידותית או null
 export function validateBlock(b: {
   day: string;
   start_time: string;
@@ -221,6 +227,7 @@ export function validateBlock(b: {
 }
 
 /** Ids of blocks that overlap another block on the same day. */
+// הפונקציה מוצאת בלוקים שחופפים זמנית באותו יום כדי לסמן אותם כבעייתיים
 export function overlappingBlockIds(blocks: ScheduleBlock[]): Set<string> {
   const bad = new Set<string>();
   for (const day of DAYS) {
@@ -243,6 +250,7 @@ export const isDuplicateBlock = (a: ScheduleBlock, b: ScheduleBlock) =>
   a.day === b.day && a.start_time === b.start_time && a.end_time === b.end_time && a.type === b.type;
 
 /** Adds imported blocks to existing ones, skipping exact duplicates. */
+// הפונקציה ממזגת בלוקים שיובאו מתמונה לתוך הבלוקים הקיימים, בלי כפילויות
 export function mergeImportedBlocks(existing: ScheduleBlock[], imported: ScheduleBlock[]) {
   const added: ScheduleBlock[] = [];
   for (const inc of imported) {

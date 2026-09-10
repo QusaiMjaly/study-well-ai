@@ -29,14 +29,17 @@ const COMPATIBLE: Partial<Record<MovementFamily, MovementFamily[]>> = {
   conditioning: ["core", "lunge"],
 };
 
+// הפונקציה הופכת שורות מהקטלוג לרשימת מועמדים תקינים בלבד
 export function toCandidates(rows: CatalogueRow[]): Candidate[] {
   return rows.map(toCandidate).filter((c): c is Candidate => c !== null);
 }
 
+// הפונקציה בודקת אם אפשר לבצע את התרגיל באימון ביתי
 export function isHomeCompatible(c: Candidate) {
   return HOME_EQUIPMENT.has(c.equipment.toLowerCase()) || HOME_ELIGIBLE_SLUGS.has(c.slug);
 }
 
+// הפונקציה בודקת אם רמת הפעילות של הסטודנט מתירה תרגילים מתקדמים
 export function allowsAdvanced(activityLevel: string | null) {
   return /very|athlete|advanced/.test((activityLevel ?? "").toLowerCase());
 }
@@ -50,6 +53,7 @@ export type PoolContext = {
 };
 
 /** Slugs that fit the student's current training context (home/gym + difficulty). */
+// הפונקציה מסננת תרגילים שמתאימים להקשר של הסטודנט (בית/חדר כושר ורמת קושי)
 export function contextCompatible(all: Candidate[], ctx: PoolContext): Candidate[] {
   const home = (ctx.workoutPreference ?? "").toLowerCase() === "home";
   const advanced = allowsAdvanced(ctx.activityLevel);
@@ -64,6 +68,7 @@ export function contextCompatible(all: Candidate[], ctx: PoolContext): Candidate
  * Ranked replacement pool: same family first, then muscle overlap, then
  * compatible families. Excludes the original and everything already programmed.
  */
+// הפונקציה בונה מאגר תרגילי חלופה מדורגים לתרגיל שהמשתמש רוצה להחליף
 export function buildReplacementPool(
   all: Candidate[],
   original: Candidate | null,
@@ -103,6 +108,7 @@ const tokens = (s: string) =>
  * Name search across the WHOLE active catalogue, so a specific request is never
  * declared missing just because it is outside the context-compatible pool.
  */
+// הפונקציה מחפשת תרגילים בקטלוג לפי שם חופשי שהמשתמש הקליד
 export function searchCatalogue(all: Candidate[], query: string, limit = LOOKUP_POOL_SIZE) {
   const q = tokens(query);
   if (!q.length) return [];
@@ -123,6 +129,7 @@ export function searchCatalogue(all: Candidate[], query: string, limit = LOOKUP_
 }
 
 /** Merges pools, keeping order and removing duplicates. */
+// הפונקציה ממזגת כמה מאגרי תרגילים לאחד, בלי כפילויות
 export function mergePools(...pools: Candidate[][]): Candidate[] {
   const seen = new Set<string>();
   const out: Candidate[] = [];

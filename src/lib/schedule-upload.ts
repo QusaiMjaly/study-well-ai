@@ -11,6 +11,7 @@ const EXT_BY_MIME: Record<string, string> = {
 };
 
 /** Sniffs the real image type from the file bytes, independent of its filename. */
+// הפונקציה מזהה את סוג התמונה האמיתי מתוך הבייטים של הקובץ, לא לפי שם הקובץ
 async function sniffMime(file: File): Promise<string | null> {
   const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   const is = (...sig: number[]) => sig.every((b, i) => head[i] === b);
@@ -29,6 +30,7 @@ async function sniffMime(file: File): Promise<string | null> {
  * The user's original filename (Hebrew, Arabic, emoji, spaces…) is never used
  * as the storage key — it is only kept for display.
  */
+// הפונקציה מעלה תמונת מערכת שעות לאחסון תחת שם קובץ בטוח מבוסס UUID (בלי להשתמש בשם המקורי)
 export async function uploadTimetableImage(file: File, userId: string) {
   const sniffed = await sniffMime(file);
   const mime = sniffed ?? (file.type.startsWith("image/") ? file.type : null);

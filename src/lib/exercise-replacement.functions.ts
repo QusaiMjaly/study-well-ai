@@ -53,11 +53,13 @@ export type ExerciseApplyResult =
 const CATALOGUE_COLUMNS =
   "slug, display_name, category, equipment, difficulty, primary_muscles, ymove_exercise_id";
 
+// הפונקציה טוענת את כל התרגילים הפעילים מהקטלוג וממירה אותם למועמדים
 async function loadCatalogue(supabase: any) {
   const { data } = await supabase.from("exercise_media").select(CATALOGUE_COLUMNS).eq("is_active", true);
   return toCandidates((data ?? []) as CatalogueRow[]);
 }
 
+// הפונקציה מבקשת מה-AI שלוש הצעות לתרגילים חלופיים מתוך הקטלוג המאושר
 export const suggestExerciseReplacements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Target.parse(d))
@@ -161,6 +163,7 @@ export const suggestExerciseReplacements = createServerFn({ method: "POST" })
     return { suggestions: suggestions.slice(0, 3) };
   });
 
+// הפונקציה מחפשת בקטלוג תרגיל ספציפי שהמשתמש ביקש ובודקת שהוא מתאים להקשר האימון שלו
 export const requestSpecificExerciseReplacement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -282,6 +285,7 @@ export const requestSpecificExerciseReplacement = createServerFn({ method: "POST
     };
   });
 
+// הפונקציה שומרת את התרגיל החדש שהמשתמש בחר במקום הישן, אחרי בדיקות תקינות מול הקטלוג
 export const applyExerciseReplacement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

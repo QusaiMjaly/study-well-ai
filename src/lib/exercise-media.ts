@@ -19,6 +19,7 @@ const COLUMNS =
   "slug, display_name, category, equipment, animation_url, poster_url, primary_muscles, cues, common_mistakes, license, attribution, source_url";
 
 /** Normalizes a free-text exercise name for safe alias comparison. */
+// הפונקציה מנרמלת שם תרגיל בטקסט חופשי כדי שאפשר יהיה להשוות אותו בבטחה
 export function normalizeExerciseName(name: string) {
   return name
     .toLowerCase()
@@ -32,6 +33,7 @@ export function normalizeExerciseName(name: string) {
  * 2. Legacy plans only: exact alias / display-name match on the normalized name.
  * Never guesses — an unmatched exercise returns null so the UI shows a text-only state.
  */
+// הפונקציה מוצאת את נתוני המדיה של תרגיל לפי ה-slug השמור או לפי התאמת שם מדויקת
 export async function fetchExerciseMedia(
   slug: string | null | undefined,
   exerciseName: string,

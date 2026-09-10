@@ -28,6 +28,7 @@ export type PlanInputs = {
   schedule: ScheduleJson | null;
 };
 
+// הפונקציה בונה את ההנחיה (prompt) שנשלחת ל-AI כדי ליצור תוכנית שבועית מותאמת אישית
 export function buildPlanPrompt(
   inputs: PlanInputs,
   candidates: Candidate[],
@@ -118,6 +119,7 @@ Return JSON only, no markdown, no explanation, exactly this shape:
 }
 
 /** Flattens the validated plan into the payload the save_ai_plan database routine expects. */
+// הפונקציה הופכת את התוכנית המאומתת למבנה שמתאים לשמירה במסד הנתונים
 export function toSavePayload(plan: AiPlan, model: string) {
   return {
     plan_name: `${plan.summary.goal} plan`,
@@ -129,6 +131,7 @@ export function toSavePayload(plan: AiPlan, model: string) {
   };
 }
 
+// הפונקציה מחלצת ומפענחת את ה-JSON מתוך תשובת ה-AI
 export function extractJson(raw: string): unknown {
   const cleaned = raw.replace(/^```json\s*|\s*```$/g, "").trim();
   return JSON.parse(cleaned);

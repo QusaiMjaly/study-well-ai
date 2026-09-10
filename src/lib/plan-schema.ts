@@ -77,6 +77,7 @@ const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
  * Business validation on top of the shape validation.
  * Returns a list of human readable problems; empty means the plan is acceptable.
  */
+// הפונקציה בודקת שהתוכנית לא מתנגשת עם הלו"ז של הסטודנט (אימונים וארוחות מול שיעורים)
 export function validatePlanAgainstSchedule(
   plan: AiPlan,
   schedule: ScheduleJson | null,
@@ -188,6 +189,7 @@ const FLEXIBLE_BAND: DurationBand = {
   guidance: "4-8 exercises, 3 sets each, 45-90s rest",
 };
 
+// הפונקציה מחזירה את טווח אורך האימון המתאים להעדפה שהמשתמש בחר
 export function durationBand(preference: string | null | undefined): DurationBand {
   const key = (preference ?? "").trim();
   return BANDS[key] ?? FLEXIBLE_BAND;
@@ -197,6 +199,7 @@ export function durationBand(preference: string | null | undefined): DurationBan
  * Ensures the generated workouts actually fit the requested session length:
  * duration, scheduled window and exercise volume must agree with the band.
  */
+// הפונקציה בודקת שהאימונים שנוצרו באמת מתאימים לאורך האימון שהמשתמש ביקש
 export function validatePlanDuration(plan: AiPlan, preference: string | null | undefined): string[] {
   const band = durationBand(preference);
   const problems: string[] = [];
@@ -228,6 +231,7 @@ export function validatePlanDuration(plan: AiPlan, preference: string | null | u
  * Validates that every generated exercise uses a slug from the candidate pool
  * that was supplied to the model for THIS generation. No fuzzy remapping.
  */
+// הפונקציה בודקת שכל התרגילים בתוכנית נלקחו רק מקטלוג התרגילים המאושר
 export function validatePlanExercises(plan: AiPlan, allowedSlugs: Set<string>): string[] {
   const problems: string[] = [];
   const invalid = new Set<string>();

@@ -114,6 +114,7 @@ const CARDIO_RESERVED = 3;
 
 type GoalBucket = "general" | "strength" | "endurance";
 
+// הפונקציה מסווגת את מטרת המשתמש לקטגוריה כללית: כוח, סיבולת או כושר כללי
 function goalBucket(goalType: string | null): GoalBucket {
   const g = (goalType ?? "").toLowerCase();
   if (/muscle|strength|gain|bulk/.test(g)) return "strength";
@@ -128,6 +129,7 @@ type Level = "beginner" | "typical" | "advanced";
  * only a sedentary student is steered towards beginner movements first, and even
  * then intermediate exercises stay eligible.
  */
+// הפונקציה מסיקה את רמת הניסיון של הסטודנט לפי רמת הפעילות והמטרה
 function experienceLevel(activityLevel: string | null, goal: GoalBucket): Level {
   const a = (activityLevel ?? "").toLowerCase();
   if (!a || /sedentary/.test(a)) return "beginner";
@@ -138,6 +140,7 @@ function experienceLevel(activityLevel: string | null, goal: GoalBucket): Level 
   return "typical";
 }
 
+// הפונקציה מחזירה אילו רמות קושי של תרגילים מתאימות לרמת הסטודנט
 function allowedDifficulties(level: Level): string[] {
   if (level === "beginner") return ["beginner"];
   if (level === "typical") return ["beginner", "intermediate"];
@@ -145,6 +148,7 @@ function allowedDifficulties(level: Level): string[] {
 }
 
 /** Difficulties we are willing to widen to when a family cannot be filled. */
+// הפונקציה מחזירה רמות קושי רחבות יותר למקרה שלא נמצאו מספיק תרגילים ברמה המועדפת
 function fallbackDifficulties(level: Level): string[] {
   if (level === "beginner") return ["beginner", "intermediate"];
   return allowedDifficulties(level);
@@ -215,6 +219,7 @@ export const MAX_CANDIDATES = 120;
 export const MIN_CANDIDATES = 60;
 
 /** Small deterministic string hash so a given user gets a stable but varied pool. */
+// הפונקציה יוצרת גיבוב דטרמיניסטי קטן כדי שכל משתמש יקבל מאגר תרגילים יציב אבל מגוון
 function hash(input: string): number {
   let h = 2166136261;
   for (let i = 0; i < input.length; i++) {
@@ -224,6 +229,7 @@ function hash(input: string): number {
   return (h >>> 0) / 4294967295;
 }
 
+// הפונקציה הופכת שורה מהקטלוג לתרגיל מועמד, או null אם הקטגוריה לא מוכרת
 export function toCandidate(row: CatalogueRow): Candidate | null {
   const family = CATEGORY_TO_FAMILY[(row.category ?? "").toLowerCase()];
   if (!family) return null;
@@ -242,6 +248,7 @@ export function toCandidate(row: CatalogueRow): Candidate | null {
  * Reduces the active catalogue to a balanced candidate pool.
  * Deterministic for a given (catalogue, context) pair.
  */
+// הפונקציה בוחרת מהקטלוג מאגר תרגילים מאוזן שמתאים למטרה, לרמה ולמקום האימון של הסטודנט
 export function selectCandidates(
   catalogue: CatalogueRow[],
   ctx: SelectionContext,
@@ -361,6 +368,7 @@ export function selectCandidates(
 }
 
 /** Compact prompt block: only the fields Gemini needs to choose an exercise. */
+// הפונקציה מעצבת את רשימת התרגילים המועמדים כטקסט קומפקטי שנשלח ל-AI
 export function formatCandidatesForPrompt(candidates: Candidate[]): string {
   const header = "slug | name | muscle | equipment | difficulty | family";
   const rows = candidates.map(

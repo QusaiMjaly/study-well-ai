@@ -28,6 +28,7 @@ const PlanRegenerationContext = createContext<PlanRegenerationValue | null>(null
  * in-flight regeneration or turn it into a failure. Uses the existing
  * `generateAiPlan` server function — there is no second generation path.
  */
+// הקומפוננטה מנהלת באופן גלובלי את תהליך יצירת התוכנית מחדש, גם בזמן מעבר בין עמודים
 export function PlanRegenerationProvider({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient();
   const generate = useServerFn(generateAiPlan);
@@ -35,6 +36,7 @@ export function PlanRegenerationProvider({ children }: { children: React.ReactNo
   /** Duplicate-generation guard that survives re-renders and route changes. */
   const inFlight = useRef<Promise<boolean> | null>(null);
 
+  // הפונקציה מבקשת יצירת תוכנית מחדש ומוודאת שלא רצה יצירה כפולה במקביל
   const requestRegeneration = useCallback(
     (options?: { reason?: string }) => {
       if (inFlight.current) return inFlight.current;
@@ -68,6 +70,7 @@ export function PlanRegenerationProvider({ children }: { children: React.ReactNo
     [generate, qc],
   );
 
+  // הפונקציה מנקה את מצב הכישלון אחרי שהמשתמש ראה אותו
   const clearFailure = useCallback(() => {
     setStatus((s) => (s === "failed" ? "idle" : s));
   }, []);
@@ -88,6 +91,7 @@ export function PlanRegenerationProvider({ children }: { children: React.ReactNo
   );
 }
 
+// ה-Hook נותן לקומפוננטות גישה למצב יצירת התוכנית מחדש ולבקשת יצירה
 export function usePlanRegeneration() {
   const ctx = useContext(PlanRegenerationContext);
   if (!ctx) {

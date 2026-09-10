@@ -55,6 +55,7 @@ const DAY_INDEX = (name: string) => dayIndexOf(name);
 
 
 /** One optimized read: active plan -> this week's workout days + today's exercises, plus today's completions. */
+// הפונקציה טוענת את אימון היום של המשתמש, כולל התרגילים, סימוני "בוצע" והאימון הבא הקרוב
 export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout> {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
@@ -83,6 +84,7 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
   const day = idx >= 0 ? allDays[idx] : null;
 
   /** Scan forward from today (wrapping across the week) for the nearest workout. */
+  // הפונקציה סורקת קדימה מהיום (עם גלילה לשבוע הבא) כדי למצוא את האימון הקרוב
   const findNext = (): NextWorkout | null => {
     const todayIdx = todayIndex(now);
     for (let offset = 1; offset <= 7; offset++) {
@@ -164,6 +166,7 @@ export async function fetchTodayWorkout(now = new Date()): Promise<TodayWorkout>
   };
 }
 
+// הפונקציה מסמנת תרגיל בודד כ"בוצע" או מבטלת את הסימון להיום
 export async function setExerciseCompleted(
   workoutDayId: string,
   exerciseId: string,
@@ -196,6 +199,7 @@ export async function setExerciseCompleted(
 }
 
 /** Marks (or clears) the whole workout for today. Stored as the exercise_id IS NULL row. */
+// הפונקציה מסמנת את כל האימון כ"בוצע" (או מבטלת) עם אחוז השלמה
 export async function setWorkoutCompleted(
   workoutDayId: string,
   completed: boolean,

@@ -21,6 +21,7 @@ import { logPlanDiagnostic } from "./plan-diagnostics";
 import type { ScheduleJson } from "./schedule-schema";
 
 
+// הפונקציה יוצרת תוכנית אימונים ותזונה חדשה למשתמש בעזרת ה-AI, מאמתת אותה מול הלו"ז והקטלוג ושומרת אותה במסד הנתונים
 export const generateAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ planId: string; summary: AiPlan["summary"] }> => {

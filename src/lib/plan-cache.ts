@@ -13,6 +13,7 @@ export const PLAN_QUERY_KEYS = [
 ] as const;
 
 /** Invalidate (and refetch active queries for) every plan-derived cache. */
+// הפונקציה מנקה את כל הנתונים השמורים במטמון שמבוססים על התוכנית, כדי שהמסכים יתרעננו
 export async function invalidatePlanCaches(qc: QueryClient) {
   await Promise.all(
     PLAN_QUERY_KEYS.map((key) => qc.invalidateQueries({ queryKey: [key] })),

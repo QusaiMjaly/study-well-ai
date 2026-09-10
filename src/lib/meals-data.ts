@@ -30,6 +30,7 @@ export type TodayMeals = {
 
 const DAYS = DAY_NAMES;
 
+// הפונקציה מחזירה את התאריך המקומי בפורמט YYYY-MM-DD לשמירה של סימוני "בוצע"
 export function localDateKey(now = new Date()) {
   const y = now.getFullYear();
   const m = `${now.getMonth() + 1}`.padStart(2, "0");
@@ -38,6 +39,7 @@ export function localDateKey(now = new Date()) {
 }
 
 /** One optimized read: active plan -> today's meal day -> items, plus today's completions. */
+// הפונקציה טוענת את ארוחות היום של המשתמש מהתוכנית הפעילה, כולל סימוני "בוצע" להיום
 export async function fetchTodayMeals(now = new Date()): Promise<TodayMeals> {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
@@ -98,6 +100,7 @@ export async function fetchTodayMeals(now = new Date()): Promise<TodayMeals> {
   };
 }
 
+// הפונקציה מסמנת ארוחה כ"בוצעה" או מבטלת את הסימון להיום
 export async function setMealCompleted(mealItemId: string, completed: boolean, now = new Date()) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not signed in");

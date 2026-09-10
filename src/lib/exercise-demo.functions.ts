@@ -27,6 +27,7 @@ const COLUMNS =
  * Priority: mapped YMove demo -> self-hosted licensed asset -> unavailable state.
  * No fuzzy YMove matching happens here; only the stored ymove_exercise_id is used.
  */
+// הפונקציה מוצאת ומחזירה את סרטון ההדגמה של תרגיל, קודם מ-YMove ואם לא — מנכס עצמי
 export const getExerciseDemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { slug?: string | null; exerciseName: string }) => ({
@@ -126,6 +127,7 @@ export const getExerciseDemo = createServerFn({ method: "POST" })
   });
 
 /** Read-only catalogue browse used for establishing mappings. Never requests videos. */
+// הפונקציה מאפשרת לעיין בקטלוג YMove לצורך מיפוי תרגילים, בלי לבקש סרטונים בפועל
 export const searchYmoveCatalogue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { search?: string; page?: number; pageSize?: number }) => input ?? {})
