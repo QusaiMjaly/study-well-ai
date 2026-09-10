@@ -479,6 +479,7 @@ function Onboarding() {
 
   if (prefilling) {
     return (
+      /* מצב טעינה בזמן מילוי הטופס מהפרטים השמורים */
       <div className="flex min-h-screen items-center justify-center bg-page-gradient">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
@@ -488,6 +489,7 @@ function Onboarding() {
   return (
     <div className="min-h-screen bg-page-gradient">
       <div className="mx-auto w-full max-w-[420px] px-5 pb-16 pt-6">
+        {/* ניווט בין שלבי ההיכרות ומד ההתקדמות */}
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -509,6 +511,7 @@ function Onboarding() {
         </div>
 
         {step === 1 && (
+          /* שלב ראשון: בחירת מטרה והזנת פרטים אישיים */
           <div className="mt-7 space-y-6">
             <div>
               <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight">
@@ -519,6 +522,7 @@ function Onboarding() {
               </p>
             </div>
 
+            {/* בחירת המטרה המרכזית של התוכנית */}
             <div className="grid grid-cols-2 gap-3">
               {GOALS.map((g) => {
                 const active = goalType === g.value;
@@ -544,6 +548,7 @@ function Onboarding() {
               })}
             </div>
 
+            {/* שדות השם, הגיל, המגדר, הגובה והמשקל */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Personal Information</h2>
               <div className="mt-4 grid gap-4">
@@ -604,6 +609,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* בחירת רמת הפעילות היומית */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Activity Level</h2>
               <div className="mt-4 space-y-3">
@@ -631,6 +637,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* כפתור לשמירת הפרטים ומעבר למערכת השעות */}
             <Button
               onClick={saveStep1}
               disabled={loading}
@@ -642,6 +649,7 @@ function Onboarding() {
         )}
 
         {step === 2 && (
+          /* שלב שני: בניית מערכת השעות השבועית */
           <div className="mt-7 space-y-6">
             <div>
               <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight">
@@ -652,6 +660,7 @@ function Onboarding() {
               </p>
             </div>
 
+            {/* עורך משותף להוספת בלוקי לימוד, עבודה וזמן תפוס */}
             <WeeklyScheduleEditor
               blocks={blocks}
               onChange={setBlocks}
@@ -660,6 +669,7 @@ function Onboarding() {
             />
 
             {step2Error && (
+              /* הודעת שגיאה עבור מערכת שעות חסרה או חופפת */
               <p
                 role="alert"
                 className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
@@ -668,6 +678,7 @@ function Onboarding() {
               </p>
             )}
 
+            {/* הסבר כיצד ה-AI משתמש בחלונות הפנויים */}
             <section className="rounded-2xl border border-ai/20 bg-ai/5 p-5">
               <div className="flex gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ai/10 text-ai">
@@ -684,6 +695,7 @@ function Onboarding() {
             </section>
 
 
+            {/* כפתור לשמירת מערכת השעות ומעבר להעדפות */}
             <Button
               onClick={saveStep2}
               disabled={loading}
@@ -695,6 +707,7 @@ function Onboarding() {
         )}
 
         {step === 3 && (
+          /* שלב שלישי: בחירת העדפות האימון והתזונה */
           <div className="mt-7 space-y-6">
             <div>
               <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight">
@@ -705,6 +718,7 @@ function Onboarding() {
               </p>
             </div>
 
+            {/* בחירת מקום וסגנון האימון */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Workout Preference</h2>
               <div className="mt-4 grid grid-cols-3 gap-3">
@@ -720,6 +734,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* בחירת סוג התזונה המועדף */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Meal Preference</h2>
               <div className="mt-4 grid grid-cols-2 gap-3">
@@ -735,6 +750,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* בחירת משך האימון הרצוי */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Workout Duration</h2>
               <div className="mt-4 grid grid-cols-3 gap-3">
@@ -750,6 +766,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* בחירת הזמן המועדף לאימון */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Preferred Workout Time</h2>
               <div className="mt-4 grid grid-cols-2 gap-3">
@@ -765,6 +782,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* בחירת האתגר המרכזי של המשתמש */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Biggest Challenge</h2>
               <div className="mt-4 grid grid-cols-2 gap-3">
@@ -780,6 +798,7 @@ function Onboarding() {
               </div>
             </section>
 
+            {/* סיכום כל הפרטים לפני יצירת התוכנית */}
             <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
               <h2 className="text-base font-semibold">Your Summary</h2>
               <dl className="mt-4 space-y-2.5 text-sm">
@@ -810,6 +829,7 @@ function Onboarding() {
               </dl>
             </section>
 
+            {/* כפתור להפעלת ה-AI וליצירת התוכנית האישית */}
             <Button
               onClick={generatePlan}
               disabled={loading}
@@ -824,6 +844,7 @@ function Onboarding() {
       </div>
 
       {analyzing && (
+        /* חלונית התקדמות בזמן שה-AI בונה ושומר את התוכנית */
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-5 backdrop-blur-sm">
           <div className="w-full max-w-[420px] rounded-3xl border border-border/60 bg-card p-6 shadow-card">
             <div className="flex items-center gap-3">

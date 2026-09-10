@@ -52,6 +52,7 @@ export function RecipeSheet({
         side="bottom"
         className="mx-auto max-h-[88vh] w-full max-w-[448px] overflow-y-auto rounded-t-3xl border-border/70 p-0"
       >
+        {/* כותרת חלונית המתכון עם שם המנה */}
         <SheetHeader className="px-5 pb-2 pt-5 text-left">
           <SheetTitle className="text-[20px] font-bold leading-7">
             {meal?.meal_name ?? "Recipe"}
@@ -59,7 +60,7 @@ export function RecipeSheet({
         </SheetHeader>
 
         <div className="space-y-5 px-5 pb-8">
-          {/* Dish image */}
+          {/* תמונת המנה או מצב היצירה שלה באמצעות AI */}
           <div className="overflow-hidden rounded-2xl bg-muted">
             {loading ? (
               <AiImageGenerating />
@@ -90,7 +91,7 @@ export function RecipeSheet({
             )}
           </div>
 
-          {/* Steps */}
+          {/* שלבי ההכנה של המתכון */}
           <section>
             <h3 className="flex items-center gap-2 text-[16px] font-bold">
               <ChefHat className="h-[18px] w-[18px] text-success" /> Preparation
@@ -116,6 +117,7 @@ export function RecipeSheet({
           </section>
 
           {meal?.ingredients?.length ? (
+            /* רשימת המרכיבים הדרושים למנה */
             <section>
               <h3 className="text-[16px] font-bold">Ingredients</h3>
               <div className="mt-3 flex flex-wrap gap-2">

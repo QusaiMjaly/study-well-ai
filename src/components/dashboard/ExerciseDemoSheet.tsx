@@ -64,6 +64,7 @@ export function ExerciseDemoSheet({
         side="bottom"
         className="mx-auto max-h-[88vh] w-full max-w-[448px] overflow-y-auto rounded-t-3xl border-border/70 p-0"
       >
+        {/* כותרת חלונית ההדגמה עם שם התרגיל */}
         <SheetHeader className="px-5 pb-2 pt-5 text-left">
           <SheetTitle className="text-[20px] font-bold leading-7">
             {data?.display_name ?? exercise?.exercise_name ?? "Exercise"}
@@ -71,7 +72,7 @@ export function ExerciseDemoSheet({
         </SheetHeader>
 
         <div className="space-y-5 px-5 pb-8">
-          {/* Demo media */}
+          {/* סרטון ההדגמה או מצב חלופי כאשר הסרטון אינו זמין */}
           <div className="overflow-hidden rounded-2xl bg-muted">
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
@@ -108,7 +109,7 @@ export function ExerciseDemoSheet({
           </div>
 
 
-          {/* Plan prescription */}
+          {/* הסטים, החזרות, זמני העבודה והמנוחה מהתוכנית */}
           <div className="flex flex-wrap gap-2">
             {exercise?.sets ? <Pill>{exercise.sets} sets</Pill> : null}
             {exercise?.reps ? <Pill>{exercise.reps} reps</Pill> : null}
@@ -118,6 +119,7 @@ export function ExerciseDemoSheet({
           </div>
 
           {data?.primary_muscles?.length ? (
+            /* השרירים העיקריים שעובדים בתרגיל */
             <Section icon={<Dumbbell className="h-[18px] w-[18px] text-primary" />} title="Muscles worked">
               <p className="text-[14px] capitalize leading-5 text-foreground/90">
                 {data.primary_muscles.join(", ")}
@@ -126,6 +128,7 @@ export function ExerciseDemoSheet({
           ) : null}
 
           {data?.cues?.length ? (
+            /* דגשים לביצוע נכון ובטוח של התרגיל */
             <Section icon={<ListChecks className="h-[18px] w-[18px] text-success" />} title="Form cues">
               <ul className="space-y-2">
                 {data.cues.map((c, i) => (
@@ -139,6 +142,7 @@ export function ExerciseDemoSheet({
           ) : null}
 
           {data?.common_mistakes?.length ? (
+            /* טעויות נפוצות שכדאי להימנע מהן */
             <Section
               icon={<TriangleAlert className="h-[18px] w-[18px] text-warning" />}
               title="Common mistakes"
@@ -155,6 +159,7 @@ export function ExerciseDemoSheet({
           ) : null}
 
           {exercise?.notes ? (
+            /* הערת המאמן שמגיעה מהתוכנית האישית */
             <Section icon={<Info className="h-[18px] w-[18px] text-primary" />} title="Coach note">
               <p className="text-[14px] leading-5 text-foreground/90">{exercise.notes}</p>
             </Section>

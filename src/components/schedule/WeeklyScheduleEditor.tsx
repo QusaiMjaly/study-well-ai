@@ -271,7 +271,7 @@ export function WeeklyScheduleEditor({
 
   return (
     <div className="space-y-4">
-      {/* PRIMARY: the weekly schedule (same timetable in view and edit mode) */}
+      {/* מערכת השעות השבועית במצב צפייה או עריכה */}
       <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-soft">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -302,6 +302,7 @@ export function WeeklyScheduleEditor({
         </div>
 
         {editing && (
+          /* סרגל בחירת ימים עם אפשרות לבחור או לנקות את כולם */
           <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground">
               {selectedDays.length === 0
@@ -318,6 +319,7 @@ export function WeeklyScheduleEditor({
           </div>
         )}
 
+        {/* בורר ימי השבוע עם חיווי לימים שיש בהם בלוקים */}
         <div className="-mx-1 mt-4 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {DAYS.map((d) => {
             const active = editing ? selectedDays.includes(d) : d === activeDay;
@@ -355,6 +357,7 @@ export function WeeklyScheduleEditor({
           })}
         </div>
 
+        {/* רשימת בלוקי הזמן עבור הימים המוצגים */}
         <div className="mt-4 space-y-4">
           {visibleDays.map((day) => {
             const dayBlocks = blocksFor(day);
@@ -365,6 +368,7 @@ export function WeeklyScheduleEditor({
                 )}
 
                 {dayBlocks.length === 0 && (
+                  /* מצב קומפקטי ליום שאין בו בלוקים */
                   <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 px-3 py-2.5 text-center">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm font-medium text-muted-foreground">Nothing on {DAY_LABELS[day]}</p>
@@ -389,6 +393,7 @@ export function WeeklyScheduleEditor({
                               : "border-border/60 bg-muted/25",
                       )}
                     >
+                      {/* פרטי בלוק בודד ופעולות עריכה או מחיקה */}
                       <div
                         className={cn(
                           "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
@@ -443,6 +448,7 @@ export function WeeklyScheduleEditor({
         </div>
 
         {editing && (
+          /* כפתור להוספת בלוק לכל הימים שנבחרו */
           <button
             type="button"
             disabled={selectedDays.length === 0}
@@ -458,6 +464,7 @@ export function WeeklyScheduleEditor({
         )}
 
         {!always && editing && (
+          /* פעולות לשמירת הטיוטה או לביטול השינויים */
           <div className="mt-4 flex gap-2">
             <Button
               type="button"
@@ -481,7 +488,7 @@ export function WeeklyScheduleEditor({
         )}
       </section>
 
-      {/* SECONDARY: image import helper */}
+      {/* כלי לייבוא בלוקי לימוד מתמונת מערכת שעות */}
       {(always || editing) && (
         <section className="rounded-2xl border border-border/60 bg-card p-4">
           <div className="flex items-center gap-3">
@@ -519,6 +526,7 @@ export function WeeklyScheduleEditor({
         </section>
       )}
 
+      {/* חלונית להוספה או עריכה של בלוק זמן */}
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
         <DialogContent className="max-w-[360px] rounded-2xl">
           <DialogHeader>
@@ -532,6 +540,7 @@ export function WeeklyScheduleEditor({
 
           {draft && (
             <div className="space-y-4">
+              {/* בחירת סוג הבלוק: לימוד, עבודה או אחר */}
               <div className="grid grid-cols-3 gap-2">
                 {(["study", "work", "other"] as BlockType[]).map((t) => {
                   const Icon = TYPE_ICON[t];
@@ -554,6 +563,7 @@ export function WeeklyScheduleEditor({
                 })}
               </div>
 
+              {/* בחירת הימים שאליהם יתווסף הבלוק */}
               <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1">
                 {DAYS.map((d) => {
                   const on = draft.days.includes(d);
@@ -584,6 +594,7 @@ export function WeeklyScheduleEditor({
                 })}
               </div>
 
+              {/* שדות שעת ההתחלה ושעת הסיום */}
               <div className="grid grid-cols-2 gap-3">
                 <label className="text-xs font-medium text-muted-foreground">
                   Start
@@ -605,6 +616,7 @@ export function WeeklyScheduleEditor({
                 </label>
               </div>
 
+              {/* שדה אופציונלי לשם או לתיאור הבלוק */}
               <label className="block text-xs font-medium text-muted-foreground">
                 Label (optional)
                 <Input
@@ -617,6 +629,7 @@ export function WeeklyScheduleEditor({
               </label>
 
               {draftError && (
+                /* הודעת שגיאה עבור פרטי בלוק לא תקינים או חופפים */
                 <p
                   role="alert"
                   className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive"

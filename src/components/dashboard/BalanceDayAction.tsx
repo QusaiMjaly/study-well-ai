@@ -56,6 +56,7 @@ export function BalanceDayAction({
   };
 
   return (
+    /* כרטיס שמציע לאזן את שאר ארוחות היום */
     <Card className="gap-0 rounded-2xl border-warning/40 bg-warning/5 p-4 shadow-soft">
       <div className="flex items-start gap-2">
         <Scale className="mt-0.5 h-[18px] w-[18px] shrink-0 text-warning" />
@@ -77,6 +78,7 @@ export function BalanceDayAction({
         </button>
       </div>
 
+      {/* כפתור להפעלת איזון הארוחות */}
       <Button
         className="mt-3 h-11 w-full rounded-2xl bg-warning text-warning-foreground hover:bg-warning/90"
         disabled={busy}
