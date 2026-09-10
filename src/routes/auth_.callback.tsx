@@ -109,6 +109,7 @@ function AuthCallback() {
         </div>
         {error ? (
           <>
+            {/* מצב כשל בהשלמת ההתחברות החיצונית */}
             <h1 className="text-xl font-bold tracking-tight">We couldn't sign you in</h1>
             <p role="alert" className="mt-2 text-sm text-muted-foreground">
               {error}
@@ -124,6 +125,7 @@ function AuthCallback() {
           </>
         ) : (
           <>
+            {/* מצב טעינה בזמן השלמת ההתחברות והפניית המשתמש */}
             <h1 className="text-xl font-bold tracking-tight">Signing you in…</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Just a moment while we finish setting up your session.

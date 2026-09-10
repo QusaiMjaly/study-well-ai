@@ -67,6 +67,7 @@ function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen flex-col bg-page-gradient px-5 py-8">
       <div className="mx-auto w-full max-w-[420px]">
+        {/* קישור המיתוג שמחזיר לעמוד הראשי */}
         <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cta-gradient text-primary-foreground shadow-soft">
             <Sparkles className="h-4.5 w-4.5" />
@@ -76,6 +77,7 @@ function ForgotPasswordPage() {
 
         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
           {sent ? (
+            /* הודעת הצלחה לאחר שליחת קישור האיפוס */
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <MailCheck className="h-5 w-5" />
@@ -96,6 +98,7 @@ function ForgotPasswordPage() {
             </div>
           ) : (
             <>
+              {/* כותרת מסך שחזור הסיסמה */}
               <h1 className="text-center text-2xl font-bold tracking-tight">
                 Forgot your password?
               </h1>
@@ -103,6 +106,7 @@ function ForgotPasswordPage() {
                 Enter your email and we'll send you a link to set a new password.
               </p>
 
+              {/* טופס לשליחת קישור איפוס לכתובת האימייל */}
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-email" className="text-sm font-medium">
@@ -121,6 +125,7 @@ function ForgotPasswordPage() {
                 </div>
 
                 {fieldError && (
+                  /* הודעת שגיאה עבור כתובת האימייל או השליחה */
                   <p
                     role="alert"
                     className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"

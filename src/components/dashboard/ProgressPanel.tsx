@@ -142,6 +142,7 @@ export function ProgressPanel() {
 
   if (isLoading) {
     return (
+      /* מצב טעינה של נתוני ההתקדמות */
       <div className="space-y-4">
         <Skeleton className="h-[132px] w-full rounded-3xl" />
         <div className="grid grid-cols-2 gap-3">
@@ -185,13 +186,13 @@ export function ProgressPanel() {
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
+      {/* כותרת מסך המעקב אחר ההתקדמות */}
       <section className="bg-progress-gradient rounded-3xl px-6 pb-7 pt-6 text-white shadow-card">
         <h2 className="text-[28px] font-bold leading-9 tracking-tight">Your Progress</h2>
         <p className="mt-1 text-[14px] opacity-85">Track your fitness journey</p>
       </section>
 
-      {/* STAT CARDS */}
+      {/* כרטיסי סיכום של משקל, אימונים, רצף ושעות */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           icon={
@@ -235,7 +236,7 @@ export function ProgressPanel() {
         />
       </div>
 
-      {/* WEIGHT PROGRESS */}
+      {/* גרף השינוי במשקל לאורך זמן */}
       <ChartCard
         title="Weight Progress"
         subtitle={
@@ -284,7 +285,7 @@ export function ProgressPanel() {
         )}
       </ChartCard>
 
-      {/* CALORIE BALANCE */}
+      {/* גרף הקלוריות שנשרפו באימונים השבוע */}
       <ChartCard title="Calorie Balance" subtitle="This week">
         {data.workouts.length === 0 ? (
           <p className="mt-8 text-center text-sm text-muted-foreground">
@@ -319,7 +320,7 @@ export function ProgressPanel() {
         )}
       </ChartCard>
 
-      {/* WORKOUT DURATION */}
+      {/* גרף משך האימונים בכל יום */}
       <ChartCard title="Workout Duration" subtitle="Minutes per day">
         {data.workouts.length === 0 ? (
           <p className="mt-8 text-center text-sm text-muted-foreground">
@@ -348,7 +349,7 @@ export function ProgressPanel() {
         )}
       </ChartCard>
 
-      {/* NUTRITION ADHERENCE */}
+      {/* מד העמידה בתוכנית הארוחות השבועית */}
       <Card className="gap-0 rounded-3xl border-border/60 p-5 shadow-soft">
         <h3 className="text-[18px] font-bold leading-6">Nutrition Adherence</h3>
         {!data.hasActivePlan || data.mealsPlannedPerWeek === 0 ? (
@@ -369,7 +370,7 @@ export function ProgressPanel() {
         )}
       </Card>
 
-      {/* ACHIEVEMENTS */}
+      {/* הישגים שהמשתמש צבר לפי הפעילות שלו */}
       <Card className="bg-achievement-gradient gap-0 rounded-3xl border-warning/25 p-5 shadow-soft">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-warning text-warning-foreground">
@@ -400,7 +401,7 @@ export function ProgressPanel() {
         )}
       </Card>
 
-      {/* ADD ENTRY */}
+      {/* טופס להזנת משקל, אחוז שומן ומסת שריר */}
       <Card className="gap-0 rounded-3xl border-border/60 p-5 shadow-soft">
         <h3 className="text-[18px] font-bold leading-6">Add a progress entry</h3>
         <p className="mt-1 text-[13px] text-muted-foreground">Log today's body metrics</p>
@@ -469,6 +470,7 @@ export function ProgressPanel() {
             ) : null}
           </div>
         </div>
+        {/* שדה אופציונלי להערות על המדידה */}
         <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -476,6 +478,7 @@ export function ProgressPanel() {
           rows={2}
           className="mt-3 rounded-xl"
         />
+        {/* כפתור לשמירת מדידת ההתקדמות */}
         <Button
           className="mt-4 h-12 w-full rounded-2xl bg-cta-gradient font-bold text-primary-foreground"
           disabled={add.isPending}

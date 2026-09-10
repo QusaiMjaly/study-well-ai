@@ -99,6 +99,7 @@ function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen flex-col bg-page-gradient px-5 py-8">
       <div className="mx-auto w-full max-w-[420px]">
+        {/* קישור המיתוג שמחזיר לעמוד הראשי */}
         <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cta-gradient text-primary-foreground shadow-soft">
             <Sparkles className="h-4.5 w-4.5" />
@@ -108,6 +109,7 @@ function ResetPasswordPage() {
 
         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
           {done ? (
+            /* הודעת הצלחה לאחר שמירת הסיסמה החדשה */
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
                 <CheckCircle2 className="h-5 w-5" />
@@ -127,16 +129,19 @@ function ResetPasswordPage() {
             </div>
           ) : (
             <>
+              {/* כותרת מסך הגדרת הסיסמה החדשה */}
               <h1 className="text-center text-2xl font-bold tracking-tight">Set a new password</h1>
               <p className="mt-1.5 text-center text-sm text-muted-foreground">
                 Choose a new password for your account
               </p>
 
               {!ready ? (
+                /* מצב טעינה בזמן בדיקת קישור האיפוס */
                 <div className="mt-8 flex justify-center">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : !hasSession ? (
+                /* הודעה כאשר קישור האיפוס אינו תקף או שפג תוקפו */
                 <div className="mt-6 space-y-4">
                   <p className="rounded-xl bg-muted p-4 text-center text-sm text-muted-foreground">
                     {friendlyAuthMessage("reset link expired")}
@@ -151,6 +156,7 @@ function ResetPasswordPage() {
                   </Button>
                 </div>
               ) : (
+                /* טופס להזנת הסיסמה החדשה ולאישורה */
                 <form onSubmit={onSubmit} className="mt-6 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password" className="text-sm font-medium">
@@ -192,6 +198,7 @@ function ResetPasswordPage() {
                   </div>
 
                   {error && (
+                    /* הודעת שגיאה עבור הסיסמה החדשה */
                     <p
                       role="alert"
                       className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"

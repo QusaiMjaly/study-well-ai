@@ -30,6 +30,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
 
   if (isLoading) {
     return (
+      /* מצב טעינה של נתוני מסך הבית */
       <div className="space-y-4">
         {[0, 1, 2].map((i) => (
           <Card key={i} className="space-y-3 rounded-[24px] p-6 shadow-soft">
@@ -63,7 +64,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* NEXT WORKOUT */}
+      {/* האימון הבא שמתוכנן למשתמש */}
       <section className="rounded-[24px] bg-gradient-to-br from-primary/10 to-primary/[0.03] p-6 shadow-soft">
         <div className="flex min-h-[56px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -109,7 +110,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
         )}
       </section>
 
-      {/* NEXT MEAL */}
+      {/* הארוחה הבאה שמתוכננת למשתמש */}
       <section className="rounded-[24px] bg-gradient-to-br from-success/10 to-success/[0.03] p-6 shadow-soft">
         <div className="flex min-h-[56px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -152,7 +153,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
         )}
       </section>
 
-      {/* TODAY SUMMARY */}
+      {/* סיכום האימונים, הארוחות והקלוריות של היום */}
       <section className="rounded-[24px] bg-card p-6 shadow-card">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-ai to-ai/75 text-ai-foreground">
@@ -167,7 +168,7 @@ export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
         </div>
       </section>
 
-      {/* AI TIP */}
+      {/* טיפ יומי אישי שנוצר על ידי ה-AI */}
       <section className="rounded-[24px] bg-gradient-to-br from-ai/10 to-primary/5 p-5">
         <div className="flex items-start gap-3">
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" />
@@ -208,6 +209,7 @@ function EmptyInline({ label }: { label: string }) {
 // הקומפוננטה מציגה מצב ריק למשתמש שעוד אין לו תוכנית פעילה
 function NoPlan() {
   return (
+    /* מצב ריק כאשר עדיין אין תוכנית פעילה */
     <Card className="rounded-[24px] p-8 text-center shadow-soft">
       <Sparkles className="mx-auto h-8 w-8 text-ai" />
       <h3 className="mt-3 text-lg font-bold">No active plan yet</h3>
