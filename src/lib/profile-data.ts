@@ -1,3 +1,4 @@
+// הקובץ הזה טוען את חבילת הפרופיל (פרטים, יעדים, לו"ז, תוכנית) ובודק האם התוכנית הפעילה כבר לא עדכנית.
 import { supabase } from "@/integrations/supabase/client";
 import type { ScheduleJson } from "@/lib/schedule-schema";
 

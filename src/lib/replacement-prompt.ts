@@ -1,3 +1,4 @@
+// הקובץ הזה בונה את ההנחיות ל-AI עבור החלפת ארוחה/תרגיל ושולח קריאת JSON מובנית אחת.
 /**
  * Prompt construction + one shared structured-JSON gateway call for single-item
  * meal / exercise replacement. Pure string building only — no persistence.

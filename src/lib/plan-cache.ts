@@ -1,3 +1,4 @@
+// הקובץ הזה מגדיר את מפתחות המטמון שמבוססים על התוכנית ומספק פונקציה לניקוי כולם בבת אחת.
 import type { QueryClient } from "@tanstack/react-query";
 
 /**

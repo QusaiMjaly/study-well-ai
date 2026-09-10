@@ -1,3 +1,4 @@
+// הקובץ הזה שומר בשרת את עדכוני הפרופיל והיעדים ומדווח אילו שדות שמשפיעים על התוכנית השתנו.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {

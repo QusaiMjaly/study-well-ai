@@ -1,3 +1,4 @@
+// הקובץ הזה מטפל בהעלאת תמונת מערכת שעות לאחסון תחת שם קובץ בטוח מבוסס UUID, בלי להשתמש בשם הקובץ המקורי.
 import { supabase } from "@/integrations/supabase/client";
 
 const EXT_BY_MIME: Record<string, string> = {

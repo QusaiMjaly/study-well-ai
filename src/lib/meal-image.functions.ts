@@ -1,3 +1,4 @@
+// הקובץ הזה יוצר תמונת AI של מנה, שומר אותה באחסון ומחזיר קישור חתום; אם כבר קיימת — מחזיר את הקיימת.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 

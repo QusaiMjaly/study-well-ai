@@ -1,3 +1,4 @@
+// הקובץ הזה מכיל עזרים משותפים להחלפת ארוחה או תרגיל — טעינת פריטים, יעדים, סכומים ועדכון תמונות.
 /**
  * Shared, transport-agnostic helpers for single-item replacement.
  *

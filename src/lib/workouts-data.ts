@@ -1,3 +1,4 @@
+// הקובץ הזה טוען את אימון היום מהתוכנית הפעילה ומנהל את סימוני "בוצע" של תרגילים ושל האימון כולו.
 import { supabase } from "@/integrations/supabase/client";
 import { DAY_NAMES, dayIndexOf, normalizeDay, todayIndex } from "@/lib/day-utils";
 import { localDateKey } from "@/lib/meals-data";

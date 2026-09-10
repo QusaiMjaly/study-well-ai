@@ -1,3 +1,4 @@
+// הקובץ הזה מכיל את רשימות האפשרויות הקבועות מראש לטפסי הפרופיל וההרשמה (מגדר, רמת פעילות, מטרות וכו').
 /** Shared, predefined option lists for the Profile edit form (mirrors onboarding). */
 
 export type Option = { value: string; label: string };

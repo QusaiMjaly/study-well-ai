@@ -1,3 +1,4 @@
+// הקובץ הזה מכיל דוגמה לפונקציית שרת — מקבלת שם ומחזירה ברכה, בעיקר להמחשת המבנה.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 

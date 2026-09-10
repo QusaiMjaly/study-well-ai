@@ -1,3 +1,4 @@
+// הקובץ הזה מייצר תוכנית AI חדשה לאורך כל הדרך — אוסף נתונים, בוחר תרגילים, מנהל ניסיונות ושומר במסד.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {

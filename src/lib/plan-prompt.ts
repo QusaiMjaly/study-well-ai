@@ -1,3 +1,4 @@
+// הקובץ הזה בונה את ההנחיה (prompt) ל-AI ליצירת תוכנית שבועית וממיר את התוכנית המאומתת למבנה לשמירה.
 import { blockTypeOf } from "./schedule-schema";
 import type { ScheduleJson } from "./schedule-schema";
 import { durationBand, type AiPlan } from "./plan-schema";

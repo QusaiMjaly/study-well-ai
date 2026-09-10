@@ -1,3 +1,4 @@
+// הקובץ הזה מוצא בצד הלקוח את נתוני המדיה של תרגיל לפי ה-slug או שם תואם מהקטלוג.
 import { supabase } from "@/integrations/supabase/client";
 
 export type ExerciseMedia = {

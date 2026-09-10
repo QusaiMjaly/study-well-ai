@@ -1,3 +1,4 @@
+// הקובץ הזה טוען את ארוחות היום מהתוכנית הפעילה ומנהל את סימוני "בוצע" של כל ארוחה.
 import { supabase } from "@/integrations/supabase/client";
 import { DAY_NAMES, normalizeDay } from "@/lib/day-utils";
 

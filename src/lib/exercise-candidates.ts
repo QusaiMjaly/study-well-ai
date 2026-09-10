@@ -1,3 +1,4 @@
+// הקובץ הזה בונה מאגרי תרגילים חלופיים מדורגים, מחפש בקטלוג ומוודא התאמה לבית/חדר כושר ולרמת קושי.
 /**
  * Compact candidate pools for single-exercise replacement.
  *

@@ -1,3 +1,4 @@
+// הקובץ הזה מכיל לקוח שרת-בלבד ל-API של YMove להבאת מטא-נתונים וסרטוני תרגילים, בלי לשמור אותם במסד.
 /**
  * Server-only YMove Exercise API v2 client.
  * The API key never leaves this module, and provider video URLs are never persisted.

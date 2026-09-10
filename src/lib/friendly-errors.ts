@@ -1,3 +1,4 @@
+// הקובץ הזה הופך שגיאות טכניות מהשרת, האימות וה-AI להודעות קצרות וידידותיות למשתמש.
 /**
  * Maps raw Supabase / PostgREST / network errors onto short, user-facing copy.
  * Raw technical text is never surfaced to the UI.

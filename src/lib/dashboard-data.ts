@@ -1,3 +1,4 @@
+// הקובץ הזה טוען את התוכנית הפעילה ומחשב ממנה את האימון הקרוב, הארוחה הקרובה, סיכום היום והטיפ היומי.
 import { supabase } from "@/integrations/supabase/client";
 import { DAY_NAMES, normalizeDay, weekOrderFrom } from "@/lib/day-utils";
 

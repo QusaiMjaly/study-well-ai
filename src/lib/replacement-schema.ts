@@ -1,3 +1,4 @@
+// הקובץ הזה מגדיר את סכמות Zod לאימות נתוני החלפת ארוחה או תרגיל, כולל תשובות ה-AI.
 /**
  * Zod schemas for single-item meal / exercise replacement.
  *

@@ -1,3 +1,4 @@
+// הקובץ הזה מספק קומפוננטה גלובלית לניהול מחזור יצירת התוכנית מחדש — מצב, מניעת כפילות ושמירה על בקשה בין מעברי עמודים.
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
