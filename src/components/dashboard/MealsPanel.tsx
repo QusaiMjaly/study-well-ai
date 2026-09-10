@@ -49,6 +49,7 @@ export function MealsPanel() {
 
   if (isLoading) {
     return (
+      /* מצב טעינה של תוכנית הארוחות */
       <div className="space-y-4">
         <Skeleton className="h-[188px] w-full rounded-3xl" />
         {[0, 1, 2].map((i) => (
@@ -67,6 +68,7 @@ export function MealsPanel() {
 
   if (!data) {
     return (
+      /* מצב ריק כאשר עדיין אין תוכנית ארוחות פעילה */
       <Card className="rounded-2xl p-10 text-center shadow-soft">
         <Sparkles className="mx-auto h-8 w-8 text-primary" />
         <h3 className="mt-3 font-semibold">No active plan yet</h3>
@@ -118,7 +120,7 @@ export function MealsPanel() {
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
+      {/* כותרת תוכנית הארוחות ומדדי הצריכה היומיים */}
       <section className="bg-meals-gradient rounded-3xl px-6 pb-6 pt-6 text-success-foreground shadow-card">
         <div className="flex items-center gap-2 text-[14px] font-medium">
           <Sparkles className="h-[18px] w-[18px]" />
@@ -144,6 +146,7 @@ export function MealsPanel() {
       </section>
 
       {balance ? (
+        /* הצעה אופציונלית לאיזון שאר ארוחות היום */
         <BalanceDayAction
           state={balance}
           onDismiss={() => setReplaced(null)}
@@ -154,7 +157,7 @@ export function MealsPanel() {
         />
       ) : null}
 
-      {/* MEAL CARDS */}
+      {/* כרטיסי הארוחות המתוכננות להיום */}
       {data.meals.length === 0 ? (
         <Card className="rounded-2xl p-10 text-center shadow-soft">
           <Utensils className="mx-auto h-8 w-8 text-success" />
@@ -179,12 +182,14 @@ export function MealsPanel() {
         </div>
       )}
 
+      {/* חלונית המתכון של הארוחה שנבחרה */}
       <RecipeSheet
         meal={recipe}
         open={recipe !== null}
         onOpenChange={(v) => !v && setRecipe(null)}
       />
 
+      {/* חלונית לבחירה או בקשה של ארוחה חלופית */}
       <MealChangeSheet
         meal={changing}
         planId={data.planId}
@@ -255,7 +260,7 @@ function MealCard({
         done ? "border-success/40 bg-success/5" : "border-border/70"
       }`}
     >
-      {/* badges */}
+      {/* תוויות סוג הארוחה ומצב ההשלמה */}
       <div className="flex items-center gap-2">
         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[12px] font-medium capitalize text-primary">
           {meal.meal_type ?? "Meal"}
@@ -267,7 +272,7 @@ function MealCard({
         ) : null}
       </div>
 
-      {/* title + meta */}
+      {/* שם הארוחה, השעה והקלוריות */}
       <h3 className="mt-2.5 text-[18px] font-bold leading-6">{meal.meal_name}</h3>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
@@ -282,14 +287,14 @@ function MealCard({
         ) : null}
       </div>
 
-      {/* macros */}
+      {/* ערכי החלבון, הפחמימות והשומן */}
       <div className="mt-3.5 grid grid-cols-3 gap-2">
         <Macro label="Protein" value={meal.protein} tone="protein" />
         <Macro label="Carbs" value={meal.carbohydrates} tone="carbs" />
         <Macro label="Fats" value={meal.fats} tone="fats" />
       </div>
 
-      {/* ingredients */}
+      {/* רשימת המרכיבים של הארוחה */}
       {meal.ingredients?.length ? (
         <div className="mt-3.5 flex flex-wrap gap-2">
           {meal.ingredients.map((ing, i) => (
@@ -307,6 +312,7 @@ function MealCard({
         <p className="mt-3 text-[12px] leading-4 text-muted-foreground">{meal.notes}</p>
       ) : null}
 
+      {/* כפתור לסימון הארוחה כהושלמה */}
       <Button
         onClick={onToggle}
         disabled={busy}
@@ -326,6 +332,7 @@ function MealCard({
         )}
       </Button>
 
+      {/* פעולות לצפייה במתכון או להחלפת הארוחה */}
       <div className="mt-2 flex gap-2">
         <Button
           onClick={onViewRecipe}

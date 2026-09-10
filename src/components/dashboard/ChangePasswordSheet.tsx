@@ -110,16 +110,19 @@ export function ChangePasswordSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
+        {/* כותרת החלונית משתנה לפי סוג החשבון */}
         <SheetHeader>
           <SheetTitle>{hasPassword ? "Change password" : "Set a password"}</SheetTitle>
         </SheetHeader>
 
         <div className="px-4 pb-8">
           {loadingUser ? (
+            /* מצב טעינה בזמן בדיקת שיטת ההתחברות */
             <div className="flex justify-center py-10">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : done === "updated" ? (
+            /* הודעת הצלחה לאחר שינוי הסיסמה */
             <div className="py-6 text-center">
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
                 <CheckCircle2 className="h-5 w-5" />
@@ -133,6 +136,7 @@ export function ChangePasswordSheet({
               </Button>
             </div>
           ) : done === "sent" ? (
+            /* הודעת הצלחה לאחר שליחת קישור להגדרת סיסמה */
             <div className="py-6 text-center">
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <MailCheck className="h-5 w-5" />
@@ -149,6 +153,7 @@ export function ChangePasswordSheet({
               </Button>
             </div>
           ) : !hasPassword ? (
+            /* אפשרות למשתמש Google להגדיר סיסמה ראשונה */
             <div className="py-4">
               <p className="text-[15px] text-muted-foreground">
                 You currently sign in with Google. You can add a password to your account — we'll
@@ -172,6 +177,7 @@ export function ChangePasswordSheet({
               </Button>
             </div>
           ) : (
+            /* טופס לשינוי הסיסמה הנוכחית */
             <form onSubmit={onUpdate} className="mt-2 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="cp-current" className="text-sm font-medium">
@@ -224,6 +230,7 @@ export function ChangePasswordSheet({
               </div>
 
               {error && (
+                /* הודעת שגיאה עבור שינוי הסיסמה */
                 <p
                   role="alert"
                   className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"

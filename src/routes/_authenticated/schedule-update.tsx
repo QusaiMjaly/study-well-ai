@@ -125,6 +125,7 @@ function ScheduleUpdate() {
   return (
     <div className="min-h-screen bg-page-gradient">
       <div className="mx-auto w-full max-w-[420px] px-5 pb-16 pt-6">
+        {/* כותרת עליונה עם כפתור חזרה לדשבורד */}
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -139,6 +140,7 @@ function ScheduleUpdate() {
         </div>
 
         <div className="mt-7 space-y-6">
+          {/* כותרת עמוד עדכון מערכת השעות */}
           <div>
             <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight">
               Update your weekly schedule
@@ -150,10 +152,12 @@ function ScheduleUpdate() {
           </div>
 
           {blocks === null ? (
+            /* מצב טעינה בזמן הבאת מערכת השעות השמורה */
             <div className="flex h-40 items-center justify-center rounded-2xl border border-border/60 bg-card">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
+            /* עורך מערכת השעות השבועית המשותף */
             <WeeklyScheduleEditor
               blocks={blocks}
               onChange={setBlocks}
@@ -165,12 +169,14 @@ function ScheduleUpdate() {
           )}
 
           {done && (
+            /* הודעת הצלחה לאחר שמירת מערכת השעות */
             <div className="flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-primary">
               <CheckCircle2 className="h-4.5 w-4.5" />
               Schedule updated — returning to your dashboard…
             </div>
           )}
 
+          {/* כפתור חזרה לדשבורד ללא שמירה נוספת */}
           <button
             type="button"
             onClick={() => navigate({ to: "/dashboard" })}

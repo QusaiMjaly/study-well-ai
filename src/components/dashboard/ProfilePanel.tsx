@@ -269,6 +269,7 @@ export function ProfilePanel() {
 
   if (isLoading) {
     return (
+      /* מצב טעינה של פרטי הפרופיל */
       <div className="space-y-4">
         <Skeleton className="h-[132px] rounded-3xl" />
         <Skeleton className="h-48 rounded-3xl" />
@@ -352,7 +353,7 @@ export function ProfilePanel() {
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
+      {/* כותרת הפרופיל עם שם המשתמש והאימייל */}
       <section className="bg-profile-gradient rounded-3xl px-6 py-6 text-white shadow-card">
         <div className="flex items-center gap-4">
           <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-white text-[22px] font-bold text-primary shadow-soft">
@@ -373,6 +374,7 @@ export function ProfilePanel() {
       </section>
 
       {busy && (
+        /* הודעה בזמן שמירת הפרטים או עדכון התוכנית */
         <Card className="flex flex-row items-center gap-3 rounded-2xl border-ai/30 bg-ai/5 p-4 shadow-soft">
           <Loader2 className="h-4 w-4 shrink-0 animate-spin text-ai" />
           <p className="text-sm font-medium">Updating your plan…</p>
@@ -380,6 +382,7 @@ export function ProfilePanel() {
       )}
 
       {!busy && hasFailed && (
+        /* הודעת כשל עם אפשרות לנסות שוב לעדכן את התוכנית */
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-destructive/30 bg-destructive/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
           <div className="flex-1">
@@ -400,7 +403,7 @@ export function ProfilePanel() {
       )}
 
       {!busy && !hasFailed && stale && (
-
+        /* הודעה כאשר הפרטים חדשים יותר מהתוכנית הפעילה */
         <Card className="flex flex-row items-start gap-3 rounded-2xl border-primary/30 bg-primary/5 p-4 shadow-soft">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="flex-1">
@@ -421,7 +424,7 @@ export function ProfilePanel() {
       )}
 
 
-      {/* YOUR DETAILS — one card, one edit mode, one Save */}
+      {/* אזור הפרטים האישיים, היעדים וההעדפות */}
       <SectionCard
         icon={<User className="h-5 w-5 text-primary-foreground" />}
         iconClass="bg-primary"
@@ -430,6 +433,7 @@ export function ProfilePanel() {
       >
         {editing && form ? (
           <>
+            {/* טופס עריכת שם, גיל, גובה, משקל והעדפות */}
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="full_name">Full name</Label>
@@ -539,6 +543,7 @@ export function ProfilePanel() {
           </>
         ) : (
           <>
+            {/* תצוגת הפרטים וההעדפות השמורים */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Field label="Age" value={data.profile?.age ? `${data.profile.age} years` : ""} />
               <Field
@@ -600,7 +605,7 @@ export function ProfilePanel() {
 
 
 
-      {/* YOUR SCHEDULE */}
+      {/* סיכום מערכת השעות וקישור לעדכון שלה */}
       <Card className="gap-0 rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[0.06] to-success/[0.08] p-5 shadow-soft">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cta-gradient text-primary-foreground">
@@ -695,7 +700,7 @@ export function ProfilePanel() {
         </Link>
       </Card>
 
-      {/* AUTO-UPDATE */}
+      {/* הסבר על עדכון התוכנית לאחר שינוי פרטים */}
       <Card className="gap-0 rounded-3xl border-ai/20 bg-gradient-to-br from-ai/[0.08] to-primary/[0.06] p-5 shadow-soft">
         <div className="flex items-start gap-3">
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-ai" />
@@ -708,7 +713,7 @@ export function ProfilePanel() {
         </div>
       </Card>
 
-      {/* SETTINGS */}
+      {/* הגדרות החשבון ושינוי הסיסמה */}
       <SectionCard
         icon={<Settings className="h-5 w-5 text-background" />}
         iconClass="bg-foreground"
@@ -733,9 +738,7 @@ export function ProfilePanel() {
         </div>
       </SectionCard>
 
-      {/* ACTIONS */}
-
-
+      {/* כפתור להתנתקות מהחשבון */}
       <Button
         variant="outline"
         className="h-13 w-full rounded-2xl border-destructive/30 py-3.5 text-[16px] font-bold text-destructive hover:bg-destructive/5 hover:text-destructive"
@@ -744,6 +747,7 @@ export function ProfilePanel() {
         <LogOut className="mr-2 h-5 w-5" /> Log out
       </Button>
 
+      {/* חלונית שינוי או הגדרת הסיסמה */}
       <ChangePasswordSheet open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </div>
   );

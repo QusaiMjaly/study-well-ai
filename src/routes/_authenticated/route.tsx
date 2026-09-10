@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated")({
 // הקומפוננטה היא המעטפת של כל העמודים המוגנים (רק למשתמשים מחוברים) ומנהלת את יצירת התוכנית מחדש ברמה הגלובלית
 function AuthenticatedLayout() {
   return (
+    /* מעטפת העמודים הפרטיים עם מנהל עדכון התוכנית */
     <PlanRegenerationProvider>
       <div className="min-h-screen bg-background">
         <Outlet />

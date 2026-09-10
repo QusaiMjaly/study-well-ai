@@ -64,10 +64,12 @@ function Dashboard() {
     <div className="flex min-h-screen justify-center bg-page-gradient">
       <div className="relative flex w-full max-w-[448px] flex-col bg-background shadow-card">
         {loading ? (
+          /* מצב טעינה בזמן הבאת פרטי המשתמש */
           <div className="flex h-[70vh] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : !profile ? (
+          /* מצב למשתמש שעדיין צריך להשלים את תהליך ההיכרות */
           <div className="px-6 py-20 text-center">
             <h2 className="text-2xl font-bold">Let's get you set up</h2>
             <p className="mt-2 text-muted-foreground">
@@ -81,7 +83,7 @@ function Dashboard() {
           </div>
         ) : (
           <Tabs value={tab} onValueChange={setTab} className="flex flex-1 flex-col gap-0">
-            {/* Header */}
+            {/* כותרת הדשבורד עם ברכה אישית */}
             <header className="relative bg-gradient-to-b from-primary/[0.07] to-transparent px-6 pb-8 pt-6">
               <h1 className="text-[30px] font-bold leading-9 tracking-tight">
                 Hi {profile.full_name?.split(" ")[0] || "there"} 👋
@@ -98,7 +100,7 @@ function Dashboard() {
 
             </header>
 
-            {/* Content */}
+            {/* תוכן הלשונית הפעילה בדשבורד */}
             <div className="flex-1 px-6 pb-28">
               <TabsContent value="home" className="mt-0">
                 <HomeOverview
@@ -120,7 +122,7 @@ function Dashboard() {
               </TabsContent>
             </div>
 
-            {/* Bottom navigation */}
+            {/* תפריט הניווט התחתון בין חלקי האפליקציה */}
             <div className="sticky bottom-0 z-20 border-t border-border/60 bg-background">
               <TabsList className="grid h-20 w-full grid-cols-5 items-center gap-0 rounded-none bg-transparent px-4 py-3">
                 {navItems.map((item) => (

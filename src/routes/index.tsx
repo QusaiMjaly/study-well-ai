@@ -51,7 +51,7 @@ function Landing() {
   return (
     <div className="flex min-h-screen justify-center bg-background">
       <div className="relative flex w-full max-w-[448px] flex-col pb-10">
-        {/* Hero */}
+        {/* אזור הפתיחה עם שם המוצר והמסר המרכזי */}
         <section className="relative overflow-hidden px-6 pb-14 pt-16 text-center">
           <div
             aria-hidden
@@ -90,7 +90,7 @@ function Landing() {
           </div>
         </section>
 
-        {/* Feature cards */}
+        {/* כרטיסי היתרונות המרכזיים של האפליקציה */}
         <section className="space-y-4 px-6">
           {features.map((f) => (
             <article
@@ -110,7 +110,7 @@ function Landing() {
           ))}
         </section>
 
-        {/* How it works */}
+        {/* הסבר קצר על אופן יצירת התוכנית האישית */}
         <section className="mt-6 px-6">
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft">
             <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ function Landing() {
           </div>
         </section>
 
-        {/* Primary actions */}
+        {/* פעולות ראשיות להרשמה או להתחברות */}
         <section className="mt-auto px-6 pt-14 text-center">
           <Link
             to="/auth"

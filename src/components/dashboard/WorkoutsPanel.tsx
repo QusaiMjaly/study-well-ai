@@ -67,6 +67,7 @@ export function WorkoutsPanel() {
 
   if (isLoading) {
     return (
+      /* מצב טעינה של אימון היום */
       <div className="space-y-4">
         <Skeleton className="h-[212px] w-full rounded-3xl" />
         {[0, 1, 2, 3].map((i) => (
@@ -101,7 +102,7 @@ export function WorkoutsPanel() {
 
   return (
     <div className="space-y-4">
-      {/* HEADER */}
+      {/* כותרת האימון עם משך, קלוריות והתקדמות */}
       <section className="bg-workout-gradient rounded-3xl px-6 pb-6 pt-6 text-primary-foreground shadow-card">
         <div className="flex items-center gap-2 text-[14px] font-medium">
           <Sparkles className="h-[18px] w-[18px]" />
@@ -133,7 +134,7 @@ export function WorkoutsPanel() {
         </div>
       </section>
 
-      {/* EXERCISES */}
+      {/* כרטיסי התרגילים באימון של היום */}
       {total === 0 ? (
         <EmptyCard title="No exercises listed" body="This workout has no exercises in your plan." />
       ) : (
@@ -152,7 +153,7 @@ export function WorkoutsPanel() {
         </div>
       )}
 
-      {/* PROGRESS + PRIMARY ACTION */}
+      {/* מד התקדמות וכפתור לסיום האימון */}
       <Card className="gap-0 rounded-2xl border-border/70 p-4 shadow-soft">
         <div className="flex items-center justify-between text-[14px]">
           <span className="font-semibold">Workout progress</span>
@@ -189,12 +190,14 @@ export function WorkoutsPanel() {
         )}
       </Button>
 
+      {/* חלונית סרטון ההדגמה של התרגיל */}
       <ExerciseDemoSheet
         exercise={demo}
         open={demo !== null}
         onOpenChange={(v) => !v && setDemo(null)}
       />
 
+      {/* חלונית לבחירת תרגיל חלופי */}
       <ExerciseChangeSheet
         exercise={changing}
         planId={data.planId}
@@ -251,6 +254,7 @@ function ExerciseCard({
         completed ? "border-success/40 bg-success/5" : "border-border/70"
       }`}
     >
+      {/* פרטי התרגיל וכפתור סימון ההשלמה */}
       <div className="flex items-center gap-3">
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-bold ${
@@ -294,6 +298,7 @@ function ExerciseCard({
         <p className="mt-2.5 pl-13 text-[12px] leading-4 text-muted-foreground">{ex.notes}</p>
       ) : null}
 
+      {/* פעולות לצפייה בהדגמה או להחלפת התרגיל */}
       <div className="mt-2.5 ml-13 flex items-center gap-4">
         <button
           type="button"
@@ -334,6 +339,7 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
 
   return (
     <div className="space-y-4">
+      {/* כרטיס יום ההתאוששות וההסבר שלו */}
       <section className="bg-meals-gradient rounded-3xl px-6 py-7 text-center text-success-foreground shadow-card">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
           <Leaf className="h-6 w-6" />
@@ -345,6 +351,7 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
         </p>
       </section>
 
+      {/* מטרות ההתאוששות המומלצות להיום */}
       <Card className="gap-0 rounded-2xl border-border/70 p-4 shadow-soft">
         <h3 className="text-[16px] font-bold">Recovery goals</h3>
         <ul className="mt-3 space-y-2.5">
@@ -360,6 +367,7 @@ function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
       </Card>
 
       {next ? (
+        /* הצצה לאימון הבא בתוכנית */
         <Card className="gap-0 rounded-2xl border-border/70 p-4 shadow-soft">
           <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
             <CalendarDays className="h-4 w-4 text-primary" /> Next workout

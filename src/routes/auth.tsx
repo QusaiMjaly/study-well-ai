@@ -143,6 +143,7 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-page-gradient px-5 py-8">
       <div className="mx-auto w-full max-w-[420px]">
+        {/* קישור המיתוג שמחזיר לעמוד הראשי */}
         <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cta-gradient text-primary-foreground shadow-soft">
             <Sparkles className="h-4.5 w-4.5" />
@@ -151,6 +152,7 @@ function AuthPage() {
         </Link>
 
         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
+          {/* כותרת מסך ההתחברות או ההרשמה */}
           <h1 className="text-center text-2xl font-bold tracking-tight">
             {mode === "signup" ? "Create your account" : "Welcome back"}
           </h1>
@@ -160,6 +162,7 @@ function AuthPage() {
               : "Log in to continue your plan"}
           </p>
 
+          {/* טופס אימייל וסיסמה להתחברות או ליצירת חשבון */}
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
@@ -204,6 +207,7 @@ function AuthPage() {
 
 
             {fieldError && (
+              /* הודעת שגיאה ידידותית עבור פרטי ההתחברות */
               <p
                 role="alert"
                 className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive"
@@ -231,6 +235,7 @@ function AuthPage() {
           </div>
 
           <div className="space-y-3">
+            {/* כפתור התחברות באמצעות חשבון Google */}
             <Button
               type="button"
               variant="outline"
@@ -245,6 +250,7 @@ function AuthPage() {
           </div>
         </div>
 
+        {/* מעבר בין מצב התחברות למצב הרשמה */}
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {mode === "signup" ? "Already have an account?" : "Don't have an account?"}{" "}
           <button

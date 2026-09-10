@@ -159,6 +159,7 @@ export function MealChangeSheet({
         side="bottom"
         className="mx-auto max-h-[88vh] w-full max-w-[448px] overflow-y-auto rounded-t-3xl border-border/70 p-0"
       >
+        {/* כותרת חלונית החלפת הארוחה */}
         <SheetHeader className="px-5 pb-2 pt-5 text-left">
           <SheetTitle className="text-[20px] font-bold leading-7">Change meal</SheetTitle>
           <p className="text-[13px] text-muted-foreground">
@@ -167,7 +168,7 @@ export function MealChangeSheet({
         </SheetHeader>
 
         <div className="space-y-4 px-5 pb-8">
-          {/* Mode switch */}
+          {/* בחירה בין הצעות AI לבין בקשת מנה מסוימת */}
           <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
             {(["suggest", "request"] as Mode[]).map((m) => (
               <button
@@ -191,6 +192,7 @@ export function MealChangeSheet({
           </div>
 
           {completedToday ? (
+            /* אזהרה כאשר הארוחה כבר סומנה כהושלמה */
             <p className="flex items-start gap-2 rounded-2xl bg-warning/10 px-3 py-2.5 text-[12px] leading-4 text-warning">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               You already completed this meal today. Changing it will mark the replacement as not
@@ -199,6 +201,7 @@ export function MealChangeSheet({
           ) : null}
 
           {mode === "request" ? (
+            /* בחירת אופן ההתאמה והזנת תיאור הארוחה המבוקשת */
             <div className="space-y-3">
               <div className="grid gap-2">
                 {REQUEST_MODES.map((rm) => {
@@ -264,6 +267,7 @@ export function MealChangeSheet({
 
 
           {loading ? (
+            /* מצב טעינה בזמן יצירת הצעות חלופיות */
             <div className="space-y-3">
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-28 w-full rounded-2xl" />
@@ -275,6 +279,7 @@ export function MealChangeSheet({
           ) : null}
 
           {error ? (
+            /* הודעת שגיאה ואפשרות לנסות שוב */
             <div className="rounded-2xl border border-border/70 p-4 text-center">
               <p className="text-[13px] text-muted-foreground">{error}</p>
               {mode === "suggest" ? (
@@ -291,6 +296,7 @@ export function MealChangeSheet({
 
           {!loading && options
             ? options.map((o, i) => (
+                /* כרטיס ארוחה חלופית לבחירה */
                 <MealSuggestionCard
                   key={`${o.meal_name}-${i}`}
                   meal={o}
@@ -302,6 +308,7 @@ export function MealChangeSheet({
             : null}
 
           {confirmNeeded ? (
+            /* אישור החלפת ארוחה שכבר סומנה כהושלמה */
             <div className="rounded-2xl border border-warning/40 bg-warning/5 p-4">
               <p className="text-[13px] leading-5">
                 You already completed this meal today. Changing it will mark the replacement as not
@@ -326,6 +333,7 @@ export function MealChangeSheet({
               </div>
             </div>
           ) : (
+            /* כפתור החלת הארוחה החלופית שנבחרה */
             <Button
               className="h-12 w-full rounded-2xl bg-success text-success-foreground hover:bg-success/90"
               disabled={selected === null || applying || loading}

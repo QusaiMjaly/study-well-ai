@@ -14,6 +14,7 @@ type Props = {
 // הקומפוננטה מציגה מצב שגיאה ידידותי עם כפתור נסה-שוב, בלי טקסט טכני גולמי
 export function DataError({ title, error, onRetry, className }: Props) {
   return (
+    /* כרטיס שגיאה ידידותי עם כפתור לניסיון נוסף */
     <Card
       className={`flex items-start gap-3 rounded-2xl border-destructive/30 p-5 shadow-soft ${className ?? ""}`}
     >
