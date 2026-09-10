@@ -16,6 +16,7 @@ import { MealChangeSheet } from "@/components/dashboard/MealChangeSheet";
 import { BalanceDayAction } from "@/components/dashboard/BalanceDayAction";
 import { shouldOfferBalance } from "@/lib/replacement-core";
 
+// הקומפוננטה מציגה את תוכנית הארוחות של המשתמש להיום, עם סימון "בוצע", מתכונים והחלפת ארוחה
 export function MealsPanel() {
   const qc = useQueryClient();
   const [recipe, setRecipe] = useState<MealItem | null>(null);
@@ -24,6 +25,7 @@ export function MealsPanel() {
   const [replaced, setReplaced] = useState<{ mealItemId: string; mealName: string } | null>(null);
 
   /** Local replacement: refresh plan-derived reads only, never a full regeneration. */
+  // הפונקציה מרעננת רק את קריאות הארוחות אחרי החלפה מקומית, בלי לייצר תוכנית מחדש
   const refreshMeals = () => {
     void qc.invalidateQueries({ queryKey: ["today-meals"] });
     void qc.invalidateQueries({ queryKey: ["active-plan"] });
@@ -231,6 +233,7 @@ function ProgressRow({
   );
 }
 
+// הקומפוננטה מציגה כרטיס ארוחה בודד עם המאקרו, המרכיבים וכפתורי הפעולה שלה
 function MealCard({
   meal,
   done,
