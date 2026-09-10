@@ -90,6 +90,11 @@ export type ScheduleBlock = {
 const DAY_START = "08:00";
 const DAY_END = "22:00";
 
+/** Full-day range used by the "Busy all day" quick action. */
+// טווח היום המלא, משמש לפעולה המהירה "עסוק כל היום"
+export const ALL_DAY_START = "00:00";
+export const ALL_DAY_END = "23:59";
+
 export const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 const toHHmm = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
@@ -220,8 +225,7 @@ export function validateBlock(b: {
   if (!DAYS.includes(b.day as DayKey)) return "Choose a valid day.";
   if (!TIME.test(b.start_time) || !TIME.test(b.end_time)) return "Times must be in HH:mm format.";
   if (toMin(b.end_time) <= toMin(b.start_time)) return "End time must be after the start time.";
-  if (toMin(b.end_time) - toMin(b.start_time) > 12 * 60)
-    return "A single block can't be longer than 12 hours.";
+
   if (!BLOCK_TYPES.includes(b.type as BlockType)) return "Choose Study, Work or Other.";
   return null;
 }

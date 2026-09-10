@@ -33,6 +33,8 @@ import {
   BLOCK_TYPE_LABELS,
   DAYS,
   DAY_LABELS,
+  ALL_DAY_END,
+  ALL_DAY_START,
   mergeImportedBlocks,
   newBlockId,
   overlappingBlockIds,
@@ -83,6 +85,9 @@ type Draft = {
   label: string | null;
 };
 
+// הפונקציה בודקת אם הטיוטה מוגדרת כיום שלם (עסוק כל היום)
+const isAllDay = (d: Draft) => d.start_time === ALL_DAY_START && d.end_time === ALL_DAY_END;
+
 const emptyDraft = (days: DayKey[]): Draft => ({
   id: "",
   days,
@@ -111,6 +116,8 @@ export function WeeklyScheduleEditor({
   const [draftError, setDraftError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  /** Times to restore when "Busy all day" is switched back off. */
+  const prevTimes = useRef({ start_time: "10:00", end_time: "12:00" });
 
   const runImport = useServerFn(importTimetableImage);
 
@@ -146,6 +153,18 @@ export function WeeklyScheduleEditor({
   function toggleDay(d: DayKey) {
     if (!editing) return setActiveDay(d);
     setSelectedDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+  }
+
+  // הפונקציה מפעילה או מכבה את "עסוק כל היום" ומחזירה את השעות הקודמות בכיבוי
+  function toggleAllDay(d: Draft) {
+    setDraftError(null);
+    if (isAllDay(d)) {
+      const prev = prevTimes.current;
+      setDraft({ ...d, start_time: prev.start_time, end_time: prev.end_time });
+      return;
+    }
+    prevTimes.current = { start_time: d.start_time, end_time: d.end_time };
+    setDraft({ ...d, start_time: ALL_DAY_START, end_time: ALL_DAY_END });
   }
 
   // הפונקציה נכנסת למצב עריכה עם העתק מקומי של הלו"ז והיום הפעיל מסומן
@@ -528,10 +547,12 @@ export function WeeklyScheduleEditor({
 
       {/* חלונית להוספה או עריכה של בלוק זמן */}
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
-        <DialogContent className="max-w-[360px] rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>{draft?.id ? "Edit block" : "Add time block"}</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[400px] overflow-x-hidden rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="min-w-0">
+            <DialogTitle className="break-words">
+              {draft?.id ? "Edit block" : "Add time block"}
+            </DialogTitle>
+            <DialogDescription className="break-words">
               {draft && !draft.id && draft.days.length > 1
                 ? `Creates a separate block on ${draft.days.length} days — you can edit each one later.`
                 : "Study is your classes. Work and Other are anything else."}
@@ -539,7 +560,7 @@ export function WeeklyScheduleEditor({
           </DialogHeader>
 
           {draft && (
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               {/* בחירת סוג הבלוק: לימוד, עבודה או אחר */}
               <div className="grid grid-cols-3 gap-2">
                 {(["study", "work", "other"] as BlockType[]).map((t) => {
@@ -550,21 +571,21 @@ export function WeeklyScheduleEditor({
                       type="button"
                       onClick={() => setDraft({ ...draft, type: t })}
                       className={cn(
-                        "flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-semibold transition-colors",
+                        "flex min-w-0 items-center justify-center gap-1.5 rounded-xl border px-1.5 py-2.5 text-xs font-semibold transition-colors",
                         draft.type === t
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border/60 text-muted-foreground hover:bg-muted/50",
                       )}
                     >
-                      <Icon className="h-4 w-4" />
-                      {BLOCK_TYPE_LABELS[t]}
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{BLOCK_TYPE_LABELS[t]}</span>
                     </button>
                   );
                 })}
               </div>
 
               {/* בחירת הימים שאליהם יתווסף הבלוק */}
-              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1">
+              <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
                 {DAYS.map((d) => {
                   const on = draft.days.includes(d);
                   return (
@@ -582,7 +603,7 @@ export function WeeklyScheduleEditor({
                         })
                       }
                       className={cn(
-                        "min-w-[48px] rounded-xl border px-2 py-1.5 text-xs font-semibold transition-colors",
+                        "min-w-0 rounded-xl border px-1 py-1.5 text-xs font-semibold transition-colors",
                         on
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border/60 text-muted-foreground hover:bg-muted/50",
@@ -594,37 +615,57 @@ export function WeeklyScheduleEditor({
                 })}
               </div>
 
+              {/* פעולה מהירה: סימון היום כולו כתפוס */}
+              <button
+                type="button"
+                onClick={() => toggleAllDay(draft)}
+                aria-pressed={isAllDay(draft)}
+                className={cn(
+                  "flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors",
+                  isAllDay(draft)
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 text-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                <span className="truncate">Busy all day</span>
+                <span className="shrink-0 text-[11px] font-medium">
+                  {isAllDay(draft) ? "On · 00:00–23:59" : "Off"}
+                </span>
+              </button>
+
               {/* שדות שעת ההתחלה ושעת הסיום */}
-              <div className="grid grid-cols-2 gap-3">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+                <label className="min-w-0 text-xs font-medium text-muted-foreground">
                   Start
                   <Input
                     type="time"
                     value={draft.start_time}
+                    disabled={isAllDay(draft)}
                     onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
-                    className="mt-1 h-11 rounded-xl"
+                    className="mt-1 h-11 w-full min-w-0 rounded-xl px-2"
                   />
                 </label>
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="min-w-0 text-xs font-medium text-muted-foreground">
                   End
                   <Input
                     type="time"
                     value={draft.end_time}
+                    disabled={isAllDay(draft)}
                     onChange={(e) => setDraft({ ...draft, end_time: e.target.value })}
-                    className="mt-1 h-11 rounded-xl"
+                    className="mt-1 h-11 w-full min-w-0 rounded-xl px-2"
                   />
                 </label>
               </div>
 
               {/* שדה אופציונלי לשם או לתיאור הבלוק */}
-              <label className="block text-xs font-medium text-muted-foreground">
+              <label className="block min-w-0 text-xs font-medium text-muted-foreground">
                 Label (optional)
                 <Input
                   value={draft.label ?? ""}
                   maxLength={80}
                   placeholder={draft.type === "study" ? "Database Systems" : "Work"}
                   onChange={(e) => setDraft({ ...draft, label: e.target.value })}
-                  className="mt-1 h-11 rounded-xl"
+                  className="mt-1 h-11 w-full min-w-0 rounded-xl"
                 />
               </label>
 
