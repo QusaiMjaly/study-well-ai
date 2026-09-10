@@ -1,3 +1,4 @@
+// הקובץ הזה רושם אירועי אבחון בפיתוח על תהליך יצירת התוכנית, בלי לחשוף נתונים אישיים או סודיים.
 /**
  * Development-safe diagnostics for AI plan generation.
  *

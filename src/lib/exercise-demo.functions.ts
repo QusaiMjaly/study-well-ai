@@ -1,3 +1,4 @@
+// הקובץ הזה מוצא סרטון הדגמה לתרגיל — קודם מ-YMove, אחר כך מנכס עצמי, ואם אין — מסמן כלא זמין.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { normalizeExerciseName } from "./exercise-media";

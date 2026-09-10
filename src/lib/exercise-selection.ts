@@ -1,3 +1,4 @@
+// הקובץ הזה בוחר מתוך קטלוג התרגילים מאגר מאוזן של מועמדים ליצירת תוכנית AI, לפי מטרה, רמה ומקום אימון.
 /**
  * Server-side preselection of canonical StudentFitAI exercises for AI plan generation.
  *

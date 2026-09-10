@@ -1,3 +1,4 @@
+// הקובץ הזה מדווח על שגיאות React למערכת הניטור של Lovable כדי שנוכל לעקוב אחרי בעיות באפליקציה.
 type LovableErrorOptions = {
   mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
   handled?: boolean;

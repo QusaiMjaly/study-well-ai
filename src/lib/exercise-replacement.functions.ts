@@ -1,3 +1,4 @@
+// הקובץ הזה מטפל בהחלפת תרגיל אחד באימון — מבקש הצעות חלופיות, בודק בקשה ספציפית ושומר את הבחירה.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";

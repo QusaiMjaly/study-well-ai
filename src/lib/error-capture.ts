@@ -1,3 +1,4 @@
+// הקובץ הזה תופס את השגיאה האחרונה שקרתה באפליקציה כדי שנוכל להציג מידע אמיתי על הכשל בעמוד השגיאה.
 // Captures the original Error out-of-band so server.ts can recover the stack
 // when h3 has already swallowed the throw into a generic 500 Response.
 

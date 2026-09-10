@@ -1,3 +1,4 @@
+// הקובץ הזה מטפל בהחלפת ארוחה אחת — מבקש הצעות, יוצר ארוחה ספציפית, שומר את הבחירה ומאזן את היום.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";

@@ -1,3 +1,4 @@
+// הקובץ הזה אחראי על קריאת הגדרות שרת סודיות (כמו מפתחות וסביבה) שאף פעם לא עוזבות את השרת.
 import process from "node:process";
 
 // Server-only config. The .server.ts suffix prevents Vite from bundling
