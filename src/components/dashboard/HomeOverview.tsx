@@ -20,6 +20,7 @@ type Props = {
   onOpenMeals?: () => void;
 };
 
+// הקומפוננטה מציגה את מסך הבית: האימון והארוחה הבאים, סיכום היום והטיפ היומי של ה-AI
 export function HomeOverview({ onOpenWorkouts, onOpenMeals }: Props) {
   const { data: plan, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["active-plan"],
@@ -204,6 +205,7 @@ function EmptyInline({ label }: { label: string }) {
   );
 }
 
+// הקומפוננטה מציגה מצב ריק למשתמש שעוד אין לו תוכנית פעילה
 function NoPlan() {
   return (
     <Card className="rounded-[24px] p-8 text-center shadow-soft">

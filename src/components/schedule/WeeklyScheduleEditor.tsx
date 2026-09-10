@@ -92,6 +92,7 @@ const emptyDraft = (days: DayKey[]): Draft => ({
   label: null,
 });
 
+// הקומפוננטה היא עורך מערכת השעות השבועית: תצוגה, עריכה, בחירת ימים מרובה, הוספת בלוקים וייבוא מתמונה
 export function WeeklyScheduleEditor({
   blocks,
   onChange,
@@ -129,27 +130,32 @@ export function WeeklyScheduleEditor({
   const visibleDays: DayKey[] =
     editing && selectedDays.length > 0 ? DAYS.filter((d) => selectedDays.includes(d)) : [activeDay];
 
+  // הפונקציה מחזירה את הבלוקים של יום מסוים, ממוינים לפי שעת התחלה
   const blocksFor = (day: DayKey) =>
     current.filter((b) => b.day === day).sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
 
   const countFor = (day: DayKey) => current.filter((b) => b.day === day).length;
+  // הפונקציה מחזירה אילו סוגי בלוקים יש ביום (לימוד/עבודה/אחר) כדי להציג את סמלי החיווי הקטנים
   const typesFor = (day: DayKey) => {
     const hasStudy = current.some((b) => b.day === day && b.type === "study");
     const hasBusy = current.some((b) => b.day === day && b.type !== "study");
     return { hasStudy, hasBusy, hasBlocks: hasStudy || hasBusy };
   };
 
+  // הפונקציה מטפלת בלחיצה על יום: במצב צפייה מחליפה יום פעיל, במצב עריכה מסמנת/מסירה בחירה
   function toggleDay(d: DayKey) {
     if (!editing) return setActiveDay(d);
     setSelectedDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
   }
 
+  // הפונקציה נכנסת למצב עריכה עם העתק מקומי של הלו"ז והיום הפעיל מסומן
   function enterEdit() {
     setWork(blocks);
     setSelectedDays([activeDay]);
     setEditing(true);
   }
 
+  // הפונקציה מבטלת את מצב העריכה וזורקת את כל השינויים שלא נשמרו
   function cancelEdit() {
     setWork(blocks);
     setSelectedDays([]);
@@ -157,6 +163,7 @@ export function WeeklyScheduleEditor({
     setEditing(false);
   }
 
+  // הפונקציה שומרת את הלו"ז הערוך פעם אחת אצל ההורה אחרי בדיקת חפיפות
   async function saveEdit() {
     if (overlappingBlockIds(work).size > 0)
       return toast.error("Two blocks overlap. Fix them before saving.");
@@ -170,6 +177,7 @@ export function WeeklyScheduleEditor({
     }
   }
 
+  // הפונקציה שומרת בלוק מהדיאלוג: עריכת בלוק קיים או יצירת בלוק נפרד בכל יום נבחר
   function saveDraft() {
     if (!draft) return;
     const days = draft.days;
@@ -221,6 +229,7 @@ export function WeeklyScheduleEditor({
     setDraftError(null);
   }
 
+  // הפונקציה מעלה תמונת מערכת שעות, שולחת אותה ל-AI וממזגת את בלוקי הלימוד שזוהו לטיוטה
   async function handleFile(file: File | null) {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) return toast.error("Image must be under 10 MB.");

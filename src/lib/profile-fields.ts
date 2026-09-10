@@ -23,6 +23,7 @@ export type ProfileEdits = {
 
 export const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
+// הפונקציה בודקת שהפרטים שהמשתמש ערך תקינים (שם, גיל, גובה, משקל) ומחזירה שגיאה ידידותית או null
 export function validateEdits(e: ProfileEdits): string | null {
   if (!e.full_name.trim()) return "Please enter your full name.";
   if (e.full_name.trim().length > 100) return "Name must be under 100 characters.";
@@ -69,6 +70,7 @@ export type PlanFieldSnapshot = Record<PlanAffectingField, string | number | nul
 const NUMERIC: ReadonlySet<string> = new Set(["age", "height", "weight", "target_weight"]);
 
 /** Normalizes a raw stored/edited value so 70, "70", "70.0" and "" compare consistently. */
+// הפונקציה מנרמלת ערך שמור כדי ש-70, "70" ו-"" ישוו נכון זה לזה
 function normalizeValue(field: PlanAffectingField, value: unknown): string | number | null {
   if (value === null || value === undefined) return null;
   if (NUMERIC.has(field)) {
@@ -79,6 +81,7 @@ function normalizeValue(field: PlanAffectingField, value: unknown): string | num
   return s === "" ? null : s;
 }
 
+// הפונקציה יוצרת "תמונת מצב" של השדות שמשפיעים על התוכנית מתוך נתוני הפרופיל
 export function snapshotFrom(source: Record<string, unknown>): PlanFieldSnapshot {
   const out = {} as PlanFieldSnapshot;
   for (const field of PLAN_AFFECTING_FIELDS) {
@@ -88,6 +91,7 @@ export function snapshotFrom(source: Record<string, unknown>): PlanFieldSnapshot
 }
 
 /** Plan-affecting fields whose committed value differs from the previous one. */
+// הפונקציה מחזירה אילו שדות שמשפיעים על התוכנית באמת השתנו
 export function diffPlanFields(
   previous: PlanFieldSnapshot,
   next: PlanFieldSnapshot,
@@ -117,11 +121,13 @@ export const GOALS_COLUMNS = [
 ] as const;
 
 /** Normalizes any profile/goals column so 70, "70", "70.0", "" and null compare consistently. */
+// הפונקציה מנרמלת ערך של עמודת פרופיל/יעדים כדי שאפשר יהיה להשוות אותו בצורה עקבית
 export function normalizeField(field: string, value: unknown): string | number | null {
   return normalizeValue(field as PlanAffectingField, value);
 }
 
 /** Columns from `fields` whose normalized value differs between the two sources. */
+// הפונקציה מחזירה אילו עמודות מרשימה נתונה השתנו בין שני מקורות נתונים
 export function diffColumns(
   fields: readonly string[],
   previous: Record<string, unknown>,

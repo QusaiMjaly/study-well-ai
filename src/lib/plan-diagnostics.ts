@@ -22,6 +22,7 @@ function enabled() {
   return process.env["NODE_ENV"] !== "production";
 }
 
+// הפונקציה רושמת אירוע אבחון על יצירת התוכנית (רק בפיתוח, בלי מידע אישי או סודי)
 export function logPlanDiagnostic(d: PlanDiagnostic) {
   if (!enabled()) return;
   // eslint-disable-next-line no-console

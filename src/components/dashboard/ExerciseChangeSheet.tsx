@@ -18,6 +18,7 @@ import {
 
 type Mode = "suggest" | "request";
 
+// הקומפוננטה מציגה את חלון החלפת התרגיל: הצעות AI, בקשת תרגיל ספציפי ושמירת הבחירה
 export function ExerciseChangeSheet({
   exercise,
   planId,
@@ -57,6 +58,7 @@ export function ExerciseChangeSheet({
     setApplying(false);
   }, [open, exercise?.id]);
 
+  // הפונקציה טוענת מהשרת שלוש הצעות AI לתרגילים חלופיים
   const loadSuggestions = async () => {
     if (!exercise) return;
     setLoading(true);
@@ -80,6 +82,7 @@ export function ExerciseChangeSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, exercise?.id, mode]);
 
+  // הפונקציה שולחת את התרגיל הספציפי שהמשתמש ביקש לחיפוש מול הקטלוג
   const submitRequest = async () => {
     if (!exercise || request.trim().length < 2) return;
     setLoading(true);
@@ -103,6 +106,7 @@ export function ExerciseChangeSheet({
     }
   };
 
+  // הפונקציה שומרת את התרגיל החדש שנבחר במקום הישן (עם אישור אם הוא כבר סומן כ"בוצע")
   const doApply = async (confirm: boolean) => {
     if (!exercise || selected === null || !options) return;
     const choice = options[selected]!;

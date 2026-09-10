@@ -3,6 +3,7 @@
  * Raw technical text is never surfaced to the UI.
  */
 
+// הפונקציה מחלצת את טקסט השגיאה הגולמי מתוך אובייקט שגיאה כלשהו
 function raw(err: unknown): string {
   if (!err) return "";
   if (typeof err === "string") return err;
@@ -13,6 +14,7 @@ function raw(err: unknown): string {
 const GENERIC = "Something went wrong. Please try again.";
 
 /** Friendly copy for data reads/writes (dashboard panels, saves). */
+// הפונקציה הופכת שגיאת נתונים טכנית להודעה קצרה וידידותית למשתמש
 export function friendlyMessage(err: unknown, fallback = GENERIC): string {
   const m = raw(err).toLowerCase();
   if (!m) return fallback;
@@ -32,6 +34,7 @@ export function friendlyMessage(err: unknown, fallback = GENERIC): string {
 }
 
 /** Friendly copy for Supabase Auth failures. Never surfaces raw provider text. */
+// הפונקציה הופכת שגיאת התחברות/הרשמה להודעה ידידותית, בלי טקסט טכני של הספק
 export function friendlyAuthMessage(err: unknown): string {
   const m = raw(err).toLowerCase();
   if (!m) return GENERIC;
@@ -73,6 +76,7 @@ export function friendlyAuthMessage(err: unknown): string {
 
 
 /** Friendly copy for the AI onboarding pipeline. */
+// הפונקציה הופכת שגיאה בתהליך יצירת התוכנית עם AI להודעה ידידותית
 export function friendlyAiMessage(err: unknown): string {
   const m = raw(err).toLowerCase();
   if (m.includes("no schedule") || m.includes("no timetable") || m.includes("schedule image"))
@@ -86,12 +90,14 @@ export function friendlyAiMessage(err: unknown): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// הפונקציה בודקת שכתובת האימייל שהוזנה תקינה
 export function validateEmail(email: string): string | null {
   if (!email.trim()) return "Please enter your email address.";
   if (!EMAIL_RE.test(email.trim())) return "Please enter a valid email address.";
   return null;
 }
 
+// הפונקציה בודקת שהסיסמה עומדת בדרישות (חזקה מספיק בהרשמה, קיימת בהתחברות)
 export function validatePassword(password: string, mode: "signin" | "signup"): string | null {
   if (!password) return "Please enter your password.";
   if (mode === "signup") {

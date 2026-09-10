@@ -29,12 +29,14 @@ export type ProgressData = {
 };
 
 /** Local (not UTC) start of the current week, Sunday-based, as a YYYY-MM-DD key. */
+// הפונקציה מחזירה את מפתח התאריך של תחילת השבוע הנוכחי (ראשון) לפי השעון המקומי
 export function startOfWeekKey(now = new Date()) {
   const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   d.setDate(d.getDate() - d.getDay());
   return localDateKey(d);
 }
 
+// הפונקציה מזיזה מפתח תאריך קדימה או אחורה במספר ימים
 function addDaysKey(key: string, days: number) {
   const [y, m, d] = key.split("-").map(Number);
   const dt = new Date(y!, (m ?? 1) - 1, d!);
@@ -42,6 +44,7 @@ function addDaysKey(key: string, days: number) {
   return localDateKey(dt);
 }
 
+// הפונקציה טוענת את כל נתוני ההתקדמות: מדידות גוף, אימונים שבוצעו וסטטיסטיקת ארוחות שבועית
 export async function fetchProgressData(now = new Date()): Promise<ProgressData | null> {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
@@ -126,6 +129,7 @@ export async function fetchProgressData(now = new Date()): Promise<ProgressData 
  * Validates a progress entry. Returns a field->message map; empty means valid.
  * Runs before any write so impossible values never reach Supabase.
  */
+// הפונקציה בודקת שרשומת מדידה חדשה תקינה לפני שמירה ומחזירה שגיאות לפי שדה
 export function validateProgressEntry(input: {
   weight: string;
   body_fat: string;
@@ -161,6 +165,7 @@ export function validateProgressEntry(input: {
   return errors;
 }
 
+// הפונקציה שומרת רשומת מדידת גוף חדשה (משקל, אחוז שומן, מסת שריר) אחרי אימות
 export async function addProgressLog(input: {
   weight: number;
   body_fat?: number | null;
@@ -189,6 +194,7 @@ export async function addProgressLog(input: {
 
 /* ---------- derived statistics ---------- */
 
+// הפונקציה מחשבת סטטיסטיקת משקל: ערך ראשון, אחרון ושינוי מצטבר באחוזים
 export function weightStats(logs: ProgressLog[]) {
   const withWeight = logs.filter((l) => l.weight != null);
   if (!withWeight.length) return null;
@@ -200,11 +206,13 @@ export function weightStats(logs: ProgressLog[]) {
 }
 
 /** Distinct calendar days with at least one completed workout. */
+// הפונקציה מחזירה את רשימת הימים הייחודיים שבהם בוצע אימון, ממוינת
 function completedDayKeys(workouts: WorkoutCompletionRow[]) {
   return Array.from(new Set(workouts.map((w) => w.completed_on))).sort();
 }
 
 /** Consecutive local calendar days ending today (or yesterday, so today stays "alive"). */
+// הפונקציה מחשבת כמה ימי אימון רצופים יש למשתמש עד היום (או אתמול)
 export function currentStreak(workouts: WorkoutCompletionRow[], now = new Date()) {
   const days = new Set(completedDayKeys(workouts));
   if (!days.size) return 0;
@@ -220,6 +228,7 @@ export function currentStreak(workouts: WorkoutCompletionRow[], now = new Date()
   return streak;
 }
 
+// הפונקציה מחשבת את רצף ימי האימון הארוך ביותר שהיה אי פעם
 export function longestStreak(workouts: WorkoutCompletionRow[]) {
   const days = completedDayKeys(workouts);
   let best = 0;
@@ -233,6 +242,7 @@ export function longestStreak(workouts: WorkoutCompletionRow[]) {
   return best;
 }
 
+// הפונקציה מחשבת ממוצע אימונים לשבוע מאז האימון הראשון
 export function avgWorkoutsPerWeek(workouts: WorkoutCompletionRow[], now = new Date()) {
   if (!workouts.length) return 0;
   const firstKey = workouts[0]!.completed_on;
@@ -244,12 +254,14 @@ export function avgWorkoutsPerWeek(workouts: WorkoutCompletionRow[], now = new D
   return workouts.length / weeks;
 }
 
+// הפונקציה מסכמת את סך שעות האימון שהמשתמש צבר
 export function totalWorkoutHours(workouts: WorkoutCompletionRow[]) {
   const mins = workouts.reduce((s, w) => s + (w.duration_minutes ?? 0), 0);
   return mins / 60;
 }
 
 /** Last 7 local days (oldest first) with per-day workout count, minutes and calories. */
+// הפונקציה בונה סדרת נתונים ל-7 הימים האחרונים לצורך גרף שבועי
 export function weeklySeries(workouts: WorkoutCompletionRow[], now = new Date()) {
   const todayKey = localDateKey(now);
   const out: { key: string; label: string; workouts: number; minutes: number; calories: number }[] =
@@ -271,6 +283,7 @@ export function weeklySeries(workouts: WorkoutCompletionRow[], now = new Date())
 
 export type Achievement = { id: string; title: string; description: string };
 
+// הפונקציה מחשבת אילו הישגים (badges) המשתמש הרוויח לפי הרצפים וההתמדה שלו
 export function earnedAchievements(data: ProgressData, now = new Date()): Achievement[] {
   const out: Achievement[] = [];
   const streak = Math.max(currentStreak(data.workouts, now), longestStreak(data.workouts));

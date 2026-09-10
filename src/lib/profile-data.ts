@@ -45,6 +45,7 @@ export type ProfileBundle = {
 };
 
 /** One authenticated read of everything the Profile page needs. */
+// הפונקציה טוענת בקריאה אחת את כל הנתונים שדף הפרופיל צריך: פרופיל, יעדים, לו"ז ותוכנית פעילה
 export async function fetchProfileBundle(): Promise<ProfileBundle> {
   const { data: u, error: uErr } = await supabase.auth.getUser();
   if (uErr) throw uErr;
@@ -96,6 +97,7 @@ export async function fetchProfileBundle(): Promise<ProfileBundle> {
   };
 }
 
+// הפונקציה מחזירה את ראשי התיבות של שם המשתמש (או אות ראשונה מהאימייל) לאווטאר
 export function initialsOf(name: string | null, email: string | null) {
   const source = (name || "").trim();
   if (source) {
@@ -106,6 +108,7 @@ export function initialsOf(name: string | null, email: string | null) {
 }
 
 /** Days in the parsed timetable that actually contain classes. */
+// הפונקציה מחזירה את ימי הלו"ז שיש בהם בלוקים בפועל, עם מספר הבלוקים בכל יום
 export function scheduleDays(schedule: ScheduleRow | null) {
   const days = schedule?.schedule_json?.days ?? [];
   return days
@@ -113,6 +116,7 @@ export function scheduleDays(schedule: ScheduleRow | null) {
     .map((d) => ({ day: d.day, count: d.classes.length }));
 }
 
+// הפונקציה סופרת את סך הבלוקים בלו"ז השבועי
 export function totalClasses(schedule: ScheduleRow | null) {
   return scheduleDays(schedule).reduce((sum, d) => sum + d.count, 0);
 }
@@ -122,6 +126,7 @@ export function totalClasses(schedule: ScheduleRow | null) {
  * Derived from persisted rows (a newer goals row or a newer *parsed* schedule);
  * `pendingChange` only covers a saved plan-affecting edit whose regeneration failed.
  */
+// הפונקציה בודקת אם התוכנית הפעילה "ישנה" — כלומר פרטים שמשפיעים עליה השתנו אחרי שנוצרה
 export function isPlanStale(bundle: ProfileBundle, pendingChange = false) {
   if (!bundle.activePlan) return false;
   if (pendingChange) return true;

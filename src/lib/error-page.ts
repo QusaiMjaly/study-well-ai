@@ -1,3 +1,4 @@
+// הפונקציה מחזירה דף שגיאה סטטי וידידותי שמוצג כשהעמוד לא הצליח להיטען בכלל
 export function renderErrorPage(): string {
   return `<!doctype html>
 <html lang="en">

@@ -35,6 +35,7 @@ export type ActivePlan = {
 };
 
 /** Single optimized read of the user's active plan with all nested children. */
+// הפונקציה טוענת את התוכנית הפעילה של המשתמש עם כל האימונים, הארוחות והטיפים בקריאה אחת
 export async function fetchActivePlan(): Promise<ActivePlan | null> {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
@@ -60,6 +61,7 @@ export async function fetchActivePlan(): Promise<ActivePlan | null> {
 
 const DAYS = DAY_NAMES;
 
+// הפונקציה ממירה מחרוזת שעה "HH:mm" למספר דקות מאז חצות
 function minutesOf(time: string | null | undefined): number | null {
   if (!time) return null;
   const [h, m] = time.split(":");
@@ -69,6 +71,7 @@ function minutesOf(time: string | null | undefined): number | null {
   return hh * 60 + mm;
 }
 
+// הפונקציה מעצבת שעה לתצוגה ידידותית בשפה המקומית של המכשיר
 export function formatTime(time: string | null | undefined) {
   const mins = minutesOf(time);
   if (mins === null) return "—";
@@ -78,10 +81,12 @@ export function formatTime(time: string | null | undefined) {
 }
 
 /** Days ordered starting from today, so "nearest upcoming" wraps across the week. */
+// הפונקציה מחזירה את ימות השבוע בסדר שמתחיל מהיום, עם גלילה לשבוע הבא
 function upcomingDayOrder(now: Date) {
   return weekOrderFrom(now).map((i) => DAYS[i]!);
 }
 
+// הפונקציה מוצאת את האימון הקרוב הבא בתוכנית, החל מהיום ואילך
 export function pickNextWorkout(plan: ActivePlan | null, now = new Date()) {
   if (!plan) return null;
   const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -97,6 +102,7 @@ export function pickNextWorkout(plan: ActivePlan | null, now = new Date()) {
   return null;
 }
 
+// הפונקציה מוצאת את הארוחה הקרובה הבאה בתוכנית, החל מהיום ואילך
 export function pickNextMeal(plan: ActivePlan | null, now = new Date()) {
   if (!plan) return null;
   const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -117,6 +123,7 @@ export function pickNextMeal(plan: ActivePlan | null, now = new Date()) {
   return null;
 }
 
+// הפונקציה מסכמת את נתוני היום הנוכחי: כמה אימונים, כמה ארוחות וכמה קלוריות/חלבון
 export function todaySummary(plan: ActivePlan | null, now = new Date()) {
   const today = normalizeDay(DAYS[now.getDay()]);
   const workouts = plan?.workout_days.filter((w) => normalizeDay(w.day_name) === today) ?? [];
@@ -136,6 +143,7 @@ export function todaySummary(plan: ActivePlan | null, now = new Date()) {
   };
 }
 
+// הפונקציה מחזירה את הטיפ היומי של ה-AI שמתאים להיום
 export function todayTip(plan: ActivePlan | null, now = new Date()) {
   if (!plan) return null;
   const today = normalizeDay(DAYS[now.getDay()]);

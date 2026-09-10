@@ -35,6 +35,7 @@ export function BalanceDayAction({
   const diff = state.totals.calories - state.targets.calories;
   const direction = diff > 0 ? "over" : "under";
 
+  // הפונקציה שולחת בקשה לשרת לאזן את שאר ארוחות היום סביב הארוחה שנעולה
   const run = async () => {
     setBusy(true);
     try {

@@ -30,6 +30,7 @@ export const Route = createFileRoute("/auth_/callback")({
 });
 
 /** Authoritative onboarding check: a profile row is what the dashboard requires. */
+// הפונקציה בודקת אם המשתמש סיים אונבורדינג לפי קיום שורת פרופיל (המקור המוסמך)
 async function hasCompletedOnboarding(userId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("profiles")
@@ -40,6 +41,7 @@ async function hasCompletedOnboarding(userId: string): Promise<boolean> {
   return !!data;
 }
 
+// הפונקציה מחלצת שגיאת OAuth מהכתובת אם הספק החזיר את המשתמש עם כשל
 function providerErrorFromUrl(): string | null {
   if (typeof window === "undefined") return null;
   const search = new URLSearchParams(window.location.search);
@@ -51,6 +53,7 @@ function providerErrorFromUrl(): string | null {
   return "oauth failed";
 }
 
+// הקומפוננטה משלימה את התחברות Google: מחכה לסשן ומנווטת לדשבורד או לאונבורדינג
 function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +68,7 @@ function AuthCallback() {
       return;
     }
 
+    // הפונקציה מסיימת את ההתחברות ומנווטת פעם אחת ליעד הנכון
     async function finish(userId: string) {
       if (done.current) return;
       done.current = true;

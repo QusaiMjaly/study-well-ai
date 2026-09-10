@@ -2,6 +2,7 @@ import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;
 
+// ה-Hook מחזיר true כשמסך המשתמש צר מ-768px (תצוגת מובייל)
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
 

@@ -43,6 +43,7 @@ export type MealApplyResult =
       offerBalance: boolean;
     };
 
+// הפונקציה מבקשת מה-AI שלוש הצעות לארוחות חלופיות במקום ארוחה קיימת
 export const suggestMealReplacements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Target.parse(d))
@@ -75,6 +76,7 @@ export const suggestMealReplacements = createServerFn({ method: "POST" })
     return { suggestions: parsed.data.suggestions };
   });
 
+// הפונקציה מבקשת מה-AI ליצור ארוחה ספציפית שהמשתמש תיאר, במצב "התאמה לתוכנית" או "כמו שתיארתי"
 export const requestSpecificMealReplacement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -133,6 +135,7 @@ export const requestSpecificMealReplacement = createServerFn({ method: "POST" })
     },
   );
 
+// הפונקציה שומרת את הארוחה החדשה שהמשתמש בחר במקום הישנה ומחזירה אם כדאי להציע איזון יומי
 export const applyMealReplacement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -211,6 +214,7 @@ export const applyMealReplacement = createServerFn({ method: "POST" })
     };
   });
 
+// הפונקציה מאזנת בעזרת ה-AI את שאר ארוחות היום סביב הארוחה שהמשתמש בחר, כדי להתקרב ליעדים
 export const balanceMealDay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

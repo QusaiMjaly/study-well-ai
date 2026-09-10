@@ -7,6 +7,7 @@ import { Dumbbell, Info, ListChecks, TriangleAlert, VideoOff } from "lucide-reac
 import { getExerciseDemo } from "@/lib/exercise-demo.functions";
 import type { WorkoutExercise } from "@/lib/workouts-data";
 
+// הקומפוננטה מציגה חלון הדגמה של תרגיל: סרטון, שרירים עובדים, דגשי טכניקה וטעויות נפוצות
 export function ExerciseDemoSheet({
   exercise,
   open,
@@ -44,6 +45,7 @@ export function ExerciseDemoSheet({
     }
   }, [open]);
 
+  // הפונקציה מנסה שוב פעם אחת לטעון את הסרטון כשהקישור הזמני פג, ואז מציגה מצב "לא זמין"
   const onVideoError = () => {
     if (!retriedRef.current) {
       retriedRef.current = true;
@@ -192,6 +194,7 @@ export function ExerciseDemoSheet({
 }
 
 /** True when the user has asked the OS to reduce motion. Hydration-safe. */
+// ה-Hook בודק אם המשתמש ביקש מהמערכת להפחית אנימציות (prefers-reduced-motion)
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
 

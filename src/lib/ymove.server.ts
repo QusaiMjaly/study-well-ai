@@ -22,12 +22,14 @@ export type YmoveExercise = {
   videos?: unknown;
 };
 
+// הפונקציה מחזירה את מפתח ה-API של YMove ומוודאת שהוא מוגדר בשרת
 function apiKey() {
   const key = process.env["YMOVE_API_KEY"];
   if (!key) throw new Error("Exercise demo provider is not configured on the server.");
   return key;
 }
 
+// הפונקציה שולחת בקשה ל-API של YMove עם מפתח ה-API, בלי לחשוף פרטי שגיאה רגישים
 async function ymoveFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -44,6 +46,7 @@ async function ymoveFetch<T>(path: string, params: Record<string, string> = {}):
 }
 
 /** Trial-safe catalogue browse/search. Never requests videos, so no allowance is consumed. */
+// הפונקציה מביאה רשימת תרגילים מ-YMove לעיון בלבד, בלי סרטונים כדי לא לבזבז מכסה
 export async function listYmoveExercises(opts: {
   search?: string;
   page?: number;
@@ -61,6 +64,7 @@ export async function listYmoveExercises(opts: {
 }
 
 /** Fetches one mapped exercise with fresh (temporary) video information. */
+// הפונקציה מביאה תרגיל אחד מ-YMove, אופציונלית עם קישור סרטון זמני טרי
 export async function getYmoveExercise(id: string, withVideos: boolean) {
   const payload = await ymoveFetch<{ data?: YmoveExercise } | YmoveExercise>(
     `/exercises/${encodeURIComponent(id)}`,
@@ -71,6 +75,7 @@ export async function getYmoveExercise(id: string, withVideos: boolean) {
 }
 
 /** Picks the first playable MP4/HLS URL out of the provider's videos payload. */
+// הפונקציה בוחרת מתוך נתוני ה-YMove את קישור הסרטון הניתן לניגון הראשון
 export function pickYmoveVideo(record: YmoveExercise): { url: string; poster: string | null } | null {
   const videos = record.videos as unknown;
   const candidates: any[] = Array.isArray(videos)

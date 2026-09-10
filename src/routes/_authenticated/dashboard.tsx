@@ -25,6 +25,7 @@ const navItems = [
   { value: "profile", label: "Profile", icon: User },
 ];
 
+// הקומפוננטה היא מעטפת הדשבורד: כותרת ברכה, ניווט תחתון ולשוניות בית/ארוחות/אימונים/התקדמות/פרופיל
 function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,7 @@ function Dashboard() {
   const [tab, setTab] = useState("home");
 
 
+  // הפונקציה טוענת את פרופיל המשתמש ומוודאת שהוא מחובר לפני הצגת הדשבורד
   async function load() {
     setLoading(true);
     try {

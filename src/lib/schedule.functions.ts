@@ -63,6 +63,7 @@ export type ImportedTimetable = {
  * Reads a freshly uploaded timetable image and returns STUDY blocks for review.
  * It never writes to the schedules table — saving is an explicit user action.
  */
+// הפונקציה קוראת תמונת מערכת שעות שהועלתה, שולחת אותה ל-AI ומחזירה בלוקי לימוד לסקירה (בלי לשמור)
 export const importTimetableImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ImportInput.parse(d))
@@ -170,6 +171,7 @@ const SaveInput = z.object({
 });
 
 /** Validates the reviewed weekly schedule and stores it as the current schedule. */
+// הפונקציה מאמתת את הלו"ז שהמשתמש סיים לערוך ושומרת אותו כמערכת הנוכחית
 export const saveSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SaveInput.parse(d))

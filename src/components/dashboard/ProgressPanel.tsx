@@ -99,6 +99,7 @@ const axisProps = {
   stroke: "var(--color-muted-foreground)",
 } as const;
 
+// הקומפוננטה מציגה את מסך ההתקדמות: גרפי משקל ואימונים, רצפים, הישגים וטופס מדידה חדשה
 export function ProgressPanel() {
   const qc = useQueryClient();
   const { data, isLoading, isError, error, refetch } = useQuery({
