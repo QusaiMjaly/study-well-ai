@@ -38,6 +38,7 @@ export const Route = createFileRoute("/_authenticated/schedule-update")({
   component: ScheduleUpdate,
 });
 
+// הקומפוננטה היא עמוד עדכון מערכת השעות הקיימת: עריכה, שמירה אחת ורענון התוכנית ב-AI
 function ScheduleUpdate() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -78,6 +79,7 @@ function ScheduleUpdate() {
     if (blocks === null && !isLoading) setBlocks(scheduleToBlocks(current ?? null));
   }, [current, isLoading, blocks]);
 
+  // הפונקציה שומרת את הלו"ז המעודכן במסד ומפעילה יצירת תוכנית מחדש פעם אחת
   async function submit(next?: ScheduleBlock[]) {
     const list = next ?? blocks ?? [];
     if (list.length === 0) {
