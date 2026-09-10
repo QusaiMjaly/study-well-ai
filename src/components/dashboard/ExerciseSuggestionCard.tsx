@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Check, Timer } from "lucide-react";
 import type { ExerciseOption } from "@/lib/exercise-replacement.functions";
 
+// הקומפוננטה מציגה כרטיס של הצעת תרגיל חלופי אחד שניתן לבחור
 export function ExerciseSuggestionCard({
   option,
   selected,

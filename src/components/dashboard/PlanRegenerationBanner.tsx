@@ -5,6 +5,7 @@ import { usePlanRegeneration } from "@/lib/plan-regeneration";
  * Small app-level status shown while a plan regeneration runs, on any page.
  * Non-blocking: it floats above the content and never replaces page UI.
  */
+// הקומפוננטה מציגה פס צף "מעדכנים את התוכנית…" בזמן יצירת תוכנית מחדש, בכל עמוד
 export function PlanRegenerationBanner() {
   const { isGenerating } = usePlanRegeneration();
   if (!isGenerating) return null;

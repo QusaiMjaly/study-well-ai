@@ -11,6 +11,7 @@ type Props = {
 };
 
 /** Shared friendly error state with Retry — never shows raw Supabase text. */
+// הקומפוננטה מציגה מצב שגיאה ידידותי עם כפתור נסה-שוב, בלי טקסט טכני גולמי
 export function DataError({ title, error, onRetry, className }: Props) {
   return (
     <Card

@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Check, Flame } from "lucide-react";
 import type { MealReplacement } from "@/lib/replacement-schema";
 
+// הקומפוננטה מציגה כרטיס של הצעת ארוחה חלופית אחת שניתן לבחור
 export function MealSuggestionCard({
   meal,
   selected,

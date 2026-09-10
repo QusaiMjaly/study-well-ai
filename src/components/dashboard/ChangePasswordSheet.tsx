@@ -9,6 +9,7 @@ import { friendlyAuthMessage, validatePassword } from "@/lib/friendly-errors";
 
 type Identity = { provider: string };
 
+// הקומפוננטה מציגה חלון שינוי סיסמה; למשתמשי Google בלבד מוצע לשלוח קישור מאובטח למייל
 export function ChangePasswordSheet({
   open,
   onOpenChange,
@@ -50,6 +51,7 @@ export function ChangePasswordSheet({
     };
   }, [open]);
 
+  // הפונקציה מעדכנת את הסיסמה אחרי בדיקת הסיסמה הנוכחית מול השרת
   async function onUpdate(e: React.FormEvent) {
     e.preventDefault();
     if (!current) {
@@ -84,6 +86,7 @@ export function ChangePasswordSheet({
     }
   }
 
+  // הפונקציה שולחת למשתמשי Google קישור אימייל מאובטח להגדרת סיסמה ראשונה
   async function onSetPassword() {
     if (!email) {
       setError(friendlyAuthMessage(""));
