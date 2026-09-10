@@ -32,6 +32,7 @@ const REQUEST_MODES: { id: RequestMode; label: string; subtitle: string }[] = [
   },
 ];
 
+// הקומפוננטה מציגה את חלון החלפת הארוחה: הצעות AI, בקשת מנה ספציפית ושמירת הבחירה
 export function MealChangeSheet({
   meal,
   planId,
@@ -74,6 +75,7 @@ export function MealChangeSheet({
     setApplying(false);
   }, [open, meal?.id]);
 
+  // הפונקציה טוענת מהשרת שלוש הצעות AI לארוחות חלופיות
   const loadSuggestions = async () => {
     if (!meal) return;
     setLoading(true);
@@ -97,6 +99,7 @@ export function MealChangeSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, meal?.id, mode]);
 
+  // הפונקציה שולחת את המנה הספציפית שהמשתמש תיאר ל-AI, לפי מצב ההתאמה שנבחר
   const submitRequest = async () => {
     if (!meal || request.trim().length < 2) return;
     setLoading(true);
@@ -120,6 +123,7 @@ export function MealChangeSheet({
     }
   };
 
+  // הפונקציה שומרת את הארוחה החדשה שנבחרה במקום הישנה (עם אישור אם היא כבר סומנה כ"בוצעה")
   const doApply = async (confirm: boolean) => {
     if (!meal || selected === null || !options) return;
     setApplying(true);
