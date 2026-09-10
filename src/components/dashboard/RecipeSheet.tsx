@@ -6,6 +6,7 @@ import { ChefHat, ImageOff, Loader2, RefreshCw, Sparkles, Utensils } from "lucid
 import { ensureMealImage, type MealImageResult } from "@/lib/meal-image.functions";
 import type { MealItem } from "@/lib/meals-data";
 
+// הקומפוננטה מציגה את חלון המתכון של ארוחה: תמונת המנה מה-AI, שלבי הכנה ומרכיבים
 export function RecipeSheet({
   meal,
   open,
@@ -19,6 +20,7 @@ export function RecipeSheet({
   const [image, setImage] = useState<MealImageResult | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // הפונקציה מביאה מהשרת את תמונת המנה (קיימת או שנוצרת ב-AI) עם טיפול בשגיאות
   const load = async (mealItemId: string) => {
     setLoading(true);
     try {
@@ -140,6 +142,7 @@ export function RecipeSheet({
   );
 }
 
+// הקומפוננטה מציגה מצב "ה-AI יוצר את התמונה" עם אנימציית shimmer עדינה
 function AiImageGenerating() {
   return (
     <div className="ai-shimmer relative flex h-48 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-ai/8 text-ai">
