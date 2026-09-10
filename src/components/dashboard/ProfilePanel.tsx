@@ -202,6 +202,7 @@ function NumberField({
   );
 }
 
+// הפונקציה ממלאת את טופס העריכה בערכים השמורים הנוכחיים של המשתמש
 function emptyEdits(b: ProfileBundle): ProfileEdits {
   return {
     full_name: b.profile?.full_name ?? "",
@@ -220,6 +221,7 @@ function emptyEdits(b: ProfileBundle): ProfileEdits {
   };
 }
 
+// הקומפוננטה מציגה את מסך הפרופיל: פרטים אישיים, הלו"ז, ההגדרות, שינוי סיסמה והתנתקות
 export function ProfilePanel() {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -294,17 +296,20 @@ export function ProfilePanel() {
   const stale = isPlanStale(data, hasFailed);
 
   /** Seeds the whole form from stored values whenever edit mode opens. */
+  // הפונקציה נכנסת למצב עריכה ומאתחלת את הטופס מהערכים השמורים
   function startEditing() {
     if (!data) return;
     setForm(emptyEdits(data));
     setEditing(true);
   }
 
+  // הפונקציה יוצאת ממצב עריכה וזורקת את השינויים שלא נשמרו
   function cancelEditing() {
     setEditing(false);
     setForm(null);
   }
 
+  // הפונקציה מנתקת את המשתמש ומחזירה אותו למסך ההתחברות
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
