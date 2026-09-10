@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_authenticated")({
  * Plan regeneration state lives here (above every page) so it keeps running
  * while the user navigates between Dashboard tabs and the schedule page.
  */
+// הקומפוננטה היא המעטפת של כל העמודים המוגנים (רק למשתמשים מחוברים) ומנהלת את יצירת התוכנית מחדש ברמה הגלובלית
 function AuthenticatedLayout() {
   return (
     <PlanRegenerationProvider>

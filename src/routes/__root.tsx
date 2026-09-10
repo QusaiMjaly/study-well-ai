@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "../components/ui/sonner";
 
+// הקומפוננטה מציגה עמוד 404 ידידותי כשהכתובת לא קיימת
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -35,6 +36,7 @@ function NotFoundComponent() {
   );
 }
 
+// הקומפוננטה מציגה מסך שגיאה ידידותי כשעמוד קורס, מדווחת עליו ומאפשרת לנסות שוב
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
@@ -100,6 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+// הקומפוננטה היא שלד ה-HTML הבסיסי שכל האפליקציה מוצגת בתוכו
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -114,6 +117,7 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+// הקומפוננטה היא שורש האפליקציה: עוטפת את כל העמודים ב-React Query ובמערכת ההתראות
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
