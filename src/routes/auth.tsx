@@ -73,6 +73,7 @@ function FacebookIcon() {
   );
 }
 
+// הקומפוננטה מציגה את מסך ההתחברות/ההרשמה עם אימייל וסיסמה או Google
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -82,6 +83,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
+  // הפונקציה מטפלת בשליחת הטופס: מאמתת שדות ומבצעת הרשמה או התחברות עם אימייל וסיסמה
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const emailError = validateEmail(email);
@@ -121,6 +123,7 @@ function AuthPage() {
     }
   }
 
+  // הפונקציה מתחילה התחברות דרך Google ומפנה למסך ה-callback בסיום
   async function oauth(provider: "google") {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
