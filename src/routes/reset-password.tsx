@@ -29,6 +29,7 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
 });
 
+// הקומפוננטה מציגה את מסך הגדרת הסיסמה החדשה שאליו מגיעים מקישור האיפוס במייל
 function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -68,6 +69,7 @@ function ResetPasswordPage() {
     };
   }, []);
 
+  // הפונקציה שומרת את הסיסמה החדשה ומתנתקת מהסשן הזמני של האיפוס
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const pwError = validatePassword(password, "signup");
