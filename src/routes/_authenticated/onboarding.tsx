@@ -127,6 +127,7 @@ const toneClass = {
   ai: "bg-ai/10 text-ai",
 };
 
+// הפונקציה מחזירה את התווית הידידותית של ערך מתוך רשימת אפשרויות
 function labelOf(list: { value: string; label: string }[], value: string) {
   return list.find((i) => i.value === value)?.label ?? "—";
 }
@@ -155,6 +156,7 @@ function ChoiceChip({
   );
 }
 
+// הקומפוננטה מדריכה את המשתמש בשלושה שלבים: מטרה ופרטים אישיים, מערכת שעות, העדפות — ואז יצירת תוכנית AI
 function Onboarding() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -276,6 +278,7 @@ function Onboarding() {
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
 
+  // הפונקציה בודקת שכל שדות שלב 1 (מטרה ופרטים אישיים) מולאו ותקינים
   function validateStep1() {
     if (!goalType) return "Pick your main goal";
     if (!fullName.trim()) return "Enter your full name";
@@ -293,6 +296,7 @@ function Onboarding() {
     return null;
   }
 
+  // הפונקציה שומרת את הפרופיל של שלב 1 במסד ועוברת לשלב מערכת השעות
   async function saveStep1() {
     const err = validateStep1();
     if (err) return toast.error(err);
@@ -319,6 +323,7 @@ function Onboarding() {
     }
   }
 
+  // הפונקציה מאמתת את מערכת השעות של שלב 2, שומרת אותה ועוברת לשלב ההעדפות
   async function saveStep2() {
     if (blocks.length === 0) {
       const message = "Add at least one study or busy block — the AI builds your week around it.";
@@ -357,6 +362,7 @@ function Onboarding() {
     }
   }
 
+  // הפונקציה בודקת שכל העדפות שלב 3 נבחרו
   function validateStep3() {
     if (!workoutPref) return "Choose a workout preference";
     if (!mealPref) return "Choose a meal preference";
@@ -366,6 +372,7 @@ function Onboarding() {
     return null;
   }
 
+  // הפונקציה מריצה את יצירת תוכנית ה-AI ומציגה את שלבי ההתקדמות עד למעבר לדשבורד
   async function runAnalysis() {
     setAiError(null);
     setAiStage(0);
@@ -399,6 +406,7 @@ function Onboarding() {
   }
 
 
+  // הפונקציה שומרת את הפרופיל והיעדים הסופיים ומפעילה את יצירת התוכנית
   async function generatePlan() {
     const err1 = validateStep1();
     if (err1) {
