@@ -116,6 +116,8 @@ export function WeeklyScheduleEditor({
   const [draftError, setDraftError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  /** Times to restore when "Busy all day" is switched back off. */
+  const prevTimes = useRef({ start_time: "10:00", end_time: "12:00" });
 
   const runImport = useServerFn(importTimetableImage);
 
@@ -151,6 +153,18 @@ export function WeeklyScheduleEditor({
   function toggleDay(d: DayKey) {
     if (!editing) return setActiveDay(d);
     setSelectedDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+  }
+
+  // הפונקציה מפעילה או מכבה את "עסוק כל היום" ומחזירה את השעות הקודמות בכיבוי
+  function toggleAllDay(d: Draft) {
+    setDraftError(null);
+    if (isAllDay(d)) {
+      const prev = prevTimes.current;
+      setDraft({ ...d, start_time: prev.start_time, end_time: prev.end_time });
+      return;
+    }
+    prevTimes.current = { start_time: d.start_time, end_time: d.end_time };
+    setDraft({ ...d, start_time: ALL_DAY_START, end_time: ALL_DAY_END });
   }
 
   // הפונקציה נכנסת למצב עריכה עם העתק מקומי של הלו"ז והיום הפעיל מסומן
