@@ -6,6 +6,7 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const TEXT_MODEL = "google/gemini-3-flash-preview";
 const VISION_MODEL = "google/gemini-3-flash-preview";
 
+// הפונקציה שולחת בקשת JSON לשער ה-AI של Lovable ומחזירה את תוכן התשובה כטקסט
 async function callGatewayJSON(
   messages: Array<{ role: string; content: unknown }>,
   model = TEXT_MODEL,
@@ -34,6 +35,7 @@ async function callGatewayJSON(
   return json.choices?.[0]?.message?.content ?? "{}";
 }
 
+// הפונקציה מנסה לפענח JSON מתשובת ה-AI ומחזירה ערך ברירת מחדל אם הפענוח נכשל
 function safeParse<T>(text: string, fallback: T): T {
   try {
     const clean = text.replace(/^```json\s*|\s*```$/g, "").trim();
@@ -43,6 +45,7 @@ function safeParse<T>(text: string, fallback: T): T {
   }
 }
 
+// הפונקציה מייצרת בעזרת ה-AI תוכנית ארוחות ותוכנית אימונים שבועית ושומרת אותן (מסלול ישן מתקופת ההתחלה)
 export const generatePlans = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => d as Record<string, never>)
@@ -87,6 +90,7 @@ export const generatePlans = createServerFn({ method: "POST" })
 
 const ParseScheduleInput = z.object({ imageUrl: z.string().url() });
 
+// הפונקציה שולחת תמונת מערכת שעות ל-AI ומחלצת ממנה את הלו"ז כ-JSON (מסלול ישן מתקופת ההתחלה)
 export const parseSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ParseScheduleInput.parse(d))
