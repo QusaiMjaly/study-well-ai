@@ -46,6 +46,7 @@ const features = [
   },
 ];
 
+// הקומפוננטה מציגה את דף הנחיתה הציבורי: הסבר על האפליקציה וכפתורי הרשמה/התחברות
 function Landing() {
   return (
     <div className="flex min-h-screen justify-center bg-background">
