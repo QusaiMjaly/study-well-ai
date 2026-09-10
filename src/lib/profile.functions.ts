@@ -20,6 +20,7 @@ import {
  * changed, and a new (append-only) `goals` row is only inserted when a goals
  * column actually changed. Pressing Save with no edits therefore writes nothing.
  */
+// הפונקציה שומרת את פרטי הפרופיל והיעדים של המשתמש ומחזירה אילו שדות שמשפיעים על התוכנית השתנו
 export const saveProfileDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => {
