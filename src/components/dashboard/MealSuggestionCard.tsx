@@ -15,6 +15,7 @@ export function MealSuggestionCard({
   onSelect: () => void;
 }) {
   return (
+    /* כרטיס שמציג ארוחה חלופית עם הערכים התזונתיים שלה */
     <Card
       className={`gap-0 rounded-2xl border p-4 text-left shadow-soft transition-colors ${
         selected ? "border-success/50 bg-success/5" : "border-border/70"
@@ -40,6 +41,7 @@ export function MealSuggestionCard({
           ) : null}
         </div>
 
+        {/* סיכום הקלוריות, החלבון, הפחמימות והשומן */}
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
           <span className="flex items-center gap-1 font-medium text-warning">
             <Flame className="h-3.5 w-3.5" />

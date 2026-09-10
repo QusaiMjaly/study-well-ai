@@ -16,6 +16,7 @@ import { Toaster } from "../components/ui/sonner";
 // הקומפוננטה מציגה עמוד 404 ידידותי כשהכתובת לא קיימת
 function NotFoundComponent() {
   return (
+    /* עמוד ידידותי עבור כתובת שאינה קיימת */
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
@@ -45,6 +46,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
+    /* מסך שגיאה עם פעולות לניסיון נוסף או לחזרה הביתה */
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
@@ -110,6 +112,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* כאן מוצג העמוד הפעיל של האפליקציה */}
         {children}
         <Scripts />
       </body>
@@ -122,6 +125,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
+    /* ספק הנתונים, תוכן העמוד ומערכת ההתראות */
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors position="top-right" />

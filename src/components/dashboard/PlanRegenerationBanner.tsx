@@ -11,6 +11,7 @@ export function PlanRegenerationBanner() {
   if (!isGenerating) return null;
 
   return (
+    /* הודעה גלובלית בזמן יצירת תוכנית מעודכנת */
     <div
       role="status"
       aria-live="polite"

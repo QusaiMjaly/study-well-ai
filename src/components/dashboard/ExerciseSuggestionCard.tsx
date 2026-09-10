@@ -16,6 +16,7 @@ export function ExerciseSuggestionCard({
 }) {
   const pretty = (s: string) => s.replace(/_/g, " ");
   return (
+    /* כרטיס שמציג תרגיל חלופי והסיבה להתאמתו */
     <Card
       className={`gap-0 rounded-2xl border p-4 shadow-soft transition-colors ${
         selected ? "border-primary/50 bg-primary/5" : "border-border/70"
@@ -41,6 +42,7 @@ export function ExerciseSuggestionCard({
           ) : null}
         </div>
 
+        {/* פרטי הסטים, החזרות, משך העבודה והמנוחה */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
           {option.sets ? <span>{option.sets} sets</span> : null}
           {option.reps ? <span>{option.reps} reps</span> : null}
