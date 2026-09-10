@@ -29,6 +29,7 @@ import { friendlyMessage } from "@/lib/friendly-errors";
 import { ExerciseDemoSheet } from "@/components/dashboard/ExerciseDemoSheet";
 import { ExerciseChangeSheet } from "@/components/dashboard/ExerciseChangeSheet";
 
+// הקומפוננטה מציגה את אימון היום: רשימת התרגילים, סימון "בוצע", הדגמות והחלפת תרגיל
 export function WorkoutsPanel() {
   const qc = useQueryClient();
   const [demo, setDemo] = useState<WorkoutExercise | null>(null);
@@ -40,6 +41,7 @@ export function WorkoutsPanel() {
   });
 
 
+  // הפונקציה מרעננת את כל הקריאות שקשורות לאימון אחרי שינוי
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["today-workout"] });
     qc.invalidateQueries({ queryKey: ["active-plan"] });
@@ -227,6 +229,7 @@ function HeaderStat({
   );
 }
 
+// הקומפוננטה מציגה כרטיס תרגיל בודד עם סטים/חזרות, כפתור בוצע, הדגמה והחלפה
 function ExerciseCard({
   ex,
   completed,
@@ -323,6 +326,7 @@ function EmptyCard({ title, body }: { title: string; body: string }) {
 
 const RECOVERY_GOALS = ["Stay hydrated", "Get enough sleep", "Light stretching", "Optional light walk"];
 
+// הקומפוננטה מציגה מסך "יום התאוששות" כשאין אימון היום, כולל הצצה לאימון הבא
 function RecoveryDay({ data }: { data: NonNullable<TodayWorkout> }) {
   const [showNext, setShowNext] = useState(false);
   const [demo, setDemo] = useState<WorkoutExercise | null>(null);
