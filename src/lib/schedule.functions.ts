@@ -1,3 +1,4 @@
+// הקובץ הזה מפענח תמונת מערכת שעות בעזרת AI ושומר את הלו"ז השבועי המעודכן במסד הנתונים.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";

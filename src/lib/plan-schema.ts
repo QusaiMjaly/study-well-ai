@@ -1,3 +1,4 @@
+// הקובץ הזה מגדיר את סכמות Zod של תוכנית ה-AI ומוודא שהאימונים והארוחות לא מתנגשים עם הלו"ז.
 import { z } from "zod";
 import { DAYS, type ScheduleJson } from "./schedule-schema";
 

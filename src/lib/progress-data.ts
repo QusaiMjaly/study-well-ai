@@ -1,3 +1,4 @@
+// הקובץ הזה טוען נתוני התקדמות — מדידות גוף, אימונים שבוצעו, סטטיסטיקות שבועיות והישגים.
 import { supabase } from "@/integrations/supabase/client";
 import { localDateKey } from "@/lib/meals-data";
 
