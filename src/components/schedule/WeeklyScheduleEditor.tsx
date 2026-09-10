@@ -33,6 +33,8 @@ import {
   BLOCK_TYPE_LABELS,
   DAYS,
   DAY_LABELS,
+  ALL_DAY_END,
+  ALL_DAY_START,
   mergeImportedBlocks,
   newBlockId,
   overlappingBlockIds,
@@ -82,6 +84,9 @@ type Draft = {
   type: BlockType;
   label: string | null;
 };
+
+// הפונקציה בודקת אם הטיוטה מוגדרת כיום שלם (עסוק כל היום)
+const isAllDay = (d: Draft) => d.start_time === ALL_DAY_START && d.end_time === ALL_DAY_END;
 
 const emptyDraft = (days: DayKey[]): Draft => ({
   id: "",
