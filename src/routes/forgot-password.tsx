@@ -33,6 +33,7 @@ export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
 });
 
+// הקומפוננטה מציגה את מסך "שכחתי סיסמה": שליחת קישור איפוס למייל והודעת הצלחה
 function ForgotPasswordPage() {
   const search = Route.useSearch();
   const [email, setEmail] = useState(search.email ?? "");
@@ -40,6 +41,7 @@ function ForgotPasswordPage() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
+  // הפונקציה שולחת למשתמש קישור איפוס סיסמה במייל אחרי בדיקת תקינות הכתובת
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const emailError = validateEmail(email);
