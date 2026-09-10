@@ -18,6 +18,7 @@ declare global {
   }
 }
 
+// הפונקציה מדווחת על שגיאת React למערכת הניטור של Lovable עם הקשר על העמוד
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
   window.__lovableEvents?.captureException?.(

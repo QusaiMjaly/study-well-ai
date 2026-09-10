@@ -82,6 +82,7 @@ const hasPrescription = (v: { reps: string | null; duration_seconds: number | nu
  * Slug membership is validated dynamically against the candidate pool that the
  * server itself generated, so the model physically cannot invent a slug.
  */
+// הפונקציה בונה סכמת אימות להצעות תרגילים, שמכריחה slug מתוך המאגר שהשרת יצר בלבד
 export function exerciseSuggestionsSchema(allowedSlugs: string[]) {
   const slug = z
     .string()
@@ -108,6 +109,7 @@ export type ExerciseSuggestion = {
 };
 
 /** Free-text resolution against the broader active catalogue. */
+// הפונקציה בונה סכמת אימות לבקשת תרגיל ספציפי בטקסט חופשי מול הקטלוג
 export function specificExerciseSchema(allowedSlugs: string[]) {
   return z.object({
     status: z.enum(["ok", "incompatible", "not_found"]),

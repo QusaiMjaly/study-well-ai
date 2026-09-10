@@ -15,6 +15,7 @@ if (typeof globalThis.addEventListener === "function") {
   );
 }
 
+// הפונקציה מחזירה את שגיאת השרת האחרונה שנתפסה (ומנקה אותה) כדי שאפשר יהיה להציג מידע אמיתי על הכשל
 export function consumeLastCapturedError(): unknown {
   if (!lastCapturedError) return undefined;
   if (Date.now() - lastCapturedError.at > TTL_MS) {
