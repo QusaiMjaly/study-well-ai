@@ -220,8 +220,7 @@ export function validateBlock(b: {
   if (!DAYS.includes(b.day as DayKey)) return "Choose a valid day.";
   if (!TIME.test(b.start_time) || !TIME.test(b.end_time)) return "Times must be in HH:mm format.";
   if (toMin(b.end_time) <= toMin(b.start_time)) return "End time must be after the start time.";
-  if (toMin(b.end_time) - toMin(b.start_time) > 12 * 60)
-    return "A single block can't be longer than 12 hours.";
+
   if (!BLOCK_TYPES.includes(b.type as BlockType)) return "Choose Study, Work or Other.";
   return null;
 }
